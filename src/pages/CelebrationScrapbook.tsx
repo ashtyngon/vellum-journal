@@ -140,7 +140,7 @@ export default function CelebrationScrapbook() {
     addJournalEntry({
       id: `win-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       date: todayStr(),
-      title: newWinTitle.trim() || 'A Small Win',
+      title: newWinTitle.trim() || 'A Win',
       content: newWinContent.trim(),
       wins: [newWinContent.trim()],
     });
@@ -166,7 +166,7 @@ export default function CelebrationScrapbook() {
       {/* ── Header ──────────────────────────────────────────────────── */}
       <div className="mb-10">
         <h2 className="text-4xl md:text-5xl tracking-tight font-header italic text-ink mb-2">
-          Small Wins
+          Wins
         </h2>
         <p className="text-ink-light text-lg font-handwriting">
           A quiet place to notice what went right.
