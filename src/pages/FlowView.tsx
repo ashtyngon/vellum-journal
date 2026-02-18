@@ -1840,20 +1840,22 @@ export default function FlowView() {
   const hasScrolledRef = useRef(false);
   useEffect(() => {
     if (focusedDay !== null) {
-      // When entering focused mode, reset flag so we re-scroll on exit
       hasScrolledRef.current = false;
       return;
     }
     const el = scrollContainerRef.current;
     if (!el) return;
-    // Use double rAF to ensure layout is complete after React render
+    // Temporarily disable snap so programmatic scroll lands exactly on today
+    el.style.scrollSnapType = 'none';
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         const todayCol = el.querySelector('[data-today]') as HTMLElement | null;
         if (todayCol) {
-          el.scrollTo({ left: todayCol.offsetLeft - 16, behavior: hasScrolledRef.current ? 'smooth' : 'instant' });
+          el.scrollLeft = todayCol.offsetLeft - 16;
         }
         hasScrolledRef.current = true;
+        // Re-enable snap after scroll position is set
+        setTimeout(() => { el.style.scrollSnapType = ''; }, 50);
       });
     });
   }, [focusedDay]);
@@ -2288,7 +2290,7 @@ export default function FlowView() {
           <div
             ref={scrollContainerRef}
             className={`w-full h-full overflow-x-auto flex items-start px-4 md:px-6 pt-4 pb-12 gap-0 no-scrollbar ${
-              focusedDay === null ? 'snap-x snap-mandatory scroll-smooth' : 'justify-center'
+              focusedDay === null ? 'snap-x snap-mandatory' : 'justify-center'
             }`}
           >
             {visibleOffsets.map(offset => (
