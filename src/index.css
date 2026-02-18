@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+    .bg-wood-texture {
+        background-color: #f3ede7;
+        position: relative;
+        overflow: hidden;
+    }
+    .bg-wood-texture::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuDcZ2cPvK_-yOR5SMyQCt01ghDz7Nmd5wkADyS2l99DevJZzQ-ErEBBXfKfoPcqy5qRWpGmJdsHN72nNP5nSo-7Ek0rczMiPWn-wA5bWOzwq0txA_LjJGkvudQ_ffS1fcYwm2dcQQEleXC2GaeCthy4IuE2m-pNcMjAk2aElf3wqBM2fDwV4Qu5XPuBIN5l4o0lTu5wgHUai3m7FPJoM2S8aj05zRotgPpP-AwZcmq13dkEOWqJ8aoP4ISzVTZF3DnG0t9Zeqps7xs);
+        background-size: cover;
+        filter: blur(2px) contrast(90%) sepia(30%);
+        opacity: 0.6;
+        mix-blend-mode: multiply;
+        z-index: 0;
+        pointer-events: none;
+    }
+    .dark .bg-wood-texture::before {
+        filter: blur(2px) brightness(40%) sepia(20%);
+        opacity: 0.8;
+    }
+
+    .spine-ridge {
+        background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1) 40%, rgba(255, 255, 255, 0.1) 60%, transparent);
+    }
+
+    .shelf-shadow {
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), transparent);
+    }
+
+    .book-gutter {
+        background: linear-gradient(to right, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.2) 40%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.2) 60%, rgba(0, 0, 0, 0.05) 100%);
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .clip-path-slant {
+        clip-path: polygon(0 0, 100% 20%, 100% 100%, 0% 100%);
+    }
+
+    .bg-grain {
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+    }
+
+    .bg-texture-vellum {
+        background-color: #F9F5F0;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239a734c' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .washi-tape {
+        background-color: rgba(236, 127, 19, 0.2);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        mask-image: url("data:image/svg+xml,%3Csvg width='200' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h200v40H0z' fill='%23fff'/%3E%3C/svg%3E");
+        -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 5%, #000 95%, transparent 100%);
+    }
+
+    .polaroid-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background-color: #ffffff;
+        background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    }
+
+    .bg-vellum-texture {
+        background-color: #FDFBF7;
+        background-image:
+            url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E"),
+            radial-gradient(#e5e0d8 1px, transparent 1px);
+        background-size: 200px 200px, 24px 24px;
+    }
+    .dark .bg-vellum-texture {
+        background-color: #1c1917;
+        background-image:
+            radial-gradient(#292524 1.5px, transparent 1.5px);
+        background-size: 24px 24px;
+    }
+
+    .paper-texture {
+        background-color: #F9F5F0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+    }
+
+    .bg-noise {
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+    }
+
+    /* Scrollbars */
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .horizontal-scroll::-webkit-scrollbar {
+        height: 8px;
+    }
+    .horizontal-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .horizontal-scroll::-webkit-scrollbar-thumb {
+        background-color: #D4A373;
+        border-radius: 4px;
+        opacity: 0.5;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: #e5e0dc;
+        border-radius: 20px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background-color: #d1cdc9;
+    }
+}
