@@ -60,7 +60,7 @@ function createCanvas(): HTMLCanvasElement {
 function supernova(origin: Point) {
   const canvas = createCanvas();
   const ctx = canvas.getContext('2d')!;
-  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  // scale already applied in createCanvas()
 
   interface Spark {
     x: number; y: number;
@@ -172,7 +172,7 @@ function victoryRibbon(origin: Point, el: HTMLElement) {
   const rect = row.getBoundingClientRect();
   const canvas = createCanvas();
   const ctx = canvas.getContext('2d')!;
-  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  // scale already applied in createCanvas()
 
   const startX = rect.left - 20;
   const endX = rect.right + 20;
@@ -280,7 +280,7 @@ function victoryRibbon(origin: Point, el: HTMLElement) {
 function levelUp(origin: Point, streak: number) {
   const canvas = createCanvas();
   const ctx = canvas.getContext('2d')!;
-  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  // scale already applied in createCanvas()
 
   let frame = 0;
   const maxFrame = 70;
@@ -406,7 +406,7 @@ function auroraWave(origin: Point, el: HTMLElement) {
   const rect = row.getBoundingClientRect();
   const canvas = createCanvas();
   const ctx = canvas.getContext('2d')!;
-  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  // scale already applied in createCanvas()
 
   let frame = 0;
   const maxFrame = 55;
@@ -507,7 +507,7 @@ function gravityDefier(origin: Point, el: HTMLElement) {
   // Canvas for orbiting sparkles
   const canvas = createCanvas();
   const ctx = canvas.getContext('2d')!;
-  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  // scale already applied in createCanvas()
 
   const sparkles = Array.from({ length: 12 }, (_, i) => ({
     angle: (i / 12) * Math.PI * 2,
