@@ -512,13 +512,13 @@ export default function DailyLeaf() {
             <div className="space-y-5">
               <div>
                 <label className="block font-mono text-[10px] text-accent uppercase tracking-[0.15em] mb-1.5">
-                  How should tomorrow feel?
+                  Tomorrow&rsquo;s intention
                 </label>
                 <input
                   type="text"
                   value={tomorrowIntention}
                   onChange={e => setTomorrowIntention(e.target.value)}
-                  placeholder="Calm and focused · Productive but gentle · One step at a time"
+                  placeholder="How would you like tomorrow to feel?"
                   className="w-full bg-transparent border-none p-0 text-xl font-display text-ink placeholder:text-pencil/30 focus:ring-0 focus:outline-none italic"
                 />
                 <div className="mt-1 h-[1.5px] bg-wood-light/20" />
