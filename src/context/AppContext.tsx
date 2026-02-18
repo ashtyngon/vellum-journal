@@ -17,6 +17,7 @@ export interface RapidLogEntry {
   timeBlock?: string;
   duration?: string;
   section?: string;   // section id — soft assignment without exact time
+  order?: number;      // manual sort order within a section/day
   sourceHabit?: string;  // habit name if created from habit drag
   // Event-specific
   time?: string;
