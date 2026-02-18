@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import confetti from 'canvas-confetti';
 
 /* ══════════════════════════════════════════════════════════════════════
-   TaskCelebration — 8 vivid full-screen celebrations using canvas-confetti.
+   TaskCelebration — 13 vivid full-screen celebrations using canvas-confetti.
 
    Design philosophy:
    - COLORFUL, VIVID, FULL-SCREEN — celebrations should POP
@@ -517,6 +517,333 @@ async function prideBurst(_origin: Point): Promise<void> {
 
 
 // ══════════════════════════════════════════════════════════════════════
+//  EFFECT 9: HEART EXPLOSION (4s)
+//  Pink and red hearts burst from center in waves. Romantic, warm,
+//  self-love energy. You love yourself for getting things done.
+// ══════════════════════════════════════════════════════════════════════
+
+const HEARTS = ['#ff1744', '#f50057', '#ff4081', '#ff80ab', '#e91e63', '#c2185b', '#ff6090', '#ff0044'];
+
+async function heartExplosion(origin: Point): Promise<void> {
+  const scalar = 2;
+  const heart = confetti.shapeFromText({ text: '❤️', scalar });
+  const sparkleHeart = confetti.shapeFromText({ text: '💖', scalar });
+  const fireHeart = confetti.shapeFromText({ text: '💗', scalar });
+  const norm = toNormalized(origin);
+
+  // Wave 1: big heart burst from task
+  confetti({
+    particleCount: 40,
+    spread: 360,
+    origin: norm,
+    shapes: [heart, sparkleHeart],
+    scalar,
+    startVelocity: 45,
+    gravity: 0.7,
+    ticks: 350,
+    zIndex: 9999,
+  });
+
+  // Confetti underneath
+  confetti({
+    particleCount: 80,
+    spread: 120,
+    origin: norm,
+    colors: HEARTS,
+    startVelocity: 50,
+    gravity: 0.8,
+    ticks: 300,
+    scalar: 1.2,
+    zIndex: 9999,
+  });
+
+  await sleep(400);
+
+  // Wave 2: hearts from both sides
+  confetti({
+    particleCount: 25,
+    angle: 60,
+    spread: 50,
+    origin: { x: 0, y: 0.7 },
+    shapes: [heart, fireHeart],
+    scalar,
+    startVelocity: 55,
+    gravity: 0.6,
+    ticks: 300,
+    zIndex: 9999,
+  });
+  confetti({
+    particleCount: 25,
+    angle: 120,
+    spread: 50,
+    origin: { x: 1, y: 0.7 },
+    shapes: [heart, fireHeart],
+    scalar,
+    startVelocity: 55,
+    gravity: 0.6,
+    ticks: 300,
+    zIndex: 9999,
+  });
+
+  await sleep(500);
+
+  // Wave 3: gentle heart rain from top
+  for (let i = 0; i < 3; i++) {
+    confetti({
+      particleCount: 15,
+      spread: 180,
+      origin: { x: rand(0.1, 0.9), y: -0.1 },
+      shapes: [heart, sparkleHeart, fireHeart],
+      scalar: 2.5,
+      gravity: 0.8,
+      startVelocity: 10,
+      ticks: 400,
+      flat: true,
+      zIndex: 9999,
+    });
+    await sleep(300);
+  }
+
+  await sleep(1600);
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
+//  EFFECT 10: SUPERNOVA (3.5s)
+//  Fast, intense, overwhelming. A single massive explosion from
+//  center-screen — 500+ particles in every direction. Pure impact.
+// ══════════════════════════════════════════════════════════════════════
+
+async function supernova(_origin: Point): Promise<void> {
+  // Everything at once — maximum density
+  confetti({
+    particleCount: 200,
+    spread: 360,
+    origin: { x: 0.5, y: 0.4 },
+    colors: RAINBOW,
+    startVelocity: 70,
+    gravity: 0.5,
+    ticks: 300,
+    scalar: 1.5,
+    zIndex: 9999,
+  });
+
+  confetti({
+    particleCount: 150,
+    spread: 360,
+    origin: { x: 0.5, y: 0.4 },
+    colors: PARTY,
+    shapes: ['star'],
+    startVelocity: 55,
+    gravity: 0.6,
+    ticks: 350,
+    scalar: 2,
+    zIndex: 9999,
+  });
+
+  confetti({
+    particleCount: 100,
+    spread: 360,
+    origin: { x: 0.5, y: 0.4 },
+    colors: GOLD,
+    startVelocity: 40,
+    gravity: 0.4,
+    ticks: 400,
+    scalar: 1,
+    zIndex: 9999,
+  });
+
+  await sleep(3500);
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
+//  EFFECT 11: FOUR CORNERS (4s)
+//  Simultaneous explosions from all four corners of the screen.
+//  Diagonal crossfire. The whole viewport is under attack by confetti.
+// ══════════════════════════════════════════════════════════════════════
+
+async function fourCorners(_origin: Point): Promise<void> {
+  const corners = [
+    { origin: { x: 0, y: 0 }, angle: 45 },     // top-left → down-right
+    { origin: { x: 1, y: 0 }, angle: 135 },    // top-right → down-left
+    { origin: { x: 0, y: 1 }, angle: 315 },    // bottom-left → up-right
+    { origin: { x: 1, y: 1 }, angle: 225 },    // bottom-right → up-left
+  ];
+
+  // Round 1: all corners fire
+  for (const corner of corners) {
+    confetti({
+      particleCount: 60,
+      angle: corner.angle,
+      spread: 70,
+      origin: corner.origin,
+      colors: RAINBOW,
+      startVelocity: 60,
+      gravity: 1,
+      ticks: 300,
+      scalar: 1.3,
+      zIndex: 9999,
+    });
+  }
+
+  await sleep(600);
+
+  // Round 2: corners fire again with stars
+  for (const corner of corners) {
+    confetti({
+      particleCount: 40,
+      angle: corner.angle,
+      spread: 90,
+      origin: corner.origin,
+      colors: WARM,
+      shapes: ['star', 'circle'],
+      startVelocity: 50,
+      gravity: 0.8,
+      ticks: 350,
+      scalar: 1.8,
+      zIndex: 9999,
+    });
+  }
+
+  await sleep(600);
+
+  // Round 3: center explosion from all the colliding confetti
+  confetti({
+    particleCount: 150,
+    spread: 360,
+    origin: { x: 0.5, y: 0.5 },
+    colors: PARTY,
+    startVelocity: 45,
+    gravity: 0.6,
+    ticks: 350,
+    scalar: 1.2,
+    zIndex: 9999,
+  });
+
+  await sleep(2500);
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
+//  EFFECT 12: CONFETTI SPIRAL (4.5s)
+//  Rapid-fire bursts that rotate around the center of the screen
+//  like a spinning sprinkler. Hypnotic and intense.
+// ══════════════════════════════════════════════════════════════════════
+
+async function confettiSpiral(_origin: Point): Promise<void> {
+  const steps = 16;
+
+  for (let i = 0; i < steps; i++) {
+    const angle = (i / steps) * 360;
+    const radians = (angle * Math.PI) / 180;
+    const r = 0.25;
+
+    confetti({
+      particleCount: 30,
+      angle: angle + 90,
+      spread: 40,
+      origin: {
+        x: 0.5 + Math.cos(radians) * r,
+        y: 0.45 + Math.sin(radians) * r,
+      },
+      colors: RAINBOW,
+      startVelocity: 45,
+      gravity: 0.9,
+      ticks: 250,
+      scalar: 1.2,
+      zIndex: 9999,
+    });
+
+    await sleep(180);
+  }
+
+  // Final center burst
+  confetti({
+    particleCount: 100,
+    spread: 360,
+    origin: { x: 0.5, y: 0.45 },
+    colors: GOLD,
+    shapes: ['star'],
+    startVelocity: 50,
+    gravity: 0.5,
+    ticks: 350,
+    scalar: 2,
+    zIndex: 9999,
+  });
+
+  await sleep(1500);
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
+//  EFFECT 13: THUNDER BURST (3.5s)
+//  Quick, aggressive — two massive simultaneous bursts from top and
+//  bottom, colliding in the middle. Then a final shockwave.
+// ══════════════════════════════════════════════════════════════════════
+
+async function thunderBurst(_origin: Point): Promise<void> {
+  // Top cannon aimed down
+  confetti({
+    particleCount: 120,
+    angle: 270,
+    spread: 100,
+    origin: { x: 0.5, y: -0.1 },
+    colors: COOL,
+    startVelocity: 65,
+    gravity: 2,
+    ticks: 200,
+    scalar: 1.3,
+    zIndex: 9999,
+  });
+
+  // Bottom cannon aimed up
+  confetti({
+    particleCount: 120,
+    angle: 90,
+    spread: 100,
+    origin: { x: 0.5, y: 1.1 },
+    colors: WARM,
+    startVelocity: 65,
+    gravity: -0.5,
+    ticks: 200,
+    scalar: 1.3,
+    zIndex: 9999,
+  });
+
+  await sleep(400);
+
+  // Collision shockwave — massive 360° from center
+  confetti({
+    particleCount: 200,
+    spread: 360,
+    origin: { x: 0.5, y: 0.5 },
+    colors: [...RAINBOW, '#ffffff', '#ffffff'],
+    startVelocity: 55,
+    gravity: 0.7,
+    ticks: 350,
+    scalar: 1.4,
+    zIndex: 9999,
+  });
+
+  confetti({
+    particleCount: 60,
+    spread: 360,
+    origin: { x: 0.5, y: 0.5 },
+    colors: GOLD,
+    shapes: ['star'],
+    startVelocity: 40,
+    gravity: 0.4,
+    ticks: 400,
+    scalar: 2.2,
+    zIndex: 9999,
+  });
+
+  await sleep(3000);
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
 //  QUEUE SYSTEM & PUBLIC API
 // ══════════════════════════════════════════════════════════════════════
 
@@ -531,6 +858,11 @@ const effects: EffectFn[] = [
   realisticCascade,
   goldenShower,
   prideBurst,
+  heartExplosion,
+  supernova,
+  fourCorners,
+  confettiSpiral,
+  thunderBurst,
 ];
 
 let lastEffectIndex = -1;
