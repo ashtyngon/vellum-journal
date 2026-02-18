@@ -1,14 +1,12 @@
 import { useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import MigrationStation from '../pages/MigrationStation';
 
 const Layout = ({ children }: { children: ReactNode }) => {
   const { pathname } = useLocation();
   const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [migrationOpen, setMigrationOpen] = useState(false);
 
   const navLinks = [
     { to: '/daily', label: 'Daily', icon: 'edit_note' },
@@ -42,17 +40,6 @@ const Layout = ({ children }: { children: ReactNode }) => {
                 <span className="font-body">{link.label}</span>
               </Link>
             ))}
-            <button
-              onClick={() => setMigrationOpen(true)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
-                migrationOpen
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-ink-light hover:text-ink hover:bg-surface-light'
-              }`}
-            >
-              <span className="material-symbols-outlined text-lg">move_up</span>
-              <span className="font-body">Migration</span>
-            </button>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -114,20 +101,6 @@ const Layout = ({ children }: { children: ReactNode }) => {
                 {link.label}
               </Link>
             ))}
-            <button
-              onClick={() => {
-                setMigrationOpen(true);
-                setMobileOpen(false);
-              }}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
-                migrationOpen
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-ink-light hover:text-ink hover:bg-surface-light'
-              }`}
-            >
-              <span className="material-symbols-outlined text-lg">move_up</span>
-              Migration
-            </button>
           </nav>
         )}
       </header>
@@ -136,7 +109,6 @@ const Layout = ({ children }: { children: ReactNode }) => {
         {children}
       </main>
 
-      <MigrationStation open={migrationOpen} onClose={() => setMigrationOpen(false)} />
     </div>
   );
 };

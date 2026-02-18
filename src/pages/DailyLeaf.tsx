@@ -591,13 +591,6 @@ export default function DailyLeaf() {
                   <span className="material-symbols-outlined text-[18px] text-pencil group-hover/link:text-primary transition-colors">calendar_view_day</span>
                   Flow View
                 </Link>
-                <Link
-                  to="/migration"
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-paper border border-wood-light/15 shadow-soft text-sm font-body text-ink hover:text-tension hover:border-tension/20 transition-all group/link"
-                >
-                  <span className="material-symbols-outlined text-[18px] text-pencil group-hover/link:text-tension transition-colors">inbox</span>
-                  Migration Station
-                </Link>
               </div>
             </aside>
 
