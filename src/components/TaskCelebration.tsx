@@ -524,27 +524,29 @@ async function prideBurst(_origin: Point): Promise<void> {
 
 const HEARTS = ['#ff1744', '#f50057', '#ff4081', '#ff80ab', '#e91e63', '#c2185b', '#ff6090', '#ff0044'];
 
+/** SVG heart path — real 3D confetti particle, not flat emoji */
+const heartShape = confetti.shapeFromPath({
+  path: 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z',
+});
+
 async function heartExplosion(origin: Point): Promise<void> {
-  const scalar = 2;
-  const heart = confetti.shapeFromText({ text: '❤️', scalar });
-  const sparkleHeart = confetti.shapeFromText({ text: '💖', scalar });
-  const fireHeart = confetti.shapeFromText({ text: '💗', scalar });
   const norm = toNormalized(origin);
 
-  // Wave 1: big heart burst from task
+  // Wave 1: big heart-shaped burst from the task
   confetti({
-    particleCount: 40,
+    particleCount: 60,
     spread: 360,
     origin: norm,
-    shapes: [heart, sparkleHeart],
-    scalar,
-    startVelocity: 45,
+    shapes: [heartShape],
+    colors: HEARTS,
+    startVelocity: 50,
     gravity: 0.7,
     ticks: 350,
+    scalar: 3,
     zIndex: 9999,
   });
 
-  // Confetti underneath
+  // Pink/red confetti underneath for density
   confetti({
     particleCount: 80,
     spread: 120,
@@ -559,50 +561,66 @@ async function heartExplosion(origin: Point): Promise<void> {
 
   await sleep(400);
 
-  // Wave 2: hearts from both sides
+  // Wave 2: heart cannons from both sides
   confetti({
-    particleCount: 25,
+    particleCount: 35,
     angle: 60,
-    spread: 50,
+    spread: 55,
     origin: { x: 0, y: 0.7 },
-    shapes: [heart, fireHeart],
-    scalar,
+    shapes: [heartShape],
+    colors: HEARTS,
     startVelocity: 55,
     gravity: 0.6,
     ticks: 300,
+    scalar: 2.5,
     zIndex: 9999,
   });
   confetti({
-    particleCount: 25,
+    particleCount: 35,
     angle: 120,
-    spread: 50,
+    spread: 55,
     origin: { x: 1, y: 0.7 },
-    shapes: [heart, fireHeart],
-    scalar,
+    shapes: [heartShape],
+    colors: HEARTS,
     startVelocity: 55,
     gravity: 0.6,
     ticks: 300,
+    scalar: 2.5,
     zIndex: 9999,
   });
 
   await sleep(500);
 
-  // Wave 3: gentle heart rain from top
+  // Wave 3: heart rain from top — large hearts floating down
   for (let i = 0; i < 3; i++) {
     confetti({
-      particleCount: 15,
+      particleCount: 20,
       spread: 180,
       origin: { x: rand(0.1, 0.9), y: -0.1 },
-      shapes: [heart, sparkleHeart, fireHeart],
-      scalar: 2.5,
+      shapes: [heartShape],
+      colors: HEARTS,
       gravity: 0.8,
-      startVelocity: 10,
+      startVelocity: 12,
       ticks: 400,
-      flat: true,
+      scalar: 3.5,
       zIndex: 9999,
     });
     await sleep(300);
   }
+
+  // Final accent — star sparkles mixed with hearts
+  confetti({
+    particleCount: 40,
+    spread: 360,
+    origin: { x: 0.5, y: 0.4 },
+    shapes: ['star'],
+    colors: ['#ff80ab', '#ff4081', '#ffffff', '#ffd700'],
+    startVelocity: 35,
+    gravity: 0.5,
+    ticks: 350,
+    scalar: 1.8,
+    zIndex: 9999,
+  });
 
   await sleep(1600);
 }
