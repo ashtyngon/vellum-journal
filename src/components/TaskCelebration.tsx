@@ -39,15 +39,82 @@ function getCenter(el: HTMLElement): Point {
   return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
 }
 
+/** Find the parent task row element for row-based effects */
+function findRow(el: HTMLElement): HTMLElement | null {
+  // Walk up the DOM to find the group/entry container
+  let node: HTMLElement | null = el;
+  while (node) {
+    if (node.classList) {
+      // Check for Tailwind group/entry class (the / becomes part of the class name)
+      for (let i = 0; i < node.classList.length; i++) {
+        if (node.classList[i].indexOf('group/entry') !== -1) {
+          return node;
+        }
+      }
+    }
+    node = node.parentElement;
+  }
+  return null;
+}
+
 function createCanvas(): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
-  canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:9999';
-  canvas.width = window.innerWidth * window.devicePixelRatio;
-  canvas.height = window.innerHeight * window.devicePixelRatio;
+  const dpr = window.devicePixelRatio || 1;
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.cssText = `position:fixed;top:0;left:0;width:${w}px;height:${h}px;pointer-events:none;z-index:9999`;
   document.body.appendChild(canvas);
   const ctx = canvas.getContext('2d')!;
-  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  ctx.scale(dpr, dpr);
   return canvas;
+}
+
+/**
+ * DOM-based glow pulse on the task row — guaranteed visible, no canvas needed.
+ * Used as an immediate visual cue alongside the canvas effect.
+ */
+function rowGlowPulse(el: HTMLElement) {
+  const row = findRow(el);
+  if (!row) return;
+
+  // Create a highlight overlay inside the row
+  const highlight = document.createElement('div');
+  highlight.style.cssText = `
+    position: absolute; inset: 0; border-radius: inherit;
+    background: linear-gradient(90deg, transparent, rgba(236, 127, 19, 0.15), transparent);
+    pointer-events: none; z-index: 1;
+    animation: celebrationGlow 600ms ease-out forwards;
+  `;
+
+  // Ensure row can contain absolute positioned children
+  const prevPosition = row.style.position;
+  const prevOverflow = row.style.overflow;
+  row.style.position = 'relative';
+  row.style.overflow = 'visible';
+
+  row.appendChild(highlight);
+
+  // Inject keyframes if not already present
+  if (!document.getElementById('celebration-glow-style')) {
+    const style = document.createElement('style');
+    style.id = 'celebration-glow-style';
+    style.textContent = `
+      @keyframes celebrationGlow {
+        0% { opacity: 0; transform: scaleX(0.3); }
+        30% { opacity: 1; transform: scaleX(1); }
+        100% { opacity: 0; transform: scaleX(1.1); }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  setTimeout(() => {
+    highlight.remove();
+    row.style.position = prevPosition;
+    row.style.overflow = prevOverflow;
+  }, 700);
 }
 
 
@@ -96,7 +163,7 @@ function supernova(origin: Point) {
 
   let frame = 0;
   function animate() {
-    ctx.clearRect(0, 0, canvas.width / window.devicePixelRatio, canvas.height / window.devicePixelRatio);
+    ctx.clearRect(0, 0, canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1));
 
     // Flash
     if (flashAlpha > 0) {
@@ -166,7 +233,7 @@ function supernova(origin: Point) {
 // ══════════════════════════════════════════════════════════════════════
 
 function victoryRibbon(origin: Point, el: HTMLElement) {
-  const row = el.closest('[class*="group/entry"]') as HTMLElement | null;
+  const row = findRow(el);
   if (!row) { supernova(origin); return; } // Fallback
 
   const rect = row.getBoundingClientRect();
@@ -183,7 +250,7 @@ function victoryRibbon(origin: Point, el: HTMLElement) {
   const sparkles: { x: number; y: number; life: number; maxLife: number; r: number; color: string }[] = [];
 
   function animate() {
-    ctx.clearRect(0, 0, canvas.width / window.devicePixelRatio, canvas.height / window.devicePixelRatio);
+    ctx.clearRect(0, 0, canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1));
 
     progress += 0.035;
     const headX = startX + width * Math.min(progress, 1);
@@ -285,7 +352,7 @@ function levelUp(origin: Point, streak: number) {
   let frame = 0;
   const maxFrame = 70;
   const isStreak = streak >= 3;
-  const text = isStreak ? `🔥 ${streak}` : '+1';
+  const text = isStreak ? `+${streak}` : '+1';
 
   // Ring particles for streak
   const streakParticles: { angle: number; dist: number; speed: number; color: string; r: number }[] = [];
@@ -302,7 +369,7 @@ function levelUp(origin: Point, streak: number) {
   }
 
   function animate() {
-    ctx.clearRect(0, 0, canvas.width / window.devicePixelRatio, canvas.height / window.devicePixelRatio);
+    ctx.clearRect(0, 0, canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1));
     frame++;
     const t = frame / maxFrame;
 
@@ -400,7 +467,7 @@ function levelUp(origin: Point, streak: number) {
 // ══════════════════════════════════════════════════════════════════════
 
 function auroraWave(origin: Point, el: HTMLElement) {
-  const row = el.closest('[class*="group/entry"]') as HTMLElement | null;
+  const row = findRow(el);
   if (!row) { supernova(origin); return; }
 
   const rect = row.getBoundingClientRect();
@@ -413,7 +480,7 @@ function auroraWave(origin: Point, el: HTMLElement) {
   const colors = [PALETTE.amber, PALETTE.sage, PALETTE.bronze, PALETTE.rose, PALETTE.gold];
 
   function animate() {
-    ctx.clearRect(0, 0, canvas.width / window.devicePixelRatio, canvas.height / window.devicePixelRatio);
+    ctx.clearRect(0, 0, canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1));
     frame++;
     const t = frame / maxFrame;
 
@@ -482,7 +549,7 @@ function auroraWave(origin: Point, el: HTMLElement) {
 // ══════════════════════════════════════════════════════════════════════
 
 function gravityDefier(origin: Point, el: HTMLElement) {
-  const maybeRow = el.closest('[class*="group/entry"]') as HTMLElement | null;
+  const maybeRow = findRow(el);
   if (!maybeRow) { supernova(origin); return; }
   const row = maybeRow;
 
@@ -556,7 +623,7 @@ function gravityDefier(origin: Point, el: HTMLElement) {
     row.style.transform = `translateY(${liftY}px) scale(${scale})`;
 
     // Draw orbiting sparkles during float phase
-    ctx.clearRect(0, 0, canvas.width / window.devicePixelRatio, canvas.height / window.devicePixelRatio);
+    ctx.clearRect(0, 0, canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1));
 
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2 + liftY;
@@ -618,28 +685,35 @@ let lastEffectIndex = -1;
 
 export function useTaskCelebration(): CelebrateFn {
   const celebrate = useCallback<CelebrateFn>((el, completedCount) => {
-    const origin = getCenter(el);
+    try {
+      const origin = getCenter(el);
 
-    // Pick a random effect, avoiding the last one used
-    let index: number;
-    do {
-      index = Math.floor(Math.random() * effects.length);
-    } while (index === lastEffectIndex && effects.length > 1);
-    lastEffectIndex = index;
+      // Always fire the DOM-based glow (guaranteed visible, no canvas dependency)
+      rowGlowPulse(el);
 
-    const effect = effects[index];
+      // Pick a random canvas effect, avoiding the last one used
+      let index: number;
+      do {
+        index = Math.floor(Math.random() * effects.length);
+      } while (index === lastEffectIndex && effects.length > 1);
+      lastEffectIndex = index;
 
-    // Route to the correct signature
-    if (effect === supernova) {
-      supernova(origin);
-    } else if (effect === victoryRibbon) {
-      victoryRibbon(origin, el);
-    } else if (effect === levelUp) {
-      levelUp(origin, completedCount);
-    } else if (effect === auroraWave) {
-      auroraWave(origin, el);
-    } else if (effect === gravityDefier) {
-      gravityDefier(origin, el);
+      const effect = effects[index];
+
+      // Route to the correct signature
+      if (effect === supernova) {
+        supernova(origin);
+      } else if (effect === victoryRibbon) {
+        victoryRibbon(origin, el);
+      } else if (effect === levelUp) {
+        levelUp(origin, completedCount);
+      } else if (effect === auroraWave) {
+        auroraWave(origin, el);
+      } else if (effect === gravityDefier) {
+        gravityDefier(origin, el);
+      }
+    } catch (err) {
+      console.error('[TaskCelebration] Effect error:', err);
     }
   }, []);
 
