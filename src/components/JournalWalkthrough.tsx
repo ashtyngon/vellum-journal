@@ -83,13 +83,23 @@ export default function JournalWalkthrough({
 
   /* ── Step transitions ───────────────────────────────────────────── */
 
+  const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const transitionRafRef = useRef<number | null>(null);
+
+  // Cleanup transition timers on unmount
+  useEffect(() => {
+    return () => {
+      if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
+      if (transitionRafRef.current) cancelAnimationFrame(transitionRafRef.current);
+    };
+  }, []);
+
   const transitionTo = useCallback((nextFn: () => void) => {
     setVisible(false);
     setTransitioning(true);
-    setTimeout(() => {
+    transitionTimerRef.current = setTimeout(() => {
       nextFn();
-      // Allow a frame for React to render the new step before fading in
-      requestAnimationFrame(() => {
+      transitionRafRef.current = requestAnimationFrame(() => {
         setVisible(true);
         setTransitioning(false);
       });

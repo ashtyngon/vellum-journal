@@ -9,6 +9,8 @@
  *   "buy groceries"                     → { title: 'buy groceries' } (no day/time detected)
  */
 
+import { formatLocalDate } from './dateUtils';
+
 export interface ParsedEntry {
   title: string;
   day?: string;        // 'today' | 'tomorrow' | 'monday' .. 'sunday' | ISO date
@@ -32,26 +34,26 @@ const DAY_ABBREVS: Record<string, string> = {
  */
 function resolveDayToDate(dayRef: string): string {
   const now = new Date();
-  const todayStr = now.toISOString().split('T')[0];
+  const todayDate = formatLocalDate(now);
 
-  if (dayRef === 'today') return todayStr;
+  if (dayRef === 'today') return todayDate;
 
   if (dayRef === 'tomorrow') {
     const d = new Date(now);
     d.setDate(d.getDate() + 1);
-    return d.toISOString().split('T')[0];
+    return formatLocalDate(d);
   }
 
   // Day of week → find next occurrence (including today if it matches)
   const targetDow = DAYS.indexOf(dayRef);
-  if (targetDow === -1) return todayStr;
+  if (targetDow === -1) return todayDate;
 
   const currentDow = now.getDay();
   let daysAhead = targetDow - currentDow;
   if (daysAhead <= 0) daysAhead += 7; // always forward, never today for named days
   const d = new Date(now);
   d.setDate(d.getDate() + daysAhead);
-  return d.toISOString().split('T')[0];
+  return formatLocalDate(d);
 }
 
 /**

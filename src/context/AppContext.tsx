@@ -1,7 +1,8 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef, type ReactNode } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from './AuthContext';
+import { todayStr, daysAgo, daysFromNow, formatLocalDate } from '../lib/dateUtils';
 
 /* ── BuJo Rapid Log Entry (replaces old Task) ─────────────────────── */
 
@@ -125,12 +126,6 @@ interface AppContextType {
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
-
-/* ── Date helpers ──────────────────────────────────────────────────── */
-
-function todayStr() { return new Date().toISOString().split('T')[0]; }
-function daysAgo(n: number) { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().split('T')[0]; }
-function daysFromNow(n: number) { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().split('T')[0]; }
 
 /* ── Seed Data ─────────────────────────────────────────────────────── */
 
@@ -429,7 +424,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       const newDates = isCompleted ? h.completedDates.filter(d => d !== date) : [...h.completedDates, date];
       let streak = 0;
       const d = new Date();
-      while (newDates.includes(d.toISOString().split('T')[0])) { streak++; d.setDate(d.getDate() - 1); }
+      while (newDates.includes(formatLocalDate(d))) { streak++; d.setDate(d.getDate() - 1); }
       return { ...h, completedDates: newDates, streak };
     }));
   }, []);
@@ -499,20 +494,30 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   /* ── Provider ──────────────────────────────────────────────────── */
 
   // Split entries into active and trash for consumers
-  const activeEntries = entries.filter(e => !e.deletedAt);
-  const trashEntries = entries.filter(e => !!e.deletedAt);
+  const activeEntries = useMemo(() => entries.filter(e => !e.deletedAt), [entries]);
+  const trashEntries = useMemo(() => entries.filter(e => !!e.deletedAt), [entries]);
+
+  const contextValue = useMemo(() => ({
+    entries: activeEntries, trash: trashEntries,
+    habits, journalEntries, collections, debriefs, loading,
+    addEntry, updateEntry, batchUpdateEntries, deleteEntry, restoreEntry, permanentlyDeleteEntry,
+    toggleHabit, addHabit, updateHabit, deleteHabit,
+    addJournalEntry, updateJournalEntry, deleteJournalEntry,
+    addCollection, updateCollection, deleteCollection,
+    addCollectionItem, updateCollectionItem, deleteCollectionItem, reorderCollectionItems,
+    saveDebrief,
+  }), [
+    activeEntries, trashEntries, habits, journalEntries, collections, debriefs, loading,
+    addEntry, updateEntry, batchUpdateEntries, deleteEntry, restoreEntry, permanentlyDeleteEntry,
+    toggleHabit, addHabit, updateHabit, deleteHabit,
+    addJournalEntry, updateJournalEntry, deleteJournalEntry,
+    addCollection, updateCollection, deleteCollection,
+    addCollectionItem, updateCollectionItem, deleteCollectionItem, reorderCollectionItems,
+    saveDebrief,
+  ]);
 
   return (
-    <AppContext.Provider value={{
-      entries: activeEntries, trash: trashEntries,
-      habits, journalEntries, collections, debriefs, loading,
-      addEntry, updateEntry, batchUpdateEntries, deleteEntry, restoreEntry, permanentlyDeleteEntry,
-      toggleHabit, addHabit, updateHabit, deleteHabit,
-      addJournalEntry, updateJournalEntry, deleteJournalEntry,
-      addCollection, updateCollection, deleteCollection,
-      addCollectionItem, updateCollectionItem, deleteCollectionItem, reorderCollectionItems,
-      saveDebrief,
-    }}>
+    <AppContext.Provider value={contextValue}>
       {children}
     </AppContext.Provider>
   );

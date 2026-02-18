@@ -5,6 +5,7 @@ import type { RapidLogEntry, DayDebrief as DayDebriefType } from '../context/App
 
 interface DayDebriefProps {
   todayEntries: RapidLogEntry[];
+  date: string;           // YYYY-MM-DD — stable date from parent, not re-computed
   onSave: (debrief: DayDebriefType) => void;
   onSkip: () => void;
 }
@@ -106,15 +107,9 @@ function getContextualMessage(
   return "You did what you could. That's always enough.";
 }
 
-/* ── Helpers ──────────────────────────────────────────────────────── */
-
-function todayStr(): string {
-  return new Date().toISOString().split('T')[0];
-}
-
 /* ── Component ────────────────────────────────────────────────────── */
 
-const DayDebrief = ({ todayEntries, onSave, onSkip }: DayDebriefProps) => {
+const DayDebrief = ({ todayEntries, date, onSave, onSkip }: DayDebriefProps) => {
   /* ── State ─────────────────────────────────────────────────────── */
   const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
   const [planRealism, setPlanRealism] = useState(0);
@@ -129,9 +124,8 @@ const DayDebrief = ({ todayEntries, onSave, onSkip }: DayDebriefProps) => {
 
   /* ── Derived ───────────────────────────────────────────────────── */
 
-  const today = todayStr();
   const todayTasks = todayEntries.filter(
-    (e) => e.type === 'task' && e.date === today
+    (e) => e.type === 'task' && e.date === date
   );
   const completedCount = todayTasks.filter((t) => t.status === 'done').length;
   const totalCount = todayTasks.length;
@@ -173,7 +167,7 @@ const DayDebrief = ({ todayEntries, onSave, onSkip }: DayDebriefProps) => {
 
   const handleSave = () => {
     onSave({
-      date: today,
+      date,
       planRealism,
       accomplishment,
       mood,

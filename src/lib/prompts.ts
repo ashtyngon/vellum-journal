@@ -1,15 +1,10 @@
 import type { RapidLogEntry, Habit, JournalEntry, DayDebrief } from '../context/AppContext';
+import { todayStr, daysAgo } from './dateUtils';
 
 /* ── Helpers ──────────────────────────────────────────────────────────── */
 
-function todayStr(): string {
-  return new Date().toISOString().split('T')[0];
-}
-
 function yesterdayStr(): string {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  return d.toISOString().split('T')[0];
+  return daysAgo(1);
 }
 
 function daysBetween(a: string, b: string): number {

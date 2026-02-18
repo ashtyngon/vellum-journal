@@ -1,16 +1,10 @@
 import { useState, useRef, useEffect, useMemo, useCallback, type ReactElement } from 'react';
 import { useApp } from '../context/AppContext';
 import { parseNaturalEntry } from '../lib/nlParser';
-import VisualTimer from '../components/VisualTimer';
 import type { RapidLogEntry } from '../context/AppContext';
+import { formatLocalDate, dateStr, todayStr } from '../lib/dateUtils';
 
 /* ── Helpers ──────────────────────────────────────────────────────────────── */
-
-function dateStr(offset: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() + offset);
-  return d.toISOString().split('T')[0];
-}
 
 function dayLabel(offset: number) {
   const d = new Date();
@@ -20,7 +14,7 @@ function dayLabel(offset: number) {
     full: d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
     weekday: d.toLocaleDateString('en-US', { weekday: 'long' }),
     shortWeekday: d.toLocaleDateString('en-US', { weekday: 'short' }),
-    iso: d.toISOString().split('T')[0],
+    iso: formatLocalDate(d),
     isWeekend: dayOfWeek === 0 || dayOfWeek === 6,
     dayOfWeek,  // 0=Sun..6=Sat
   };
@@ -187,7 +181,6 @@ function TaskCard({
   onToggleSelect,
   bulkMode,
   onOpenDetail,
-  onStartTimer,
 }: {
   entry: RapidLogEntry;
   onUpdate: (id: string, updates: Partial<RapidLogEntry>) => void;
@@ -198,7 +191,6 @@ function TaskCard({
   onToggleSelect?: (id: string) => void;
   bulkMode?: boolean;
   onOpenDetail?: () => void;
-  onStartTimer?: (title: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(entry.title);
@@ -337,16 +329,6 @@ function TaskCard({
 
         {/* Actions on hover */}
         <div className="flex flex-col items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-          {/* Timer */}
-          {onStartTimer && !isDone && (
-            <button
-              onClick={e => { e.stopPropagation(); onStartTimer(entry.title); }}
-              className="text-pencil/50 hover:text-primary transition-colors"
-              title="Start visual timer"
-            >
-              <span className="material-symbols-outlined text-[15px]">timer</span>
-            </button>
-          )}
           {/* Delete */}
           <button
             onClick={() => onDelete(entry.id)}
@@ -1309,7 +1291,6 @@ function SectionBody({
   selectedIds,
   onToggleSelect,
   bulkMode,
-  onStartTimer,
 }: {
   section: DaySection;
   date: string;
@@ -1325,7 +1306,6 @@ function SectionBody({
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string) => void;
   bulkMode?: boolean;
-  onStartTimer?: (title: string) => void;
 }) {
   const [dragOver, setDragOver] = useState(false);
   const [detailEntry, setDetailEntry] = useState<RapidLogEntry | null>(null);
@@ -1400,7 +1380,6 @@ function SectionBody({
           onToggleSelect={onToggleSelect}
           bulkMode={bulkMode}
           onOpenDetail={() => setDetailEntry(t)}
-          onStartTimer={onStartTimer}
         />
       ))}
 
@@ -1447,7 +1426,6 @@ function DayColumn({
   selectedIds,
   onToggleSelect,
   bulkMode,
-  onStartTimer,
 }: {
   offset: number;
   entries: RapidLogEntry[];
@@ -1466,7 +1444,6 @@ function DayColumn({
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string) => void;
   bulkMode?: boolean;
-  onStartTimer?: (title: string) => void;
 }) {
   const info = dayLabel(offset);
   const isToday = offset === 0;
@@ -1681,7 +1658,6 @@ function DayColumn({
                   selectedIds={selectedIds}
                   onToggleSelect={onToggleSelect}
                   bulkMode={bulkMode}
-                  onStartTimer={onStartTimer}
                 />
               )}
             </div>
@@ -1698,21 +1674,38 @@ export default function FlowView() {
   const { entries, addEntry, updateEntry, batchUpdateEntries, deleteEntry, habits, toggleHabit } = useApp();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [parkingCollapsed, setParkingCollapsed] = useState(false); // desktop fold
   const [parkingInput, setParkingInput] = useState('');
   const parkingInputRef = useRef<HTMLInputElement>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [sections, setSections] = useState<DaySection[]>(loadSections);
   const [focusedDay, setFocusedDay] = useState<number | null>(null); // null = show all
 
+  // ── Refresh date-dependent data on tab focus + every 60s (midnight rollover) ──
+  const [dateKey, setDateKey] = useState(todayStr);
+  useEffect(() => {
+    const refresh = () => {
+      setDateKey((prev) => {
+        const now = todayStr();
+        return prev !== now ? now : prev;
+      });
+    };
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refresh();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    const interval = setInterval(refresh, 60_000);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      clearInterval(interval);
+    };
+  }, []);
+
   // ── Dynamic day range (infinite scroll) ─────────────────────────
   const [rangeStart, setRangeStart] = useState(-1);    // earliest offset
   const [rangeEnd, setRangeEnd] = useState(13);         // latest offset (2 weeks ahead)
   const [showDatePicker, setShowDatePicker] = useState(false);
   const datePickerRef = useRef<HTMLInputElement>(null);
-
-  // ── Visual timer ──────────────────────────────────────────────────
-  const [timerTask, setTimerTask] = useState<string | null>(null);
-  const clearTimer = useCallback(() => setTimerTask(null), []);
 
   // Build the offsets array from rangeStart to rangeEnd
   const allDayOffsets = useMemo(() => {
@@ -1783,8 +1776,7 @@ export default function FlowView() {
         info.shortWeekday;
       return { offset, label: chipLabel, isWeekend: info.isWeekend };
     }),
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  []);
+  [dateKey]);
 
   // ── Bulk selection state ────────────────────────────────────────
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -1835,7 +1827,7 @@ export default function FlowView() {
       e.status === 'todo' &&
       (!e.date || e.date <= today)
     );
-  }, [entries]);
+  }, [entries, dateKey]);
 
   // Entries per day column
   const entriesByDay = useMemo(() => {
@@ -1845,8 +1837,7 @@ export default function FlowView() {
       map[offset] = entries.filter(e => e.date === d && e.type !== 'note');
     }
     return map;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entries, allDayOffsets]);
+  }, [entries, allDayOffsets, dateKey]);
 
   // Scroll to today column on mount and when exiting focused mode
   const hasScrolledRef = useRef(false);
@@ -1927,7 +1918,8 @@ export default function FlowView() {
 
   const handleDragEnd = useCallback(() => {
     setDraggingId(null);
-  }, []);
+    clearSelection();
+  }, [clearSelection]);
 
   // Drop onto a section (broad view) — assign to section without exact time
   const handleDropToSection = useCallback((entryId: string, targetSectionId: string, targetDate: string) => {
@@ -2018,122 +2010,156 @@ export default function FlowView() {
         </span>
       </button>
 
-      {/* ─── Sidebar: Parking Lot ──────────────────────────────────────── */}
+      {/* ─── Sidebar: Parking Lot (collapsible on desktop) ───────────── */}
       <aside
-        onDragOver={handleParkingDragOver}
-        onDragLeave={() => setParkingDragOver(false)}
-        onDrop={handleParkingDrop}
+        onDragOver={parkingCollapsed ? undefined : handleParkingDragOver}
+        onDragLeave={parkingCollapsed ? undefined : () => setParkingDragOver(false)}
+        onDrop={parkingCollapsed ? undefined : handleParkingDrop}
         className={`${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } transition-transform duration-300 ease-out fixed md:relative z-40 w-[85vw] md:w-[20%] md:min-w-[260px] md:max-w-[300px] h-full flex flex-col border-r border-wood-light/50 bg-surface-light/90 backdrop-blur-md shadow-soft md:translate-x-0 ${
-          parkingDragOver ? 'ring-2 ring-primary/30 ring-inset' : ''
+        } transition-all duration-300 ease-out fixed md:relative z-40 ${
+          parkingCollapsed
+            ? 'md:w-[48px] md:min-w-[48px] md:max-w-[48px]'
+            : 'md:w-[20%] md:min-w-[260px] md:max-w-[300px]'
+        } w-[85vw] h-full flex flex-col border-r border-wood-light/50 bg-surface-light/90 backdrop-blur-md shadow-soft md:translate-x-0 ${
+          parkingDragOver && !parkingCollapsed ? 'ring-2 ring-primary/30 ring-inset' : ''
         }`}
       >
-        <div className="p-5 pb-2">
-          <h2 className="font-display italic text-lg text-ink mb-0.5">Parking Lot</h2>
-          <p className="font-handwriting text-xs text-bronze">Unscheduled tasks</p>
-        </div>
-
-        {/* Task list */}
-        <div className="flex-1 overflow-y-auto px-4 py-2 space-y-2 no-scrollbar">
-          {parkingLotEntries.length === 0 && (
-            <p className="text-xs font-handwriting text-pencil/40 italic text-center py-6">
-              All tasks scheduled.
-            </p>
-          )}
-
-          {parkingLotEntries.map(entry => (
-            <ParkingLotItem
-              key={entry.id}
-              entry={entry}
-              onSchedule={scheduleToToday}
-              onUpdate={updateEntry}
-              onDelete={deleteEntry}
-              onDragStart={handleDragStartParking}
-              isDragging={draggingId === entry.id}
-            />
-          ))}
-        </div>
-
-        {/* Daily Rituals (habits) — draggable into sections */}
-        {habits.length > 0 && (
-          <div className="px-4 py-2 border-t border-wood-light/20">
-            <p className="text-[10px] font-mono text-pencil uppercase tracking-widest mb-2">Daily Rituals</p>
-            <div className="space-y-1.5">
-              {habits.map(habit => {
-                const todayStr = dateStr(0);
-                const isCompleted = habit.completedDates.includes(todayStr);
-                return (
-                  <div
-                    key={habit.id}
-                    draggable
-                    onDragStart={e => {
-                      // Create a task from this habit when dropped
-                      const tempId = `habit-${habit.id}-${todayStr}`;
-                      const payload: DragPayload = {
-                        entryId: tempId,
-                        entryIds: [tempId],
-                        sourceSection: null,
-                        sourceDate: todayStr,
-                      };
-                      e.dataTransfer.setData('application/json', encodeDrag(payload));
-                      e.dataTransfer.effectAllowed = 'copy';
-                      // Store habit info for drop handler
-                      e.dataTransfer.setData('text/plain', `habit:${habit.id}:${habit.name}`);
-                    }}
-                    className={`flex items-center gap-2 p-2 rounded cursor-grab active:cursor-grabbing transition-all hover:bg-sage/10 ${
-                      isCompleted ? 'opacity-40' : ''
-                    }`}
-                  >
-                    <button
-                      onClick={() => toggleHabit(habit.id, todayStr)}
-                      className="shrink-0"
-                    >
-                      <span className={`material-symbols-outlined text-[16px] ${
-                        isCompleted ? 'text-sage' : 'text-pencil/40 hover:text-primary'
-                      }`}>
-                        {isCompleted ? 'check_circle' : 'radio_button_unchecked'}
-                      </span>
-                    </button>
-                    <span className={`text-xs font-body ${isCompleted ? 'text-pencil line-through' : 'text-ink'}`}>
-                      {habit.name}
-                    </span>
-                    {habit.streak > 0 && (
-                      <span className="text-[9px] font-mono text-pencil/50 ml-auto">{habit.streak}d</span>
-                    )}
-                  </div>
-                );
-              })}
+        {/* Collapsed state on desktop — thin vertical strip */}
+        {parkingCollapsed && (
+          <div className="hidden md:flex flex-col items-center h-full py-4 gap-3">
+            <button
+              onClick={() => setParkingCollapsed(false)}
+              className="text-pencil hover:text-primary transition-colors"
+              title="Expand parking lot"
+            >
+              <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+            </button>
+            <div className="writing-mode-vertical font-mono text-[9px] text-pencil/60 uppercase tracking-[0.2em] rotate-180" style={{ writingMode: 'vertical-rl' }}>
+              Parking Lot
             </div>
+            {parkingLotEntries.length > 0 && (
+              <div className="mt-auto bg-primary/15 text-primary font-mono text-[10px] font-medium rounded-full w-6 h-6 flex items-center justify-center">
+                {parkingLotEntries.length}
+              </div>
+            )}
           </div>
         )}
 
-        {/* Add task input */}
-        <div className="px-4 pb-2">
-          <div className="flex items-center gap-2">
-            <input
-              ref={parkingInputRef}
-              value={parkingInput}
-              onChange={e => setParkingInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') addParkingLotTask(); }}
-              placeholder="Add a task..."
-              className="flex-1 bg-transparent border-b border-dashed border-bronze/40 text-sm font-body text-ink placeholder:text-pencil/40 outline-none py-2 focus:border-primary/60 transition-colors"
-            />
+        {/* Expanded state — always visible on mobile, respects collapse on desktop */}
+        <div className={`${parkingCollapsed ? 'flex md:hidden' : 'flex'} flex-col h-full`}>
+          <div className="p-5 pb-2 flex items-center justify-between">
+            <div>
+              <h2 className="font-display italic text-lg text-ink mb-0.5">Parking Lot</h2>
+              <p className="font-handwriting text-xs text-bronze">Unscheduled tasks</p>
+            </div>
             <button
-              onClick={addParkingLotTask}
-              disabled={!parkingInput.trim()}
-              className="text-bronze hover:text-primary disabled:opacity-30 transition-colors shrink-0"
+              onClick={() => setParkingCollapsed(true)}
+              className="hidden md:flex text-pencil/40 hover:text-pencil transition-colors"
+              title="Collapse parking lot"
             >
-              <span className="material-symbols-outlined text-[20px]">add_circle</span>
+              <span className="material-symbols-outlined text-[18px]">chevron_left</span>
             </button>
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-wood-light/30">
-          <div className="flex items-center gap-2 text-xs font-mono text-pencil">
-            <span className="material-symbols-outlined text-[14px]">inventory_2</span>
-            <span>{parkingLotEntries.length} unscheduled</span>
+          {/* Task list */}
+          <div className="flex-1 overflow-y-auto px-4 py-2 space-y-2 no-scrollbar">
+            {parkingLotEntries.length === 0 && (
+              <p className="text-xs font-handwriting text-pencil/40 italic text-center py-6">
+                All tasks scheduled.
+              </p>
+            )}
+
+            {parkingLotEntries.map(entry => (
+              <ParkingLotItem
+                key={entry.id}
+                entry={entry}
+                onSchedule={scheduleToToday}
+                onUpdate={updateEntry}
+                onDelete={deleteEntry}
+                onDragStart={handleDragStartParking}
+                isDragging={draggingId === entry.id}
+              />
+            ))}
+          </div>
+
+          {/* Daily Rituals (habits) — draggable into sections */}
+          {habits.length > 0 && (
+            <div className="px-4 py-2 border-t border-wood-light/20">
+              <p className="text-[10px] font-mono text-pencil uppercase tracking-widest mb-2">Daily Rituals</p>
+              <div className="space-y-1.5">
+                {habits.map(habit => {
+                  const isCompleted = habit.completedDates.includes(dateKey);
+                  return (
+                    <div
+                      key={habit.id}
+                      draggable
+                      onDragStart={e => {
+                        const tempId = `habit-${habit.id}-${dateKey}`;
+                        const payload: DragPayload = {
+                          entryId: tempId,
+                          entryIds: [tempId],
+                          sourceSection: null,
+                          sourceDate: dateKey,
+                        };
+                        e.dataTransfer.setData('application/json', encodeDrag(payload));
+                        e.dataTransfer.effectAllowed = 'copy';
+                        e.dataTransfer.setData('text/plain', `habit:${habit.id}:${habit.name}`);
+                      }}
+                      className={`flex items-center gap-2 p-2 rounded cursor-grab active:cursor-grabbing transition-all hover:bg-sage/10 ${
+                        isCompleted ? 'opacity-40' : ''
+                      }`}
+                    >
+                      <button
+                        onClick={() => toggleHabit(habit.id, dateKey)}
+                        className="shrink-0"
+                      >
+                        <span className={`material-symbols-outlined text-[16px] ${
+                          isCompleted ? 'text-sage' : 'text-pencil/40 hover:text-primary'
+                        }`}>
+                          {isCompleted ? 'check_circle' : 'radio_button_unchecked'}
+                        </span>
+                      </button>
+                      <span className={`text-xs font-body ${isCompleted ? 'text-pencil line-through' : 'text-ink'}`}>
+                        {habit.name}
+                      </span>
+                      {habit.streak > 0 && (
+                        <span className="text-[9px] font-mono text-pencil/50 ml-auto">{habit.streak}d</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Add task input */}
+          <div className="px-4 pb-2">
+            <div className="flex items-center gap-2">
+              <input
+                ref={parkingInputRef}
+                value={parkingInput}
+                onChange={e => setParkingInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') addParkingLotTask(); }}
+                placeholder="Add a task..."
+                className="flex-1 bg-transparent border-b border-dashed border-bronze/40 text-sm font-body text-ink placeholder:text-pencil/40 outline-none py-2 focus:border-primary/60 transition-colors"
+              />
+              <button
+                onClick={addParkingLotTask}
+                disabled={!parkingInput.trim()}
+                className="text-bronze hover:text-primary disabled:opacity-30 transition-colors shrink-0"
+              >
+                <span className="material-symbols-outlined text-[20px]">add_circle</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="p-4 border-t border-wood-light/30">
+            <div className="flex items-center gap-2 text-xs font-mono text-pencil">
+              <span className="material-symbols-outlined text-[14px]">inventory_2</span>
+              <span>{parkingLotEntries.length} unscheduled</span>
+            </div>
           </div>
         </div>
       </aside>
@@ -2325,7 +2351,6 @@ export default function FlowView() {
                 selectedIds={selectedIds}
                 onToggleSelect={toggleSelect}
                 bulkMode={bulkMode}
-                onStartTimer={title => setTimerTask(title)}
               />
             ))}
 
@@ -2341,13 +2366,6 @@ export default function FlowView() {
         </div>
       </div>
 
-      {/* Visual Timer popup */}
-      {timerTask && (
-        <VisualTimer
-          taskTitle={timerTask}
-          onClose={clearTimer}
-        />
-      )}
     </div>
   );
 }

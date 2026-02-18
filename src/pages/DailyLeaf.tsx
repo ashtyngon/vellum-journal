@@ -10,6 +10,7 @@ import ProcrastinationUnpacker from '../components/ProcrastinationUnpacker';
 import DayRecovery from '../components/DayRecovery';
 import DayDebriefComponent from '../components/DayDebrief';
 import { parseNaturalEntry } from '../lib/nlParser';
+import { todayStr, dayAfter, formatLocalDate } from '../lib/dateUtils';
 import type { RapidLogEntry, JournalStep, JournalEntry } from '../context/AppContext';
 import type { JournalMethod } from '../lib/journalMethods';
 
@@ -36,15 +37,7 @@ const ESTIMATED_TASK_HOURS = 0.75; // ~45 min per task average
 
 /* ── Helpers ──────────────────────────────────────────────────────── */
 
-function todayStr(): string {
-  return new Date().toISOString().split('T')[0];
-}
-
-function tomorrowStr(): string {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  return d.toISOString().split('T')[0];
-}
+/* todayStr imported from lib/dateUtils (local timezone safe) */
 
 function isEvening(): boolean {
   return new Date().getHours() >= 18;
@@ -55,11 +48,9 @@ function isAfterNoon(): boolean {
 }
 
 
-function formatEventDate(dateStr: string): string {
-  const today = todayStr();
-  const tomorrow = tomorrowStr();
-  if (dateStr === today) return 'Today';
-  if (dateStr === tomorrow) return 'Tomorrow';
+function formatEventDate(dateStr: string, todayDate: string, tomorrowDate: string): string {
+  if (dateStr === todayDate) return 'Today';
+  if (dateStr === tomorrowDate) return 'Tomorrow';
   return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
     weekday: 'short',
     month: 'short',
@@ -83,23 +74,47 @@ export default function DailyLeaf() {
     saveDebrief,
   } = useApp();
 
-  /* ── Date strings ────────────────────────────────────────────── */
+  /* ── Date & mode (auto-refresh on tab focus) ────────────────── */
 
-  const today = todayStr();
-  const tomorrow = tomorrowStr();
+  const [dateKey, setDateKey] = useState(todayStr);
+  const [mode, setMode] = useState<'morning' | 'evening'>(
+    isEvening() ? 'evening' : 'morning',
+  );
 
-  const todayDisplay = new Date().toLocaleDateString('en-US', {
+  // Refresh dateKey + mode on tab focus AND every 60s (catches midnight rollover)
+  useEffect(() => {
+    const refresh = () => {
+      setDateKey((prev) => {
+        const now = todayStr();
+        return prev !== now ? now : prev;
+      });
+      setMode((prev) => {
+        const should = isEvening() ? 'evening' : 'morning';
+        return prev !== should ? should : prev;
+      });
+    };
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refresh();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    const interval = setInterval(refresh, 60_000);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Derive today/tomorrow from dateKey — single source of truth.
+  // Never call todayStr()/tomorrowStr() separately; that creates divergence.
+  const today = dateKey;
+  const tomorrow = dayAfter(dateKey);
+
+  const todayDisplay = new Date(dateKey + 'T12:00:00').toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
   });
-  const yearStr = new Date().getFullYear();
-
-  /* ── Mode: morning vs evening ────────────────────────────────── */
-
-  const [mode, setMode] = useState<'morning' | 'evening'>(
-    isEvening() ? 'evening' : 'morning',
-  );
+  const yearStr = new Date(dateKey + 'T12:00:00').getFullYear();
 
   /* ── Intention (persisted per-date in localStorage) ──────────── */
 
@@ -111,6 +126,11 @@ export default function DailyLeaf() {
   useEffect(() => {
     localStorage.setItem(intentionKey, intention);
   }, [intention, intentionKey]);
+
+  // Re-read intention from localStorage when date rolls over
+  useEffect(() => {
+    setIntention(localStorage.getItem(intentionKey) ?? '');
+  }, [intentionKey]);
 
   /* ── Rapid log input state ───────────────────────────────────── */
 
@@ -146,6 +166,11 @@ export default function DailyLeaf() {
   useEffect(() => {
     if (tomorrowIntention) localStorage.setItem(tomorrowIntentionKey, tomorrowIntention);
   }, [tomorrowIntention, tomorrowIntentionKey]);
+
+  // Re-read tomorrow intention from localStorage when date rolls over
+  useEffect(() => {
+    setTomorrowIntention(localStorage.getItem(tomorrowIntentionKey) ?? '');
+  }, [tomorrowIntentionKey]);
 
   /* ── Focus edit input on editing ─────────────────────────────── */
 
@@ -183,9 +208,7 @@ export default function DailyLeaf() {
   );
 
   const upcomingEvents = useMemo(() => {
-    const sevenDaysOut = new Date();
-    sevenDaysOut.setDate(sevenDaysOut.getDate() + 7);
-    const cutoff = sevenDaysOut.toISOString().split('T')[0];
+    const cutoff = formatLocalDate((() => { const d = new Date(dateKey + 'T12:00:00'); d.setDate(d.getDate() + 7); return d; })());
     return entries
       .filter((e) => e.type === 'event' && e.date >= today && e.date <= cutoff)
       .sort((a, b) => {
@@ -368,7 +391,7 @@ export default function DailyLeaf() {
 
       const entry: JournalEntry = {
         id: Date.now().toString(),
-        date: today,
+        date: dateKey,
         title: activeMethod.name,
         content,
         method: activeMethod.id,
@@ -377,7 +400,7 @@ export default function DailyLeaf() {
       addJournalEntry(entry);
       setActiveMethod(null);
     },
-    [activeMethod, today, addJournalEntry],
+    [activeMethod, dateKey, addJournalEntry],
   );
 
   /* ── Handlers: Confetti ──────────────────────────────────────── */
@@ -393,33 +416,40 @@ export default function DailyLeaf() {
 
   /* ── Handlers: Debrief save ──────────────────────────────────── */
 
-  const todayDebriefExists = debriefs.some(d => d.date === today);
+  const todayDebriefExists = debriefs.some(d => d.date === dateKey);
   const [debriefDismissed, setDebriefDismissed] = useState(false);
-  const debriefHidden = debriefDismissed || todayDebriefExists;
+  const [redoDebrief, setRedoDebrief] = useState(false);
+  const debriefHidden = (debriefDismissed || todayDebriefExists) && !redoDebrief;
+
+  // Reset debrief UI state when the date rolls over
+  useEffect(() => {
+    setDebriefDismissed(false);
+    setRedoDebrief(false);
+  }, [dateKey]);
 
   /* ── Bullet rendering helpers ────────────────────────────────── */
 
   const bulletForEntry = (entry: RapidLogEntry) => {
     if (entry.type === 'event') {
       return (
-        <span className="inline-block size-2.5 rounded-full border-[1.5px] border-ink/70 flex-shrink-0 mt-[7px]" />
+        <span className="inline-block size-3 rounded-full border-2 border-ink/60 flex-shrink-0 mt-[7px]" />
       );
     }
     if (entry.type === 'note') {
       return (
-        <span className="inline-block w-3 h-[1.5px] bg-ink/50 flex-shrink-0 mt-[11px]" />
+        <span className="inline-block w-4 h-[2px] bg-ink/40 flex-shrink-0 mt-[14px]" />
       );
     }
     // Task
     if (entry.status === 'done') {
       return (
-        <span className="text-primary font-bold text-sm flex-shrink-0 mt-[3px] select-none">
+        <span className="text-primary font-bold text-lg flex-shrink-0 mt-[2px] select-none">
           &times;
         </span>
       );
     }
     return (
-      <span className="inline-block size-[6px] rounded-full bg-ink flex-shrink-0 mt-[9px]" />
+      <span className="inline-block size-2 rounded-full bg-ink flex-shrink-0 mt-[12px]" />
     );
   };
 
@@ -450,150 +480,216 @@ export default function DailyLeaf() {
 
       {/* ── Page ────────────────────────────────────────────────────── */}
 
-      <div className="flex-1 flex justify-center items-start pt-8 sm:pt-12 pb-20 px-3 sm:px-6 bg-background-light overflow-y-auto">
-        <article className="relative w-full max-w-3xl min-h-[700px] bg-paper shadow-paper hover:shadow-lift transition-shadow duration-500 rounded-sm p-6 sm:p-10 md:p-12 flex flex-col gap-6 group/paper">
-
-          {/* ── Header: Date + Mode Toggle ───────────────────────────── */}
-          <header className="space-y-5 border-b border-wood-light/30 pb-7">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-2">
+      <div className="flex-1 overflow-y-auto bg-background-light">
+        {/* ── Header strip (full width) ──────────────────────────── */}
+        <header className="px-6 sm:px-10 pt-6 pb-4 border-b border-wood-light/15">
+          <div className="max-w-[1400px] mx-auto flex items-end justify-between gap-4">
+            <div>
+              <span className="font-mono text-[11px] text-pencil tracking-[0.2em] uppercase block mb-1">
+                {yearStr}
+              </span>
               <h1 className="font-display italic text-3xl sm:text-4xl text-ink leading-tight">
                 {todayDisplay}
               </h1>
-              <div className="flex items-center gap-1">
-                <span className="font-mono text-[11px] text-pencil tracking-widest uppercase mr-3">
-                  {yearStr}
-                </span>
-                {/* Mode toggle pills */}
-                <div className="flex rounded-full border border-wood-light/50 overflow-hidden">
-                  <button
-                    onClick={() => setMode('morning')}
-                    className={`px-3 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors ${
-                      mode === 'morning'
-                        ? 'bg-primary/15 text-primary font-medium'
-                        : 'text-pencil hover:bg-surface-light'
-                    }`}
-                  >
-                    Morning
-                  </button>
-                  <button
-                    onClick={() => setMode('evening')}
-                    className={`px-3 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors ${
-                      mode === 'evening'
-                        ? 'bg-primary/15 text-primary font-medium'
-                        : 'text-pencil hover:bg-surface-light'
-                    }`}
-                  >
-                    Evening
-                  </button>
+            </div>
+            <div className="flex items-center gap-3">
+              {/* Progress */}
+              {totalTaskCount > 0 && (
+                <div className="flex items-center gap-2">
+                  <div className="w-24 h-[3px] bg-wood-light/30 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary/70 rounded-full transition-all duration-700 ease-out"
+                      style={{ width: `${(completedCount / totalTaskCount) * 100}%` }}
+                    />
+                  </div>
+                  <span className="font-mono text-xs text-pencil tabular-nums">
+                    {completedCount}/{totalTaskCount}
+                  </span>
                 </div>
+              )}
+              {/* Mode toggle */}
+              <div className="flex rounded-full border border-wood-light/40 overflow-hidden">
+                <button
+                  onClick={() => setMode('morning')}
+                  className={`px-3 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors ${
+                    mode === 'morning'
+                      ? 'bg-primary/15 text-primary font-medium'
+                      : 'text-pencil hover:bg-surface-light'
+                  }`}
+                >
+                  Morning
+                </button>
+                <button
+                  onClick={() => setMode('evening')}
+                  className={`px-3 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors ${
+                    mode === 'evening'
+                      ? 'bg-primary/15 text-primary font-medium'
+                      : 'text-pencil hover:bg-surface-light'
+                  }`}
+                >
+                  Evening
+                </button>
               </div>
             </div>
+          </div>
+        </header>
 
-            {/* Progress bar */}
-            {totalTaskCount > 0 && (
-              <div className="flex items-center gap-3">
-                <div className="flex-1 h-[2px] bg-wood-light/40 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary/60 rounded-full transition-all duration-700 ease-out"
-                    style={{
-                      width: `${totalTaskCount > 0 ? (completedCount / totalTaskCount) * 100 : 0}%`,
-                    }}
-                  />
-                </div>
-                <span className="font-mono text-[10px] text-pencil whitespace-nowrap">
-                  {completedCount}/{totalTaskCount}
-                </span>
-              </div>
-            )}
-          </header>
+        {/* ══════════════════════════════════════════════════════════
+           MORNING MODE — 3-column layout
+           ══════════════════════════════════════════════════════════ */}
+        {mode === 'morning' && (
+          <div className="max-w-[1400px] mx-auto px-6 sm:px-10 py-6 grid grid-cols-1 lg:grid-cols-[260px_1fr_260px] xl:grid-cols-[300px_1fr_300px] gap-6 items-start">
 
-          {/* ══════════════════════════════════════════════════════════
-             MORNING MODE
-             ══════════════════════════════════════════════════════════ */}
-          {mode === 'morning' && (
-            <>
-              {/* ── Morning Prompt ───────────────────────────────────── */}
-              <section className="space-y-2">
-                <p className="font-body text-base text-ink/80 leading-relaxed">
+            {/* ── LEFT SIDEBAR ────────────────────────────────────── */}
+            <aside className="hidden lg:flex flex-col gap-5 sticky top-6">
+              {/* Morning Prompt */}
+              <div className="bg-paper rounded-xl p-5 shadow-soft border border-wood-light/15">
+                <p className="font-body text-sm text-ink/70 leading-relaxed mb-2">
                   {morningPrompt.contextual}
                 </p>
-                <p className="font-handwriting text-sm text-pencil/70 italic">
+                <p className="font-handwriting text-sm text-pencil/50 italic">
                   {morningPrompt.inspirational}
                 </p>
-              </section>
+              </div>
 
-              {/* ── Today's Intention ────────────────────────────────── */}
-              <section className="space-y-1.5">
-                <label className="block font-handwriting text-base text-accent">
+              {/* Upcoming Events */}
+              {upcomingEvents.length > 0 && (
+                <div className="bg-paper rounded-xl p-5 shadow-soft border border-wood-light/15">
+                  <h3 className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em] mb-3">
+                    Upcoming Events
+                  </h3>
+                  <div className="space-y-2">
+                    {upcomingEvents.slice(0, 5).map((ev) => (
+                      <div key={ev.id} className="flex items-baseline gap-2">
+                        <span className="font-mono text-[10px] text-primary/70 whitespace-nowrap">
+                          {formatEventDate(ev.date, today, tomorrow)}
+                          {ev.time && ` ${ev.time}`}
+                        </span>
+                        <span className="font-body text-sm text-ink/80 truncate">{ev.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Quick links */}
+              <div className="flex flex-col gap-2">
+                <Link
+                  to="/flow"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-paper border border-wood-light/15 shadow-soft text-sm font-body text-ink hover:text-primary hover:border-primary/20 transition-all group/link"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-pencil group-hover/link:text-primary transition-colors">calendar_view_day</span>
+                  Flow View
+                </Link>
+                <Link
+                  to="/migration"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-paper border border-wood-light/15 shadow-soft text-sm font-body text-ink hover:text-tension hover:border-tension/20 transition-all group/link"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-pencil group-hover/link:text-tension transition-colors">inbox</span>
+                  Migration Station
+                </Link>
+              </div>
+            </aside>
+
+            {/* ── CENTER: Main journal ────────────────────────────── */}
+            <main className="min-w-0">
+              {/* Mobile-only: Morning prompt */}
+              <div className="lg:hidden mb-4">
+                <p className="font-body text-base text-ink/70 leading-relaxed">
+                  {morningPrompt.contextual}
+                </p>
+                <p className="font-handwriting text-sm text-pencil/50 italic mt-1">
+                  {morningPrompt.inspirational}
+                </p>
+              </div>
+
+              {/* Intention */}
+              <div className="mb-5">
+                <label className="block font-mono text-[10px] text-accent uppercase tracking-[0.15em] mb-1.5">
                   Today&rsquo;s Intention
                 </label>
                 <div className="relative group/input">
                   <input
-                    className="w-full bg-transparent border-none p-0 text-xl sm:text-2xl font-display text-ink placeholder:text-pencil/40 focus:ring-0 focus:outline-none italic transition-all"
+                    className="w-full bg-transparent border-none p-0 text-xl sm:text-2xl font-display text-ink placeholder:text-pencil/30 focus:ring-0 focus:outline-none italic"
                     placeholder="What is the one thing that matters today?"
                     type="text"
                     value={intention}
                     onChange={(e) => setIntention(e.target.value)}
                   />
-                  <div className="absolute bottom-0 left-0 w-0 h-[1px] bg-primary/30 group-focus-within/input:w-full transition-all duration-500" />
+                  <div className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-primary/40 group-focus-within/input:w-full transition-all duration-500" />
                 </div>
-              </section>
+              </div>
 
-              {/* ── Day Recovery Banner ──────────────────────────────── */}
+              {/* Day Recovery */}
               {showDayRecovery && (
-                <DayRecovery
-                  entries={entries}
-                  onDismiss={() => setShowDayRecovery(false)}
-                />
+                <div className="mb-4">
+                  <DayRecovery entries={entries} onDismiss={() => setShowDayRecovery(false)} />
+                </div>
               )}
-
-              {/* Reset My Day button (when recovery not auto-showing) */}
               {!showDayRecovery && todayTasks.length > 0 && (
                 <button
                   onClick={() => setShowDayRecovery(true)}
-                  className="self-start font-mono text-[10px] text-pencil/60 hover:text-primary uppercase tracking-widest transition-colors"
+                  className="mb-3 font-mono text-[10px] text-pencil/50 hover:text-primary uppercase tracking-widest transition-colors"
                 >
                   Reset My Day
                 </button>
               )}
 
-              {/* ── Capacity Warning ────────────────────────────────── */}
+              {/* Capacity Warning */}
               {capacityWarning && (
-                <div className="bg-bronze/10 border border-bronze/20 rounded-xl px-5 py-3 text-sm font-body text-ink/80">
-                  You have{' '}
-                  <span className="font-semibold">{capacityWarning.count} tasks</span>{' '}
-                  (~{capacityWarning.hours}hrs of work). That&rsquo;s ambitious
-                  &mdash; could you pick your top 3?
+                <div className="mb-4 bg-bronze/10 border border-bronze/20 rounded-lg px-4 py-3 text-sm font-body text-ink/80">
+                  You have <span className="font-semibold">{capacityWarning.count} tasks</span>{' '}
+                  (~{capacityWarning.hours}hrs). Could you pick your top 3?
                 </div>
               )}
 
-              {/* ── Unified Rapid Log ───────────────────────────────── */}
-              <section className="flex-1 space-y-0.5">
+              {/* ── Wins Banner (in-your-face) ────────────────── */}
+              {todaysCompletedTasks.length > 0 && (
+                <div className="mb-4 bg-gradient-to-r from-primary/5 via-primary/8 to-primary/5 border border-primary/15 rounded-xl px-5 py-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className="font-mono text-2xl font-bold text-primary tabular-nums">{todaysCompletedTasks.length}</span>
+                      <span className="font-body text-sm text-ink/70">
+                        {todaysCompletedTasks.length === 1 ? 'win today' : 'wins today'}
+                      </span>
+                    </div>
+                    <button onClick={fireConfetti} className="text-pencil hover:text-primary transition-colors" title="Celebrate!">
+                      <span className="material-symbols-outlined text-[20px]">celebration</span>
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    {todaysCompletedTasks.slice(0, 5).map((task) => (
+                      <span key={task.id} className="text-sm font-body text-ink/50 line-through decoration-primary/30">
+                        {task.title}
+                      </span>
+                    ))}
+                    {todaysCompletedTasks.length > 5 && (
+                      <span className="text-xs font-mono text-pencil/50">+{todaysCompletedTasks.length - 5} more</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Rapid Log ─────────────────────────────────────── */}
+              <div className="bg-paper rounded-xl p-5 sm:p-6 shadow-soft border border-wood-light/15">
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="font-header italic text-lg text-ink-light">
+                  <h2 className="font-header italic text-xl text-ink/70">
                     Rapid Log
                   </h2>
                   <button
                     onClick={() => setShowSignifierHelp((v) => !v)}
-                    className="font-mono text-[10px] text-pencil/60 hover:text-primary transition-colors uppercase tracking-widest"
-                    title="BuJo signifier key"
+                    className="font-mono text-[10px] text-pencil/50 hover:text-primary transition-colors uppercase tracking-widest"
                   >
                     Key
                   </button>
                 </div>
 
-                {/* Signifier tooltip */}
                 {showSignifierHelp && (
-                  <div className="mb-4 px-4 py-3 bg-surface-light border border-wood-light/30 rounded-xl">
+                  <div className="mb-4 px-4 py-3 bg-surface-light border border-wood-light/20 rounded-lg">
                     <div className="flex flex-wrap gap-x-5 gap-y-1">
                       {SIGNIFIER_TOOLTIPS.map((s) => (
-                        <span
-                          key={s.symbol}
-                          className="font-mono text-xs text-pencil"
-                        >
-                          <span className="text-ink font-semibold mr-1">
-                            {s.symbol}
-                          </span>
+                        <span key={s.symbol} className="font-mono text-xs text-pencil">
+                          <span className="text-ink font-semibold mr-1">{s.symbol}</span>
                           {s.meaning}
                         </span>
                       ))}
@@ -601,157 +697,119 @@ export default function DailyLeaf() {
                   </div>
                 )}
 
-                {/* Empty state */}
                 {todayEntries.length === 0 && (
-                  <p className="text-pencil/60 font-body text-sm italic py-4 text-center">
-                    No entries yet. Add one below to get started.
+                  <p className="text-pencil/50 font-body text-sm italic py-6 text-center">
+                    No entries yet. Add one below.
                   </p>
                 )}
 
                 {/* Entry list */}
-                {todayEntries.map((entry) => {
-                  const isEditing = editingEntryId === entry.id;
-                  const isDone = entry.type === 'task' && entry.status === 'done';
-                  const isTask = entry.type === 'task';
-                  const isNote = entry.type === 'note';
-                  const isEvent = entry.type === 'event';
-                  const priorityStyle = entry.priority
-                    ? PRIORITY_STYLES[entry.priority]
-                    : null;
+                <div className="space-y-0.5">
+                  {todayEntries.map((entry) => {
+                    const isEditing = editingEntryId === entry.id;
+                    const isDone = entry.type === 'task' && entry.status === 'done';
+                    const isTask = entry.type === 'task';
+                    const isNote = entry.type === 'note';
+                    const isEvent = entry.type === 'event';
+                    const priorityStyle = entry.priority ? PRIORITY_STYLES[entry.priority] : null;
 
-                  return (
-                    <div
-                      key={entry.id}
-                      className="group/entry flex items-start gap-3 py-2 hover:bg-surface-light/60 -mx-3 px-3 rounded transition-colors relative"
-                    >
-                      {/* Bullet / toggle */}
-                      {isTask ? (
-                        <button
-                          onClick={() => handleToggleTask(entry.id)}
-                          className="flex-shrink-0 focus:outline-none mt-0.5 hover:scale-125 transition-transform"
-                          aria-label={isDone ? 'Mark as todo' : 'Mark as done'}
-                        >
-                          {bulletForEntry(entry)}
-                        </button>
-                      ) : (
-                        <div className="flex-shrink-0">
-                          {bulletForEntry(entry)}
-                        </div>
-                      )}
-
-                      {/* Title area */}
-                      <div className="flex-1 min-w-0 flex items-baseline gap-2">
-                        {isEditing ? (
-                          <input
-                            ref={editInputRef}
-                            className="w-full bg-transparent border-none p-0 text-lg font-body text-ink focus:ring-0 focus:outline-none border-b border-primary/30"
-                            value={editingValue}
-                            onChange={(e) => setEditingValue(e.target.value)}
-                            onKeyDown={handleEditKeyDown}
-                            onBlur={commitEdit}
-                          />
-                        ) : (
+                    return (
+                      <div
+                        key={entry.id}
+                        className="group/entry flex items-start gap-3 py-2 hover:bg-surface-light/60 -mx-3 px-3 rounded transition-colors"
+                      >
+                        {isTask ? (
                           <button
-                            className={`text-left text-lg leading-snug font-body transition-colors ${
-                              isDone
-                                ? 'line-through decoration-pencil decoration-1 text-ink/40'
-                                : isNote
-                                  ? 'text-ink/70 italic'
-                                  : 'text-ink hover:text-ink-light'
-                            }`}
-                            onClick={() => startEditing(entry.id, entry.title)}
-                            title="Click to edit"
+                            onClick={() => handleToggleTask(entry.id)}
+                            className="flex-shrink-0 focus:outline-none mt-0.5 hover:scale-125 transition-transform"
                           >
-                            {entry.title}
+                            {bulletForEntry(entry)}
                           </button>
+                        ) : (
+                          <div className="flex-shrink-0">{bulletForEntry(entry)}</div>
                         )}
 
-                        {/* Priority dot (tasks only) */}
-                        {!isEditing && isTask && priorityStyle && (
-                          <span
-                            className={`flex-shrink-0 inline-block size-1.5 rounded-full ${priorityStyle.dot} opacity-60`}
-                            title={priorityStyle.label + ' priority'}
-                          />
-                        )}
-
-                        {/* Time badge (events) */}
-                        {!isEditing && isEvent && entry.time && (
-                          <span className="flex-shrink-0 font-mono text-[10px] text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded">
-                            {entry.time}
-                          </span>
-                        )}
-
-                        {/* Moved count dots */}
-                        {!isEditing && isTask && (entry.movedCount ?? 0) > 0 && (
-                          <span
-                            className="flex gap-0.5 ml-1"
-                            title={`Moved ${entry.movedCount} time(s)`}
-                          >
-                            {Array.from({
-                              length: entry.movedCount ?? 0,
-                            }).map((_, i) => (
-                              <span
-                                key={i}
-                                className="inline-block size-1.5 rounded-full bg-tension/40"
-                              />
-                            ))}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Tags */}
-                      {!isEditing && entry.tags && entry.tags.length > 0 && (
-                        <span className="hidden sm:inline-block font-mono text-[10px] text-pencil/70 bg-wood-light/30 px-1.5 py-0.5 rounded mt-0.5 flex-shrink-0">
-                          {entry.tags[0]}
-                        </span>
-                      )}
-
-                      {/* Hover actions */}
-                      {!isEditing && (
-                        <div className="flex items-center gap-1 opacity-0 group-hover/entry:opacity-100 transition-opacity flex-shrink-0">
-                          {/* Stuck? button (tasks only, not done) */}
-                          {isTask && !isDone && (
+                        <div className="flex-1 min-w-0 flex items-baseline gap-2">
+                          {isEditing ? (
+                            <input
+                              ref={editInputRef}
+                              className="w-full bg-transparent border-none p-0 text-base font-body text-ink focus:ring-0 focus:outline-none"
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              onKeyDown={handleEditKeyDown}
+                              onBlur={commitEdit}
+                            />
+                          ) : (
                             <button
-                              onClick={() => setStuckTask(entry)}
-                              className="font-mono text-[9px] text-pencil hover:text-primary bg-wood-light/30 hover:bg-primary/10 px-1.5 py-0.5 rounded transition-colors focus:outline-none uppercase tracking-wider"
-                              title="Stuck on this task?"
+                              className={`text-left text-base leading-snug font-body transition-colors ${
+                                isDone ? 'line-through decoration-pencil/40 text-ink/35'
+                                  : isNote ? 'text-ink/60 italic'
+                                  : 'text-ink hover:text-ink-light'
+                              }`}
+                              onClick={() => startEditing(entry.id, entry.title)}
                             >
-                              Stuck?
+                              {entry.title}
                             </button>
                           )}
-                          <Link
-                            to="/migration"
-                            className="text-pencil hover:text-tension transition-colors"
-                            title="Migrate"
-                          >
-                            <span className="material-symbols-outlined text-[16px]">
-                              east
+                          {!isEditing && isTask && priorityStyle && (
+                            <span className={`flex-shrink-0 inline-block size-1.5 rounded-full ${priorityStyle.dot} opacity-50`} />
+                          )}
+                          {!isEditing && isEvent && entry.time && (
+                            <span className="flex-shrink-0 font-mono text-[10px] text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded">{entry.time}</span>
+                          )}
+                          {!isEditing && isTask && entry.timeBlock && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); updateEntry(entry.id, { timeBlock: undefined }); }}
+                              className="flex-shrink-0 font-mono text-[10px] text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded hover:bg-primary/20 hover:line-through transition-all group/unpin"
+                              title="Click to unpin from time"
+                            >
+                              {entry.timeBlock}
+                              <span className="material-symbols-outlined text-[10px] ml-0.5 opacity-0 group-hover/unpin:opacity-100 transition-opacity">close</span>
+                            </button>
+                          )}
+                          {!isEditing && isTask && (entry.movedCount ?? 0) > 0 && (
+                            <span className="flex gap-0.5 ml-1" title={`Moved ${entry.movedCount}x`}>
+                              {Array.from({ length: entry.movedCount ?? 0 }).map((_, i) => (
+                                <span key={i} className="inline-block size-1.5 rounded-full bg-tension/40" />
+                              ))}
                             </span>
-                          </Link>
-                          <button
-                            onClick={() => deleteEntry(entry.id)}
-                            className="text-pencil hover:text-tension transition-colors focus:outline-none"
-                            title="Delete"
-                          >
-                            <span className="material-symbols-outlined text-[16px]">
-                              delete
-                            </span>
-                          </button>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
 
-                {/* ── Add New Entry Input ────────────────────────────── */}
+                        {!isEditing && entry.tags && entry.tags.length > 0 && (
+                          <span className="hidden sm:inline-block font-mono text-[10px] text-pencil/60 bg-wood-light/20 px-1.5 py-0.5 rounded flex-shrink-0">
+                            {entry.tags[0]}
+                          </span>
+                        )}
+
+                        {!isEditing && (
+                          <div className="flex items-center gap-1 opacity-0 group-hover/entry:opacity-100 transition-opacity flex-shrink-0">
+                            {isTask && !isDone && (
+                              <button onClick={() => setStuckTask(entry)} className="font-mono text-[9px] text-pencil hover:text-primary bg-wood-light/20 hover:bg-primary/10 px-1.5 py-0.5 rounded transition-colors uppercase tracking-wider">
+                                Stuck?
+                              </button>
+                            )}
+                            <Link to="/migration" className="text-pencil hover:text-tension transition-colors">
+                              <span className="material-symbols-outlined text-[16px]">east</span>
+                            </Link>
+                            <button onClick={() => deleteEntry(entry.id)} className="text-pencil hover:text-tension transition-colors">
+                              <span className="material-symbols-outlined text-[16px]">delete</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Add new entry */}
                 <div className="mt-4 space-y-2">
-                  {/* Type selector pills */}
                   <div className="flex items-center gap-1">
                     {TYPE_PILLS.map((pill) => (
                       <button
                         key={pill.type}
                         onClick={() => setEntryType(pill.type)}
-                        className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-mono text-[11px] uppercase tracking-wider transition-all ${
+                        className={`flex items-center gap-1 px-3 py-1 rounded-full font-mono text-[11px] uppercase tracking-wider transition-all ${
                           entryType === pill.type
                             ? 'bg-primary/15 text-primary font-medium border border-primary/30'
                             : 'text-pencil hover:bg-surface-light border border-transparent'
@@ -763,268 +821,382 @@ export default function DailyLeaf() {
                     ))}
                   </div>
 
-                  {/* Input row */}
-                  <div className="flex items-center gap-3 py-2 -mx-3 px-3 rounded transition-colors opacity-60 hover:opacity-100 focus-within:opacity-100">
-                    <div className="mt-0.5 text-primary/60 flex-shrink-0">
-                      <span className="material-symbols-outlined text-[18px]">
-                        add
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <input
-                        ref={newInputRef}
-                        className="w-full bg-transparent border-none p-0 text-lg font-body text-ink placeholder:text-pencil/50 focus:ring-0 focus:outline-none"
-                        placeholder={placeholder}
-                        type="text"
-                        value={newTitle}
-                        onChange={(e) => setNewTitle(e.target.value)}
-                        onKeyDown={handleAddEntry}
-                      />
-                    </div>
-
-                    {/* Event time input */}
+                  <div className="flex items-center gap-3 py-2 px-3 rounded-lg bg-surface-light/50 border border-wood-light/15 focus-within:border-primary/30 transition-all">
+                    <span className="material-symbols-outlined text-lg text-primary/40">add</span>
+                    <input
+                      ref={newInputRef}
+                      className="flex-1 min-w-0 bg-transparent border-none p-0 text-base font-body text-ink placeholder:text-pencil/40 focus:ring-0 focus:outline-none"
+                      placeholder={placeholder}
+                      type="text"
+                      value={newTitle}
+                      onChange={(e) => setNewTitle(e.target.value)}
+                      onKeyDown={handleAddEntry}
+                    />
                     {entryType === 'event' && (
                       <input
                         type="time"
                         value={newEventTime}
                         onChange={(e) => setNewEventTime(e.target.value)}
-                        className="font-mono text-xs text-ink bg-surface-light border border-wood-light/50 rounded px-2 py-1 focus:outline-none focus:border-primary/30 flex-shrink-0"
+                        className="font-mono text-xs text-ink bg-paper border border-wood-light/30 rounded px-2 py-1 focus:outline-none focus:border-primary/30 flex-shrink-0"
                       />
                     )}
-
-                    {/* Priority selector (tasks only) */}
                     {entryType === 'task' && (
                       <button
                         onClick={cyclePriority}
-                        className="flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-wood-light/50 hover:border-primary/30 transition-colors focus:outline-none flex-shrink-0"
-                        title={`Priority: ${PRIORITY_STYLES[newPriority].label}. Click to cycle.`}
+                        className="flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-wood-light/30 hover:border-primary/30 transition-colors flex-shrink-0"
                       >
-                        <span
-                          className={`inline-block size-2 rounded-full ${PRIORITY_STYLES[newPriority].dot}`}
-                        />
-                        <span className="font-mono text-[10px] text-pencil uppercase tracking-wider">
-                          {PRIORITY_STYLES[newPriority].label}
-                        </span>
+                        <span className={`inline-block size-2 rounded-full ${PRIORITY_STYLES[newPriority].dot}`} />
+                        <span className="font-mono text-[10px] text-pencil uppercase">{PRIORITY_STYLES[newPriority].label}</span>
                       </button>
                     )}
                   </div>
                 </div>
-              </section>
+              </div>
 
-              {/* ── Upcoming Events Strip ────────────────────────────── */}
-              {upcomingEvents.length > 0 && (
-                <section className="border-t border-wood-light/30 pt-6">
-                  <h2 className="font-header italic text-lg text-ink-light mb-3">
-                    Upcoming Events
-                  </h2>
-                  <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-thin scrollbar-thumb-wood-light/40">
+              {/* Mobile-only: Events + Habits inline */}
+              <div className="lg:hidden mt-5 space-y-4">
+                {upcomingEvents.length > 0 && (
+                  <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-wood-light/40">
                     {upcomingEvents.map((ev) => (
-                      <div
-                        key={ev.id}
-                        className="flex-shrink-0 bg-surface-light border border-wood-light/30 rounded-xl px-4 py-2.5 min-w-[160px] max-w-[220px]"
-                      >
+                      <div key={ev.id} className="flex-shrink-0 bg-paper border border-wood-light/20 rounded-lg px-4 py-2.5 min-w-[160px]">
                         <p className="font-mono text-[10px] text-primary uppercase tracking-widest mb-0.5">
-                          {formatEventDate(ev.date)}
-                          {ev.time && ` \u00b7 ${ev.time}`}
+                          {formatEventDate(ev.date, today, tomorrow)}{ev.time && ` \u00b7 ${ev.time}`}
                         </p>
-                        <p className="font-body text-sm text-ink truncate">
-                          {ev.title}
-                        </p>
+                        <p className="font-body text-sm text-ink truncate">{ev.title}</p>
                       </div>
                     ))}
                   </div>
-                </section>
-              )}
-
-              {/* ── Habit Toggles ───────────────────────────────────── */}
-              {habits.length > 0 && (
-                <section className="border-t border-wood-light/30 pt-6">
-                  <h2 className="font-header italic text-lg text-ink-light mb-4">
-                    Daily Rituals
-                  </h2>
-                  <div className="flex flex-wrap gap-5 sm:gap-6">
+                )}
+                {habits.length > 0 && (
+                  <div className="flex flex-wrap gap-4">
                     {habits.map((habit) => {
                       const isCompleted = habit.completedDates.includes(today);
-
-                      const colorMap: Record<string, string> = {
-                        primary: 'bg-primary',
-                        sage: 'bg-sage',
-                        accent: 'bg-accent',
-                        tension: 'bg-rose',
-                      };
+                      const colorMap: Record<string, string> = { primary: 'bg-primary', sage: 'bg-sage', accent: 'bg-accent', tension: 'bg-rose' };
                       const bgColor = colorMap[habit.color] || 'bg-primary';
-
-                      const borderMap: Record<string, string> = {
-                        primary: 'border-primary',
-                        sage: 'border-sage',
-                        accent: 'border-accent',
-                        tension: 'border-rose',
-                      };
+                      const borderMap: Record<string, string> = { primary: 'border-primary', sage: 'border-sage', accent: 'border-accent', tension: 'border-rose' };
                       const borderColor = borderMap[habit.color] || 'border-primary';
-
                       return (
-                        <button
-                          key={habit.id}
-                          onClick={() => toggleHabit(habit.id, today)}
-                          className="group/habit flex flex-col items-center gap-2 cursor-pointer focus:outline-none"
-                        >
-                          <div
-                            className={`relative size-9 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-                              isCompleted
-                                ? borderColor
-                                : 'border-pencil/30 bg-transparent group-hover/habit:border-pencil/50'
-                            }`}
-                          >
-                            <div
-                              className={`size-9 rounded-full flex items-center justify-center text-white transition-transform duration-300 ${
-                                isCompleted
-                                  ? `${bgColor} scale-100`
-                                  : 'scale-0'
-                              }`}
-                            >
-                              <span className="material-symbols-outlined text-[16px]">
-                                check
-                              </span>
+                        <button key={habit.id} onClick={() => toggleHabit(habit.id, today)} className="flex flex-col items-center gap-1.5">
+                          <div className={`size-9 rounded-full border-2 flex items-center justify-center transition-all ${isCompleted ? borderColor : 'border-pencil/30'}`}>
+                            <div className={`size-9 rounded-full flex items-center justify-center text-white transition-transform ${isCompleted ? `${bgColor} scale-100` : 'scale-0'}`}>
+                              <span className="material-symbols-outlined text-[14px]">check</span>
                             </div>
                           </div>
-                          <div className="flex flex-col items-center">
-                            <span
-                              className={`text-xs font-mono font-medium transition-colors ${
-                                isCompleted
-                                  ? 'text-ink'
-                                  : 'text-pencil group-hover/habit:text-ink'
-                              }`}
-                            >
-                              {habit.name}
-                            </span>
-                            {habit.streak > 0 && (
-                              <span className="text-[10px] font-mono text-pencil/60 mt-0.5">
-                                {habit.streak}d streak
-                              </span>
-                            )}
-                          </div>
+                          <span className={`text-xs font-mono ${isCompleted ? 'text-ink' : 'text-pencil'}`}>{habit.name}</span>
                         </button>
                       );
                     })}
                   </div>
-                </section>
-              )}
-
-              {/* ── Plan in Flow link ───────────────────────────────── */}
-              <div className="pt-2">
-                <Link
-                  to="/flow"
-                  className="inline-flex items-center gap-2 font-body text-sm text-primary hover:text-primary/80 transition-colors group/flow"
-                >
-                  Plan in Flow
-                  <span className="material-symbols-outlined text-[16px] group-hover/flow:translate-x-0.5 transition-transform">
-                    arrow_forward
-                  </span>
+                )}
+                {/* Mobile journal exercises */}
+                <div>
+                  <h3 className="font-header italic text-lg text-ink/70 mb-3">Journal Exercises</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {JOURNAL_METHODS.map((method) => (
+                      <button
+                        key={method.id}
+                        onClick={() => setActiveMethod(method)}
+                        className="text-left p-3 rounded-lg border border-wood-light/15 hover:bg-surface-light transition-all"
+                      >
+                        <span className="material-symbols-outlined text-lg text-ink/40 mb-1">{method.icon}</span>
+                        <p className="font-body text-sm font-medium text-ink">{method.name}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <Link to="/flow" className="inline-flex items-center gap-1.5 font-body text-sm text-primary hover:text-primary/80 transition-colors">
+                  Plan in Flow <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                 </Link>
               </div>
-            </>
-          )}
+            </main>
 
-          {/* ══════════════════════════════════════════════════════════
-             EVENING MODE
-             ══════════════════════════════════════════════════════════ */}
-          {mode === 'evening' && (
-            <>
-              {/* ── Day Debrief ──────────────────────────────────────── */}
+            {/* ── RIGHT SIDEBAR ───────────────────────────────────── */}
+            <aside className="hidden lg:flex flex-col gap-5 sticky top-6">
+              {/* Habits */}
+              {habits.length > 0 && (
+                <div className="bg-paper rounded-xl p-5 shadow-soft border border-wood-light/15">
+                  <h3 className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em] mb-3">
+                    Daily Rituals
+                  </h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    {habits.map((habit) => {
+                      const isCompleted = habit.completedDates.includes(today);
+                      const colorMap: Record<string, string> = { primary: 'bg-primary', sage: 'bg-sage', accent: 'bg-accent', tension: 'bg-rose' };
+                      const bgColor = colorMap[habit.color] || 'bg-primary';
+                      const borderMap: Record<string, string> = { primary: 'border-primary', sage: 'border-sage', accent: 'border-accent', tension: 'border-rose' };
+                      const borderColor = borderMap[habit.color] || 'border-primary';
+                      return (
+                        <button
+                          key={habit.id}
+                          onClick={() => toggleHabit(habit.id, today)}
+                          className="group/habit flex flex-col items-center gap-1.5"
+                        >
+                          <div className={`size-10 rounded-full border-2 flex items-center justify-center transition-all ${isCompleted ? borderColor : 'border-pencil/30 group-hover/habit:border-pencil/50'}`}>
+                            <div className={`size-10 rounded-full flex items-center justify-center text-white transition-transform ${isCompleted ? `${bgColor} scale-100` : 'scale-0'}`}>
+                              <span className="material-symbols-outlined text-[16px]">check</span>
+                            </div>
+                          </div>
+                          <span className={`text-[11px] font-mono text-center leading-tight ${isCompleted ? 'text-ink' : 'text-pencil'}`}>
+                            {habit.name}
+                          </span>
+                          {habit.streak > 0 && (
+                            <span className="text-[9px] font-mono text-pencil/50 -mt-1">{habit.streak}d</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Wins (completed tasks) */}
+              {todaysCompletedTasks.length > 0 && (
+                <div className="bg-paper rounded-xl p-5 shadow-soft border border-wood-light/15">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em]">
+                      Wins
+                    </h3>
+                    <button onClick={fireConfetti} className="text-pencil hover:text-primary transition-colors" title="Celebrate!">
+                      <span className="material-symbols-outlined text-[16px]">celebration</span>
+                    </button>
+                  </div>
+                  <ul className="space-y-1">
+                    {todaysCompletedTasks.map((task) => (
+                      <li key={task.id} className="flex items-center gap-2 text-sm font-body text-ink/50">
+                        <span className="text-primary font-bold text-xs">&times;</span>
+                        <span className="line-through decoration-pencil/30 truncate">{task.title}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Journal Exercises */}
+              <div className="bg-paper rounded-xl p-5 shadow-soft border border-wood-light/15">
+                <h3 className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em] mb-3">
+                  Journal Exercises
+                </h3>
+                <div className="flex flex-col gap-2">
+                  {JOURNAL_METHODS.map((method) => {
+                    const categoryColors: Record<string, string> = {
+                      cbt: 'bg-sage/15 text-sage border-sage/30',
+                      integration: 'bg-accent/15 text-accent border-accent/30',
+                      daily: 'bg-primary/15 text-primary border-primary/30',
+                    };
+                    const categoryStyle = categoryColors[method.category] ?? 'bg-wood-light/30 text-pencil border-wood-light/50';
+                    return (
+                      <button
+                        key={method.id}
+                        onClick={() => setActiveMethod(method)}
+                        className="text-left p-3 rounded-lg border border-wood-light/15 hover:bg-surface-light hover:border-primary/20 transition-all group/method"
+                      >
+                        <div className="flex items-start gap-2">
+                          <span className="material-symbols-outlined text-lg text-ink/40 group-hover/method:text-primary transition-colors mt-0.5">{method.icon}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span className="font-body text-sm font-medium text-ink">{method.name}</span>
+                              <span className={`font-mono text-[8px] uppercase tracking-widest px-1 py-0.5 rounded-full border ${categoryStyle}`}>{method.category}</span>
+                            </div>
+                            <p className="font-body text-xs text-pencil leading-relaxed line-clamp-2">{method.description}</p>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </aside>
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════
+           EVENING MODE — 3-column layout (matches morning)
+           ══════════════════════════════════════════════════════════ */}
+        {mode === 'evening' && (
+          <div className="max-w-[1400px] mx-auto px-6 sm:px-10 py-6 grid grid-cols-1 lg:grid-cols-[260px_1fr_260px] xl:grid-cols-[300px_1fr_300px] gap-6 items-start">
+
+            {/* ── LEFT SIDEBAR ────────────────────────────────────── */}
+            <aside className="hidden lg:flex flex-col gap-5 sticky top-6">
+              {/* Day Debrief */}
               {!debriefHidden && (
-                <section>
-                  <h2 className="font-header italic text-lg text-ink-light mb-4">
+                <div className="bg-paper rounded-xl p-5 shadow-soft border border-wood-light/15">
+                  <h3 className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em] mb-3">
                     Day Debrief
-                  </h2>
+                  </h3>
                   <DayDebriefComponent
                     todayEntries={todayEntries}
-                    onSave={(debrief) => {
-                      saveDebrief(debrief);
-                      setDebriefDismissed(true);
-                    }}
+                    date={dateKey}
+                    onSave={(debrief) => { saveDebrief(debrief); setDebriefDismissed(true); setRedoDebrief(false); }}
                     onSkip={() => setDebriefDismissed(true)}
                   />
-                </section>
+                </div>
               )}
 
-              {/* Show saved debrief summary if already completed */}
-              {todayDebriefExists && (
-                <section className="bg-sage/5 border border-sage/20 rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="material-symbols-outlined text-sage text-base">check_circle</span>
-                    <p className="text-sm font-body font-medium text-ink">Day debrief saved</p>
+              {todayDebriefExists && !redoDebrief && (
+                <div className="bg-sage/5 border border-sage/20 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-sage text-base">check_circle</span>
+                      <p className="text-sm font-body font-medium text-ink">Debrief saved</p>
+                    </div>
+                    <button
+                      onClick={() => setRedoDebrief(true)}
+                      className="text-xs font-body text-pencil hover:text-ink underline underline-offset-2 decoration-pencil/30 transition-colors"
+                    >
+                      Redo
+                    </button>
                   </div>
-                  <p className="text-xs font-body text-ink-light pl-6">
-                    You&apos;ve already reflected on today. Your data is stored safely.
-                  </p>
-                </section>
+                </div>
               )}
 
-              {/* ── Plan Tomorrow ─────────────────────────────────────── */}
-              <section className="bg-gradient-to-br from-primary/[0.06] to-sage/[0.08] border-2 border-primary/20 rounded-2xl p-8 sm:p-10 shadow-lifted -mx-2 sm:-mx-4">
-                <div className="flex items-center gap-4 mb-7">
-                  <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-primary text-2xl">event_upcoming</span>
+              {/* Wins */}
+              {todaysCompletedTasks.length > 0 && (
+                <div className="bg-paper rounded-xl p-5 shadow-soft border border-wood-light/15">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em]">
+                      Today&rsquo;s Wins
+                    </h3>
+                    <button onClick={fireConfetti} className="text-pencil hover:text-primary transition-colors" title="Celebrate!">
+                      <span className="material-symbols-outlined text-[16px]">celebration</span>
+                    </button>
+                  </div>
+                  <ul className="space-y-1.5">
+                    {todaysCompletedTasks.map((task) => (
+                      <li key={task.id} className="flex items-center gap-2 text-sm font-body text-ink/50">
+                        <span className="text-primary font-bold text-xs">&times;</span>
+                        <span className="line-through decoration-pencil/30 truncate">{task.title}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Today's Journal Entries */}
+              {journalEntries.filter((j) => j.date === today).length > 0 && (
+                <div className="bg-paper rounded-xl p-5 shadow-soft border border-wood-light/15">
+                  <h3 className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em] mb-3">
+                    Journal Entries
+                  </h3>
+                  <div className="space-y-2">
+                    {journalEntries.filter((j) => j.date === today).map((entry) => (
+                      <Link key={entry.id} to={`/journal/${entry.id}`} className="block p-3 rounded-lg border border-wood-light/15 hover:border-primary/20 hover:bg-surface-light/50 transition-all">
+                        {entry.title && <p className="font-body text-sm font-semibold text-ink/70 mb-0.5 truncate">{entry.title}</p>}
+                        <p className="text-xs leading-relaxed font-body text-ink/50 italic line-clamp-2">{entry.content}</p>
+                        {entry.method && (
+                          <span className="inline-block mt-1 font-mono text-[9px] text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded uppercase tracking-widest">{entry.method}</span>
+                        )}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </aside>
+
+            {/* ── CENTER: Plan Tomorrow ──────────────────────────── */}
+            <main className="min-w-0">
+              {/* Mobile-only: debrief */}
+              <div className="lg:hidden mb-4">
+                {!debriefHidden && (
+                  <div className="mb-4">
+                    <h3 className="font-header italic text-lg text-ink/70 mb-3">Day Debrief</h3>
+                    <DayDebriefComponent
+                      todayEntries={todayEntries}
+                      date={dateKey}
+                      onSave={(debrief) => { saveDebrief(debrief); setDebriefDismissed(true); setRedoDebrief(false); }}
+                      onSkip={() => setDebriefDismissed(true)}
+                    />
+                  </div>
+                )}
+                {todayDebriefExists && !redoDebrief && (
+                  <div className="bg-sage/5 border border-sage/20 rounded-lg p-3 mb-3 flex items-center justify-between">
+                    <p className="text-sm font-body text-ink flex items-center gap-2">
+                      <span className="material-symbols-outlined text-sage text-base">check_circle</span>
+                      Debrief saved
+                    </p>
+                    <button
+                      onClick={() => setRedoDebrief(true)}
+                      className="text-xs font-body text-pencil hover:text-ink underline underline-offset-2 decoration-pencil/30 transition-colors"
+                    >
+                      Redo
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Wins Banner — evening */}
+              {todaysCompletedTasks.length > 0 && (
+                <div className="mb-5 bg-gradient-to-r from-primary/5 via-primary/8 to-primary/5 border border-primary/15 rounded-xl px-5 py-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className="font-mono text-2xl font-bold text-primary tabular-nums">{todaysCompletedTasks.length}</span>
+                      <span className="font-body text-sm text-ink/70">
+                        {todaysCompletedTasks.length === 1 ? 'win today' : 'wins today'}
+                      </span>
+                    </div>
+                    <button onClick={fireConfetti} className="text-pencil hover:text-primary transition-colors" title="Celebrate!">
+                      <span className="material-symbols-outlined text-[20px]">celebration</span>
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    {todaysCompletedTasks.slice(0, 5).map((task) => (
+                      <span key={task.id} className="text-sm font-body text-ink/50 line-through decoration-primary/30">
+                        {task.title}
+                      </span>
+                    ))}
+                    {todaysCompletedTasks.length > 5 && (
+                      <span className="text-xs font-mono text-pencil/50">+{todaysCompletedTasks.length - 5} more</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Plan Tomorrow */}
+              <div className="bg-paper rounded-xl p-5 sm:p-6 shadow-soft border border-wood-light/15">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-primary text-lg">event_upcoming</span>
                   </div>
                   <div>
                     <h2 className="font-header italic text-2xl sm:text-3xl text-ink">Plan Tomorrow</h2>
-                    <p className="text-sm font-body text-ink-light mt-0.5">Set yourself up for a gentle start</p>
+                    <p className="text-sm font-body text-ink-light">Set yourself up for a gentle start</p>
                   </div>
                 </div>
 
-                <div className="space-y-6">
-                  {/* Tomorrow's intention */}
+                <div className="space-y-5">
                   <div>
-                    <label className="block text-sm font-body font-medium text-ink mb-2">
-                      What do you want tomorrow to feel like?
+                    <label className="block font-mono text-[10px] text-accent uppercase tracking-[0.15em] mb-1.5">
+                      How should tomorrow feel?
                     </label>
                     <input
                       type="text"
                       value={tomorrowIntention}
                       onChange={e => setTomorrowIntention(e.target.value)}
                       placeholder="Calm and focused · Productive but gentle · One step at a time"
-                      className="w-full px-5 py-4 bg-paper border border-wood-light/30 rounded-xl text-ink font-handwriting text-lg focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all placeholder-ink-light/40 shadow-inner-shallow"
+                      className="w-full bg-transparent border-none p-0 text-xl font-display text-ink placeholder:text-pencil/30 focus:ring-0 focus:outline-none italic"
                     />
+                    <div className="mt-1 h-[1.5px] bg-wood-light/20" />
                   </div>
 
-                  {/* Tomorrow's entries */}
                   {tomorrowEntries.length > 0 && (
                     <div>
-                      <p className="text-sm font-body font-medium text-ink-light mb-2 flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-[16px]">checklist</span>
+                      <p className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em] mb-2 flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-[14px]">checklist</span>
                         {tomorrowEntries.length} item{tomorrowEntries.length !== 1 ? 's' : ''} planned
                       </p>
-                      <div className="space-y-1.5 bg-paper/60 rounded-xl border border-wood-light/20 p-4">
+                      <div className="space-y-0.5">
                         {tomorrowEntries.map((entry) => (
-                          <div
-                            key={entry.id}
-                            className="flex items-center gap-3 py-2 group/item"
-                          >
+                          <div key={entry.id} className="group/item flex items-start gap-3 py-2 hover:bg-surface-light/60 -mx-3 px-3 rounded transition-colors">
                             {bulletForEntry(entry)}
-                            <span
-                              className={`font-body text-base flex-1 ${
-                                entry.type === 'note'
-                                  ? 'text-ink/60 italic'
-                                  : 'text-ink/80'
-                              }`}
-                            >
+                            <span className={`font-body text-base flex-1 leading-snug ${entry.type === 'note' ? 'text-ink/60 italic' : 'text-ink'}`}>
                               {entry.title}
                             </span>
                             {entry.type === 'event' && entry.time && (
-                              <span className="font-mono text-[11px] text-primary/70 bg-primary/10 px-2 py-0.5 rounded flex-shrink-0">
-                                {entry.time}
-                              </span>
+                              <span className="font-mono text-[10px] text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded flex-shrink-0">{entry.time}</span>
                             )}
                             {entry.type === 'task' && entry.priority && (
-                              <span
-                                className={`flex-shrink-0 inline-block size-2 rounded-full ${PRIORITY_STYLES[entry.priority].dot} opacity-60`}
-                                title={PRIORITY_STYLES[entry.priority].label + ' priority'}
-                              />
+                              <span className={`flex-shrink-0 inline-block size-1.5 rounded-full ${PRIORITY_STYLES[entry.priority].dot} opacity-50`} />
                             )}
-                            <button
-                              onClick={() => deleteEntry(entry.id)}
-                              className="opacity-0 group-hover/item:opacity-100 text-ink-light/40 hover:text-tension transition-all shrink-0"
-                            >
+                            <button onClick={() => deleteEntry(entry.id)} className="opacity-0 group-hover/item:opacity-100 text-ink-light/40 hover:text-tension transition-all shrink-0">
                               <span className="material-symbols-outlined text-[16px]">close</span>
                             </button>
                           </div>
@@ -1033,11 +1205,8 @@ export default function DailyLeaf() {
                     </div>
                   )}
 
-                  {/* Add entry for tomorrow */}
-                  <div>
-                    <label className="block text-sm font-body font-medium text-ink-light mb-2">
-                      Add tasks or events
-                    </label>
+                  <div className="flex items-center gap-3 py-2 px-3 rounded-lg bg-surface-light/50 border border-wood-light/15 focus-within:border-primary/30 transition-all">
+                    <span className="material-symbols-outlined text-lg text-primary/40">add</span>
                     <input
                       ref={tomorrowInputRef}
                       type="text"
@@ -1045,15 +1214,10 @@ export default function DailyLeaf() {
                       onChange={e => setTomorrowAddInput(e.target.value)}
                       onKeyDown={handleAddTomorrowEntry}
                       placeholder='e.g. "3pm: standup" or "review PR"'
-                      className="w-full px-5 py-4 bg-paper border border-wood-light/30 rounded-xl text-ink font-body text-base focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all placeholder-ink-light/40 shadow-inner-shallow"
+                      className="flex-1 min-w-0 bg-transparent border-none p-0 text-base font-body text-ink placeholder:text-pencil/40 focus:ring-0 focus:outline-none"
                     />
-                    <p className="text-xs font-body text-ink-light/40 mt-2 flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[14px]">keyboard_return</span>
-                      Enter to add · Day + time references auto-create events
-                    </p>
                   </div>
 
-                  {/* Capacity hint — only warn when total scheduled duration is heavy */}
                   {(() => {
                     const tasks = tomorrowEntries.filter(e => e.type === 'task');
                     const totalMin = tasks.reduce((sum, t) => {
@@ -1065,182 +1229,301 @@ export default function DailyLeaf() {
                       if (mMatch) m += parseInt(mMatch[1], 10);
                       return sum + m;
                     }, 0);
-                    const hours = Math.round(totalMin / 60);
-                    // Only show if total scheduled time > 6 hours
                     if (totalMin <= 360) return null;
                     return (
-                      <div className="flex items-start gap-2 p-4 rounded-xl bg-accent/10 border border-accent/20">
-                        <span className="material-symbols-outlined text-accent text-lg mt-0.5">emoji_objects</span>
-                        <p className="text-sm font-body text-ink-light leading-relaxed">
-                          ~{hours}h of scheduled work tomorrow — consider trimming or spreading tasks across days.
+                      <div className="flex items-start gap-2 p-3 rounded-lg bg-accent/10 border border-accent/20">
+                        <span className="material-symbols-outlined text-accent text-base mt-0.5">emoji_objects</span>
+                        <p className="text-sm font-body text-ink-light">
+                          ~{Math.round(totalMin / 60)}h of scheduled work tomorrow.
                         </p>
                       </div>
                     );
                   })()}
 
-                  {/* Empty state encouragement */}
                   {tomorrowEntries.length === 0 && !tomorrowIntention && (
-                    <div className="text-center py-4">
-                      <p className="text-base font-handwriting text-ink-light/50">
-                        Even one task is enough. Start small.
-                      </p>
-                    </div>
+                    <p className="text-center py-4 text-base font-handwriting text-ink-light/40">
+                      Even one task is enough. Start small.
+                    </p>
                   )}
                 </div>
-              </section>
+              </div>
 
-              {/* ── Journal Method Picker ────────────────────────────── */}
-              <section className="border-t border-wood-light/30 pt-6">
-                <h2 className="font-header italic text-lg text-ink-light mb-4">
-                  Evening Journal
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* ── Rapid Log (evening) ─────────────────────────────── */}
+              <div className="bg-paper rounded-xl p-5 sm:p-6 shadow-soft border border-wood-light/15 mt-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="font-header italic text-xl text-ink/70">
+                    Rapid Log
+                  </h2>
+                  <button
+                    onClick={() => setShowSignifierHelp((v) => !v)}
+                    className="font-mono text-[10px] text-pencil/50 hover:text-primary transition-colors uppercase tracking-widest"
+                  >
+                    Key
+                  </button>
+                </div>
+
+                {showSignifierHelp && (
+                  <div className="mb-4 px-4 py-3 bg-surface-light border border-wood-light/20 rounded-lg">
+                    <div className="flex flex-wrap gap-x-5 gap-y-1">
+                      {SIGNIFIER_TOOLTIPS.map((s) => (
+                        <span key={s.symbol} className="font-mono text-xs text-pencil">
+                          <span className="text-ink font-semibold mr-1">{s.symbol}</span>
+                          {s.meaning}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {todayEntries.length === 0 && (
+                  <p className="text-pencil/50 font-body text-sm italic py-6 text-center">
+                    No entries yet. Add one below.
+                  </p>
+                )}
+
+                {/* Entry list */}
+                <div className="space-y-0.5">
+                  {todayEntries.map((entry) => {
+                    const isEditing = editingEntryId === entry.id;
+                    const isDone = entry.type === 'task' && entry.status === 'done';
+                    const isTask = entry.type === 'task';
+                    const isNote = entry.type === 'note';
+                    const isEvent = entry.type === 'event';
+                    const priorityStyle = entry.priority ? PRIORITY_STYLES[entry.priority] : null;
+
+                    return (
+                      <div
+                        key={entry.id}
+                        className="group/entry flex items-start gap-3 py-2 hover:bg-surface-light/60 -mx-3 px-3 rounded transition-colors"
+                      >
+                        {isTask ? (
+                          <button
+                            onClick={() => handleToggleTask(entry.id)}
+                            className="flex-shrink-0 focus:outline-none mt-0.5 hover:scale-125 transition-transform"
+                          >
+                            {bulletForEntry(entry)}
+                          </button>
+                        ) : (
+                          <div className="flex-shrink-0">{bulletForEntry(entry)}</div>
+                        )}
+
+                        <div className="flex-1 min-w-0 flex items-baseline gap-2">
+                          {isEditing ? (
+                            <input
+                              ref={editInputRef}
+                              className="w-full bg-transparent border-none p-0 text-base font-body text-ink focus:ring-0 focus:outline-none"
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              onKeyDown={handleEditKeyDown}
+                              onBlur={commitEdit}
+                            />
+                          ) : (
+                            <button
+                              className={`text-left text-base leading-snug font-body transition-colors ${
+                                isDone ? 'line-through decoration-pencil/40 text-ink/35'
+                                  : isNote ? 'text-ink/60 italic'
+                                  : 'text-ink hover:text-ink-light'
+                              }`}
+                              onClick={() => startEditing(entry.id, entry.title)}
+                            >
+                              {entry.title}
+                            </button>
+                          )}
+                          {!isEditing && isTask && priorityStyle && (
+                            <span className={`flex-shrink-0 inline-block size-1.5 rounded-full ${priorityStyle.dot} opacity-50`} />
+                          )}
+                          {!isEditing && isEvent && entry.time && (
+                            <span className="flex-shrink-0 font-mono text-[10px] text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded">{entry.time}</span>
+                          )}
+                          {!isEditing && isTask && entry.timeBlock && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); updateEntry(entry.id, { timeBlock: undefined }); }}
+                              className="flex-shrink-0 font-mono text-[10px] text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded hover:bg-primary/20 hover:line-through transition-all group/unpin"
+                              title="Click to unpin from time"
+                            >
+                              {entry.timeBlock}
+                              <span className="material-symbols-outlined text-[10px] ml-0.5 opacity-0 group-hover/unpin:opacity-100 transition-opacity">close</span>
+                            </button>
+                          )}
+                          {!isEditing && isTask && (entry.movedCount ?? 0) > 0 && (
+                            <span className="flex gap-0.5 ml-1" title={`Moved ${entry.movedCount}x`}>
+                              {Array.from({ length: entry.movedCount ?? 0 }).map((_, i) => (
+                                <span key={i} className="inline-block size-1.5 rounded-full bg-tension/40" />
+                              ))}
+                            </span>
+                          )}
+                        </div>
+
+                        {!isEditing && entry.tags && entry.tags.length > 0 && (
+                          <span className="hidden sm:inline-block font-mono text-[10px] text-pencil/60 bg-wood-light/20 px-1.5 py-0.5 rounded flex-shrink-0">
+                            {entry.tags[0]}
+                          </span>
+                        )}
+
+                        {!isEditing && (
+                          <div className="flex items-center gap-1 opacity-0 group-hover/entry:opacity-100 transition-opacity flex-shrink-0">
+                            {isTask && !isDone && (
+                              <button onClick={() => setStuckTask(entry)} className="font-mono text-[9px] text-pencil hover:text-primary bg-wood-light/20 hover:bg-primary/10 px-1.5 py-0.5 rounded transition-colors uppercase tracking-wider">
+                                Stuck?
+                              </button>
+                            )}
+                            <Link to="/migration" className="text-pencil hover:text-tension transition-colors">
+                              <span className="material-symbols-outlined text-[16px]">east</span>
+                            </Link>
+                            <button onClick={() => deleteEntry(entry.id)} className="text-pencil hover:text-tension transition-colors">
+                              <span className="material-symbols-outlined text-[16px]">delete</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Add new entry */}
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center gap-1">
+                    {TYPE_PILLS.map((pill) => (
+                      <button
+                        key={pill.type}
+                        onClick={() => setEntryType(pill.type)}
+                        className={`flex items-center gap-1 px-3 py-1 rounded-full font-mono text-[11px] uppercase tracking-wider transition-all ${
+                          entryType === pill.type
+                            ? 'bg-primary/15 text-primary font-medium border border-primary/30'
+                            : 'text-pencil hover:bg-surface-light border border-transparent'
+                        }`}
+                      >
+                        <span className="text-sm">{pill.symbol}</span>
+                        {pill.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-3 py-2 px-3 rounded-lg bg-surface-light/50 border border-wood-light/15 focus-within:border-primary/30 transition-all">
+                    <span className="material-symbols-outlined text-lg text-primary/40">add</span>
+                    <input
+                      ref={newInputRef}
+                      className="flex-1 min-w-0 bg-transparent border-none p-0 text-base font-body text-ink placeholder:text-pencil/40 focus:ring-0 focus:outline-none"
+                      placeholder={placeholder}
+                      type="text"
+                      value={newTitle}
+                      onChange={(e) => setNewTitle(e.target.value)}
+                      onKeyDown={handleAddEntry}
+                    />
+                    {entryType === 'event' && (
+                      <input
+                        type="time"
+                        value={newEventTime}
+                        onChange={(e) => setNewEventTime(e.target.value)}
+                        className="font-mono text-xs text-ink bg-paper border border-wood-light/30 rounded px-2 py-1 focus:outline-none focus:border-primary/30 flex-shrink-0"
+                      />
+                    )}
+                    {entryType === 'task' && (
+                      <button
+                        onClick={cyclePriority}
+                        className="flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-wood-light/30 hover:border-primary/30 transition-colors flex-shrink-0"
+                      >
+                        <span className={`inline-block size-2 rounded-full ${PRIORITY_STYLES[newPriority].dot}`} />
+                        <span className="font-mono text-[10px] text-pencil uppercase">{PRIORITY_STYLES[newPriority].label}</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </main>
+
+            {/* ── RIGHT SIDEBAR ───────────────────────────────────── */}
+            <aside className="hidden lg:flex flex-col gap-5 sticky top-6">
+              {/* Journal Exercises */}
+              <div className="bg-paper rounded-xl p-5 shadow-soft border border-wood-light/15">
+                <h3 className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em] mb-3">
+                  Journal Exercises
+                </h3>
+                <div className="flex flex-col gap-2">
                   {JOURNAL_METHODS.map((method) => {
                     const categoryColors: Record<string, string> = {
                       cbt: 'bg-sage/15 text-sage border-sage/30',
                       integration: 'bg-accent/15 text-accent border-accent/30',
                       daily: 'bg-primary/15 text-primary border-primary/30',
                     };
-                    const categoryStyle =
-                      categoryColors[method.category] ??
-                      'bg-wood-light/30 text-pencil border-wood-light/50';
-
+                    const categoryStyle = categoryColors[method.category] ?? 'bg-wood-light/30 text-pencil border-wood-light/50';
                     return (
                       <button
                         key={method.id}
                         onClick={() => setActiveMethod(method)}
-                        className="text-left p-4 rounded-xl border border-wood-light/30 bg-white/40 hover:bg-surface-light hover:border-primary/20 transition-all group/method"
+                        className="text-left p-3 rounded-lg border border-wood-light/15 hover:bg-surface-light hover:border-primary/20 transition-all group/method"
                       >
-                        <div className="flex items-start gap-3">
-                          <span className="material-symbols-outlined text-xl text-ink/60 group-hover/method:text-primary transition-colors mt-0.5">
-                            {method.icon}
-                          </span>
+                        <div className="flex items-start gap-2">
+                          <span className="material-symbols-outlined text-lg text-ink/40 group-hover/method:text-primary transition-colors mt-0.5">{method.icon}</span>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-body text-sm font-semibold text-ink">
-                                {method.name}
-                              </span>
-                              <span
-                                className={`font-mono text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${categoryStyle}`}
-                              >
-                                {method.category}
-                              </span>
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span className="font-body text-sm font-medium text-ink">{method.name}</span>
+                              <span className={`font-mono text-[8px] uppercase tracking-widest px-1 py-0.5 rounded-full border ${categoryStyle}`}>{method.category}</span>
                             </div>
-                            <p className="font-body text-xs text-pencil leading-relaxed line-clamp-2">
-                              {method.description}
-                            </p>
+                            <p className="font-body text-xs text-pencil leading-relaxed line-clamp-2">{method.description}</p>
                           </div>
                         </div>
                       </button>
                     );
                   })}
                 </div>
-              </section>
+              </div>
+            </aside>
 
-              {/* ── Today's Journal Entries ──────────────────────────── */}
-              {journalEntries.filter((j) => j.date === today).length > 0 && (
-                <section className="border-t border-wood-light/30 pt-6">
-                  <h2 className="font-header italic text-lg text-ink-light mb-3">
-                    Journal Entries
-                  </h2>
-                  <div className="space-y-3">
-                    {journalEntries
-                      .filter((j) => j.date === today)
-                      .map((entry) => (
-                        <Link
-                          key={entry.id}
-                          to={`/journal/${entry.id}`}
-                          className="block p-4 rounded-xl border border-wood-light/30 bg-white/40 hover:bg-surface-light hover:border-primary/20 transition-all"
-                        >
-                          {entry.title && (
-                            <p className="font-body text-sm font-semibold text-ink/70 mb-0.5">
-                              {entry.title}
-                            </p>
-                          )}
-                          <p className="text-sm leading-relaxed font-body text-ink/70 italic line-clamp-2">
-                            {entry.content}
-                          </p>
-                          {entry.method && (
-                            <span className="inline-block mt-2 font-mono text-[9px] text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded uppercase tracking-widest">
-                              {entry.method}
-                            </span>
-                          )}
-                        </Link>
-                      ))}
-                  </div>
-                </section>
-              )}
-
-              {/* ── Wins Summary ─────────────────────────────────────── */}
+            {/* Mobile-only: evening content stacked */}
+            <div className="lg:hidden col-span-1 space-y-4">
+              {/* Mobile wins */}
               {todaysCompletedTasks.length > 0 && (
-                <section className="border-t border-wood-light/30 pt-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <h2 className="font-header italic text-lg text-ink-light">
-                      Today&rsquo;s Wins
-                    </h2>
-                    <button
-                      onClick={fireConfetti}
-                      className="font-mono text-[10px] text-primary hover:text-primary/80 uppercase tracking-widest transition-colors flex items-center gap-1"
-                      title="Celebrate!"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">
-                        celebration
-                      </span>
-                      Celebrate
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-header italic text-lg text-ink/70">Today&rsquo;s Wins</h3>
+                    <button onClick={fireConfetti} className="text-pencil hover:text-primary transition-colors">
+                      <span className="material-symbols-outlined text-[16px]">celebration</span>
                     </button>
                   </div>
-                  <ul className="space-y-1.5">
+                  <ul className="space-y-1">
                     {todaysCompletedTasks.map((task) => (
-                      <li
-                        key={task.id}
-                        className="flex items-center gap-2 font-body text-sm text-ink/70"
-                      >
-                        <span className="text-primary font-bold text-xs">
-                          &times;
-                        </span>
-                        <span className="line-through decoration-pencil/30 decoration-1">
-                          {task.title}
-                        </span>
+                      <li key={task.id} className="flex items-center gap-2 text-sm font-body text-ink/50">
+                        <span className="text-primary font-bold text-xs">&times;</span>
+                        <span className="line-through decoration-pencil/30">{task.title}</span>
                       </li>
                     ))}
                   </ul>
-                </section>
+                </div>
               )}
 
-            </>
-          )}
+              {/* Mobile journal methods */}
+              <div>
+                <h3 className="font-header italic text-lg text-ink/70 mb-3">Journal Exercises</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {JOURNAL_METHODS.map((method) => (
+                    <button
+                      key={method.id}
+                      onClick={() => setActiveMethod(method)}
+                      className="text-left p-3 rounded-lg border border-wood-light/15 hover:bg-surface-light transition-all"
+                    >
+                      <span className="material-symbols-outlined text-lg text-ink/40 mb-1">{method.icon}</span>
+                      <p className="font-body text-sm font-medium text-ink">{method.name}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-          {/* Page corner fold decoration */}
-          <div className="absolute bottom-0 right-0 w-12 h-12 bg-gradient-to-tl from-background-light/10 to-transparent pointer-events-none rounded-br-sm" />
-        </article>
-
-        {/* ── Sidebar Quick Links (hidden on small screens) ──────── */}
-        <aside className="hidden xl:flex flex-col gap-4 fixed right-10 top-32 w-16 items-center">
-          <div className="group/link relative">
-            <Link
-              to="/flow"
-              className="size-12 rounded-full bg-paper shadow-md hover:shadow-lg border border-wood-light/50 flex items-center justify-center text-ink hover:text-primary transition-all hover:-translate-y-1"
-            >
-              <span className="material-symbols-outlined">
-                calendar_view_day
-              </span>
-            </Link>
-            <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 text-xs font-medium text-ink bg-paper px-2 py-1 rounded shadow opacity-0 group-hover/link:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-              Flow View
-            </span>
+              {/* Mobile journal entries */}
+              {journalEntries.filter((j) => j.date === today).length > 0 && (
+                <div>
+                  <h3 className="font-header italic text-lg text-ink/70 mb-2">Journal Entries</h3>
+                  {journalEntries.filter((j) => j.date === today).map((entry) => (
+                    <Link key={entry.id} to={`/journal/${entry.id}`} className="block p-3 rounded-lg border border-wood-light/15 hover:border-primary/20 transition-all mb-2">
+                      {entry.title && <p className="font-body text-sm font-medium text-ink/70">{entry.title}</p>}
+                      <p className="text-xs font-body text-ink/50 italic line-clamp-2">{entry.content}</p>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-          <div className="group/link relative">
-            <Link
-              to="/migration"
-              className="size-12 rounded-full bg-paper shadow-md hover:shadow-lg border border-wood-light/50 flex items-center justify-center text-ink hover:text-tension transition-all hover:-translate-y-1"
-            >
-              <span className="material-symbols-outlined">inbox</span>
-            </Link>
-            <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 text-xs font-medium text-ink bg-paper px-2 py-1 rounded shadow opacity-0 group-hover/link:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-              Migration Station
-            </span>
-          </div>
-        </aside>
+        )}
       </div>
     </>
   );

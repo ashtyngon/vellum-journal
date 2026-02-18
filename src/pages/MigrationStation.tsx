@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { formatLocalDate } from '../lib/dateUtils';
 
 type DropTarget = 'today' | 'tomorrow' | 'nextWeek' | 'shredder';
 
@@ -15,15 +16,15 @@ export default function MigrationStation({ open, onClose }: MigrationStationProp
   const [activeDropZone, setActiveDropZone] = useState<DropTarget | null>(null);
   const [shreddedIds, setShreddedIds] = useState<Set<string>>(new Set());
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = formatLocalDate(new Date());
 
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowStr = tomorrow.toISOString().split('T')[0];
+  const tomorrowStr = formatLocalDate(tomorrow);
 
   const nextWeekDate = new Date();
   nextWeekDate.setDate(nextWeekDate.getDate() + 7);
-  const nextWeekStr = nextWeekDate.toISOString().split('T')[0];
+  const nextWeekStr = formatLocalDate(nextWeekDate);
 
   const leftBehind = useMemo(() => {
     return entries.filter(
@@ -425,7 +426,7 @@ export default function MigrationStation({ open, onClose }: MigrationStationProp
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                   <h4 className="font-sans text-sm font-bold uppercase tracking-wider text-sage">
-                    Next Week
+                    Later This Week
                   </h4>
                   <span className="text-[11px] opacity-60 font-mono text-pencil">
                     {nextWeekStr}
@@ -444,7 +445,7 @@ export default function MigrationStation({ open, onClose }: MigrationStationProp
                   {movingForward.nextWeek.length === 0 && activeDropZone !== 'nextWeek' && (
                     <div className="flex h-full min-h-[46px] items-center justify-center text-sage/50">
                       <span className="text-sm italic font-handwriting">
-                        Push to next week
+                        Push to later this week
                       </span>
                     </div>
                   )}

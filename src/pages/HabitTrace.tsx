@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { formatLocalDate, todayStr } from '../lib/dateUtils';
 
 const HABIT_COLORS: { key: string; hex: string; bg: string; text: string; label: string }[] = [
   { key: 'sage',      hex: '#8fa88f', bg: 'bg-sage',          text: 'text-sage',      label: 'Sage' },
@@ -15,8 +16,6 @@ const HABIT_COLORS: { key: string; hex: string; bg: string; text: string; label:
   { key: 'forest',    hex: '#4A7C59', bg: 'bg-[#4A7C59]',     text: 'text-[#4A7C59]', label: 'Forest' },
   { key: 'plum',      hex: '#8B5E83', bg: 'bg-[#8B5E83]',     text: 'text-[#8B5E83]', label: 'Plum' },
 ];
-
-const COLOR_OPTIONS = HABIT_COLORS.map(c => c.key);
 
 function colorToBg(color: string) {
   return HABIT_COLORS.find(c => c.key === color)?.bg ?? 'bg-primary';
@@ -56,7 +55,16 @@ export default function HabitTrace() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const [dateKey, setDateKey] = useState(todayStr);
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible')
+        setDateKey((prev) => { const now = todayStr(); return prev !== now ? now : prev; });
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, []);
+  const today = dateKey;
 
   const days = useMemo(() => {
     const result: { dateStr: string; dayName: string; dayNum: number; isToday: boolean }[] = [];
@@ -64,7 +72,7 @@ export default function HabitTrace() {
     for (let i = dayCount; i >= 0; i--) {
       const date = new Date(now);
       date.setDate(now.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = formatLocalDate(date);
       result.push({
         dateStr,
         dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),

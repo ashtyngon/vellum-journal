@@ -1,5 +1,5 @@
 /* ── Journal Method Definitions ────────────────────────────────────────
-   Static definitions for all 7 guided journaling methods available
+   Static definitions for all 8 guided journaling methods available
    in vellum-journal. Each method defines a multi-step flow with
    typed inputs (textarea, slider, select, body-picker).
    ──────────────────────────────────────────────────────────────────── */
@@ -381,6 +381,73 @@ export const JOURNAL_METHODS: JournalMethod[] = [
           'Looking at all three -- what does this say about you or the world today?',
         placeholder:
           'e.g. Good things don\'t just happen to me -- I create the conditions for them. When I slow down and show up, life meets me halfway.',
+        inputType: 'textarea',
+      },
+    ],
+  },
+
+  /* ─── 8. Anxiety Reality Check (CBT) ────────────────────────────── */
+  {
+    id: 'anxiety-reality-check',
+    name: 'Anxiety Reality Check',
+    description:
+      'Catch your anxiety in the act. Name what it\'s telling you, then compare the prediction to what\'s actually happening.',
+    icon: 'fact_check',
+    category: 'cbt',
+    steps: [
+      {
+        prompt: 'First -- name something good happening today. Anything.',
+        placeholder:
+          'e.g. A coworker complimented my work. I cooked a real meal. The weather is perfect.',
+        inputType: 'textarea',
+      },
+      {
+        prompt:
+          'What are you anxious about right now? Pick one specific thing.',
+        placeholder:
+          'e.g. I have to present quarterly numbers to the leadership team and I\'m convinced I\'ll freeze up.',
+        inputType: 'textarea',
+      },
+      {
+        prompt:
+          'What is your anxiety telling you will happen? Be specific about the worst-case scenario your brain is running.',
+        placeholder:
+          'e.g. I\'ll forget my talking points, stumble over my words, they\'ll think I\'m incompetent, and I\'ll get pulled off the project.',
+        inputType: 'textarea',
+      },
+      {
+        prompt: 'How intense is the anxiety right now?',
+        placeholder: 'Slide to rate how anxious you feel.',
+        inputType: 'slider',
+        min: 0,
+        max: 100,
+      },
+      {
+        prompt:
+          'Why does your brain believe this? What\'s triggering the fear? Dig into the "because..."',
+        placeholder:
+          'e.g. Because I stumbled once in a meeting six months ago. Because I always assume people are judging me. Because my inner critic says I\'m not qualified.',
+        inputType: 'textarea',
+      },
+      {
+        prompt:
+          'Now step back. What\'s actually likely to happen? Not the story -- the realistic version.',
+        placeholder:
+          'e.g. I\'ll present for 12 minutes. I might pause to check my notes. People will ask follow-up questions. It\'ll be fine.',
+        inputType: 'textarea',
+      },
+      {
+        prompt:
+          'Look at the gap between the fear and the realistic version. What does your anxiety get wrong consistently?',
+        placeholder:
+          'e.g. It always assumes the absolute worst. It treats a small mistake as a catastrophe. It ignores all the times things went fine. It confuses "uncomfortable" with "disaster."',
+        inputType: 'textarea',
+      },
+      {
+        prompt:
+          'What do you want to tell yourself right now, before it happens?',
+        placeholder:
+          'e.g. You\'re going to be nervous and that\'s fine. The nervousness doesn\'t mean it\'ll go badly -- it means you care. You\'ve done this before and survived every time.',
         inputType: 'textarea',
       },
     ],

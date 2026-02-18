@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
+import { todayStr, daysAgo } from '../lib/dateUtils';
 
 /* ── Types ─────────────────────────────────────────────────────────── */
 
@@ -111,8 +112,8 @@ export default function CelebrationScrapbook() {
   const currentStreak = useMemo(() => {
     if (wins.length === 0) return 0;
     const uniqueDates = [...new Set(wins.map(w => w.date))].sort().reverse();
-    const today = new Date().toISOString().split('T')[0];
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    const today = todayStr();
+    const yesterday = daysAgo(1);
 
     if (uniqueDates[0] !== today && uniqueDates[0] !== yesterday) return 0;
 
@@ -120,8 +121,8 @@ export default function CelebrationScrapbook() {
     for (let i = 0; i < uniqueDates.length - 1; i++) {
       const curr = new Date(uniqueDates[i] + 'T00:00:00');
       const prev = new Date(uniqueDates[i + 1] + 'T00:00:00');
-      const diffDays = (curr.getTime() - prev.getTime()) / 86400000;
-      if (diffDays <= 1) streak++;
+      const diffDays = Math.round((curr.getTime() - prev.getTime()) / 86400000);
+      if (diffDays === 1) streak++;
       else break;
     }
     return streak;
@@ -138,7 +139,7 @@ export default function CelebrationScrapbook() {
     if (!newWinContent.trim()) return;
     addJournalEntry({
       id: `win-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      date: new Date().toISOString().split('T')[0],
+      date: todayStr(),
       title: newWinTitle.trim() || 'A Small Win',
       content: newWinContent.trim(),
       wins: [newWinContent.trim()],

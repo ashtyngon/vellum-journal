@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, type ReactElement } from 'react';
 import type { RapidLogEntry } from '../context/AppContext';
+import { todayStr } from '../lib/dateUtils';
 
 /* ── Types ────────────────────────────────────────────────────────── */
 
@@ -27,10 +28,6 @@ function getTimeOfDayLabel(): string {
   if (hour < 12) return 'half-day';
   if (hour < 17) return 'afternoon';
   return 'evening';
-}
-
-function todayStr(): string {
-  return new Date().toISOString().split('T')[0];
 }
 
 /* ── Component ────────────────────────────────────────────────────── */

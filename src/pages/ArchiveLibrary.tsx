@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useApp } from '../context/AppContext';
 import type { JournalEntry, Collection, CollectionItem, RapidLogEntry } from '../context/AppContext';
+import { todayStr } from '../lib/dateUtils';
 
 /* ── Constants ─────────────────────────────────────────────────────── */
 
@@ -69,7 +70,7 @@ function JournalsTab({
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState<JournalEntry | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [newEntry, setNewEntry] = useState({ date: new Date().toISOString().split('T')[0], title: '', content: '' });
+  const [newEntry, setNewEntry] = useState({ date: todayStr(), title: '', content: '' });
 
   /* ── Events from rapid log for monthly views ──────────────────── */
   const rapidEvents = useMemo(() => entries.filter(e => e.type === 'event'), [entries]);
@@ -166,7 +167,7 @@ function JournalsTab({
       content: newEntry.content.trim(),
     };
     addJournalEntry(entry);
-    setNewEntry({ date: new Date().toISOString().split('T')[0], title: '', content: '' });
+    setNewEntry({ date: todayStr(), title: '', content: '' });
     setShowAddForm(false);
   }
 
