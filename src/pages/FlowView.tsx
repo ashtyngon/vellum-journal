@@ -1713,6 +1713,7 @@ export default function FlowView() {
   }, [rangeStart, rangeEnd]);
 
   // Extend range when user scrolls near edges
+  const prevScrollWidthRef = useRef(0);
   const handleScrollExtend = useCallback(() => {
     const el = scrollContainerRef.current;
     if (!el || focusedDay !== null) return;
@@ -1720,12 +1721,23 @@ export default function FlowView() {
     if (el.scrollLeft + el.clientWidth > el.scrollWidth - 400) {
       setRangeEnd(prev => prev + 7);
     }
-    // Near left edge → extend past
+    // Near left edge → extend past (compensate scroll position)
     if (el.scrollLeft < 400) {
-      setRangeEnd(r => r); // no-op to avoid losing scroll
+      prevScrollWidthRef.current = el.scrollWidth;
       setRangeStart(prev => prev - 7);
     }
   }, [focusedDay]);
+
+  // After prepending days to the left, adjust scroll position so the viewport doesn't jump
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el || focusedDay !== null || prevScrollWidthRef.current === 0) return;
+    const added = el.scrollWidth - prevScrollWidthRef.current;
+    if (added > 0) {
+      el.scrollLeft += added;
+    }
+    prevScrollWidthRef.current = 0;
+  }, [rangeStart, focusedDay]);
 
   useEffect(() => {
     const el = scrollContainerRef.current;
@@ -1824,18 +1836,26 @@ export default function FlowView() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entries, allDayOffsets]);
 
-  // Scroll to today column on mount (only in multi-day view)
+  // Scroll to today column on mount and when exiting focused mode
+  const hasScrolledRef = useRef(false);
   useEffect(() => {
-    if (focusedDay !== null) return;
+    if (focusedDay !== null) {
+      // When entering focused mode, reset flag so we re-scroll on exit
+      hasScrolledRef.current = false;
+      return;
+    }
     const el = scrollContainerRef.current;
-    if (el) {
-      setTimeout(() => {
+    if (!el) return;
+    // Use double rAF to ensure layout is complete after React render
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
         const todayCol = el.querySelector('[data-today]') as HTMLElement | null;
         if (todayCol) {
-          el.scrollTo({ left: todayCol.offsetLeft - 16, behavior: 'smooth' });
+          el.scrollTo({ left: todayCol.offsetLeft - 16, behavior: hasScrolledRef.current ? 'smooth' : 'instant' });
         }
-      }, 100);
-    }
+        hasScrolledRef.current = true;
+      });
+    });
   }, [focusedDay]);
 
   // Navigation: scroll to adjacent day

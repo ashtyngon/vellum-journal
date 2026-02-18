@@ -261,7 +261,7 @@ function JournalsTab({
           return (
             <div key={year} className="flex flex-col">
               <div className="flex items-center gap-3 mb-1 px-2">
-                <h3 className="text-2xl font-bold font-header italic text-ink">{year} Collection</h3>
+                <h3 className="text-2xl font-bold font-header italic text-ink">{year} Journal</h3>
                 <span className="h-px flex-1 bg-wood-light"></span>
                 <span className="text-sm font-handwriting text-ink-light bg-surface-light px-2 py-0.5 rounded">
                   {totalEntries} {totalEntries === 1 ? 'Entry' : 'Entries'}
@@ -1044,8 +1044,14 @@ export default function ArchiveLibrary() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-4 border-b border-wood-light/50">
         <div className="flex flex-col gap-2">
-          <h2 className="text-4xl md:text-5xl tracking-tight font-header italic text-ink">The Archive</h2>
-          <p className="text-ink-light text-lg font-handwriting">Your library of past wins and memories.</p>
+          <h2 className="text-4xl md:text-5xl tracking-tight font-header italic text-ink">
+            {activeTab === 'collections' ? 'Collections' : 'The Archive'}
+          </h2>
+          <p className="text-ink-light text-lg font-handwriting">
+            {activeTab === 'collections'
+              ? 'Themed lists for anything worth tracking.'
+              : 'Your library of journal entries and reflections.'}
+          </p>
         </div>
 
         {/* Tab pills */}
