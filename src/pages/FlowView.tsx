@@ -301,9 +301,14 @@ function TaskCard({
               </span>
             )}
             {entry.timeBlock && (
-              <span className="text-[10px] font-mono text-primary bg-primary/5 px-1.5 py-0.5 rounded">
+              <button
+                onClick={e => { e.stopPropagation(); onUpdate(entry.id, { timeBlock: undefined }); }}
+                className="text-[10px] font-mono text-primary bg-primary/5 px-1.5 py-0.5 rounded hover:bg-primary/15 hover:line-through transition-all flex items-center gap-0.5 group/time"
+                title="Click to unpin from time"
+              >
                 {formatTime12(entry.timeBlock)}
-              </span>
+                <span className="material-symbols-outlined text-[10px] opacity-0 group-hover/time:opacity-100 transition-opacity">close</span>
+              </button>
             )}
             {entry.duration && (
               <span className="text-[10px] font-mono text-pencil">{entry.duration}</span>
@@ -1707,6 +1712,7 @@ export default function FlowView() {
 
   // ── Visual timer ──────────────────────────────────────────────────
   const [timerTask, setTimerTask] = useState<string | null>(null);
+  const clearTimer = useCallback(() => setTimerTask(null), []);
 
   // Build the offsets array from rangeStart to rangeEnd
   const allDayOffsets = useMemo(() => {
@@ -2339,7 +2345,7 @@ export default function FlowView() {
       {timerTask && (
         <VisualTimer
           taskTitle={timerTask}
-          onClose={() => setTimerTask(null)}
+          onClose={clearTimer}
         />
       )}
     </div>
