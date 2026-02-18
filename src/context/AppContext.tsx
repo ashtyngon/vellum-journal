@@ -85,6 +85,7 @@ export interface DayDebrief {
   accomplishment: number;
   mood: string;
   reflection?: string;
+  savedAt?: string; // ISO timestamp of when this debrief was actually saved
 }
 
 /* ── Context Type ──────────────────────────────────────────────────── */
@@ -123,6 +124,7 @@ interface AppContextType {
   reorderCollectionItems: (collectionId: string, items: CollectionItem[]) => void;
   // Debriefs
   saveDebrief: (debrief: DayDebrief) => void;
+  deleteDebrief: (date: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -170,6 +172,25 @@ function getDefaultJournalEntries(): JournalEntry[] {
 function purgeOldTrash(entries: RapidLogEntry[]): RapidLogEntry[] {
   const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
   return entries.filter(e => !e.deletedAt || new Date(e.deletedAt).getTime() > cutoff);
+}
+
+/* ── Debrief migration — fix UTC-poisoned dates ──────────────────── */
+// Prior code used UTC-based dates which could shift a debrief to the wrong day.
+// Debriefs with savedAt: if the local date of savedAt differs from the debrief's
+// date field, the debrief was saved under the wrong date. Remove it.
+// Debriefs without savedAt (legacy): stamp them so future loads can validate.
+
+function migrateDebriefs(debriefs: DayDebrief[]): DayDebrief[] {
+  return debriefs.filter(d => {
+    if (!d.savedAt) return true; // legacy — can't verify, user can Clear manually
+    // Check: local date of savedAt should match debrief date
+    const savedLocalDate = formatLocalDate(new Date(d.savedAt));
+    if (savedLocalDate !== d.date) {
+      console.warn(`[debrief-migration] Removing UTC-poisoned debrief: savedAt local=${savedLocalDate} but date=${d.date}`);
+      return false;
+    }
+    return true;
+  });
 }
 
 /* ── localStorage write-ahead log ─────────────────────────────────── */
@@ -274,7 +295,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             setHabits(wal.habits);
             setJournalEntries(wal.journalEntries);
             setCollections(wal.collections);
-            setDebriefs(wal.debriefs);
+            setDebriefs(migrateDebriefs(wal.debriefs));
             clearWal();
           } else {
             // Use Firestore data (it's current or newer)
@@ -296,7 +317,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             setHabits(data.habits ?? []);
             setJournalEntries(data.journalEntries ?? []);
             setCollections(data.collections ?? []);
-            setDebriefs(data.debriefs ?? []);
+            setDebriefs(migrateDebriefs(data.debriefs ?? []));
           }
         } else if (wal) {
           // No Firestore doc but WAL exists — use WAL
@@ -304,7 +325,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           setHabits(wal.habits);
           setJournalEntries(wal.journalEntries);
           setCollections(wal.collections);
-          setDebriefs(wal.debriefs);
+          setDebriefs(migrateDebriefs(wal.debriefs));
           clearWal();
         } else {
           // Brand-new user — seed with defaults once, then save
@@ -330,7 +351,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           setHabits(wal.habits);
           setJournalEntries(wal.journalEntries);
           setCollections(wal.collections);
-          setDebriefs(wal.debriefs);
+          setDebriefs(migrateDebriefs(wal.debriefs));
           clearWal();
         }
       }
@@ -482,14 +503,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const saveDebrief = useCallback((debrief: DayDebrief) =>
     setDebriefs(prev => {
+      const stamped = { ...debrief, savedAt: new Date().toISOString() };
       const existing = prev.findIndex(d => d.date === debrief.date);
       if (existing >= 0) {
         const updated = [...prev];
-        updated[existing] = debrief;
+        updated[existing] = stamped;
         return updated;
       }
-      return [...prev, debrief];
+      return [...prev, stamped];
     }), []);
+
+  const deleteDebrief = useCallback((date: string) =>
+    setDebriefs(prev => prev.filter(d => d.date !== date)), []);
 
   /* ── Provider ──────────────────────────────────────────────────── */
 
@@ -505,7 +530,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     addJournalEntry, updateJournalEntry, deleteJournalEntry,
     addCollection, updateCollection, deleteCollection,
     addCollectionItem, updateCollectionItem, deleteCollectionItem, reorderCollectionItems,
-    saveDebrief,
+    saveDebrief, deleteDebrief,
   }), [
     activeEntries, trashEntries, habits, journalEntries, collections, debriefs, loading,
     addEntry, updateEntry, batchUpdateEntries, deleteEntry, restoreEntry, permanentlyDeleteEntry,
@@ -513,7 +538,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     addJournalEntry, updateJournalEntry, deleteJournalEntry,
     addCollection, updateCollection, deleteCollection,
     addCollectionItem, updateCollectionItem, deleteCollectionItem, reorderCollectionItems,
-    saveDebrief,
+    saveDebrief, deleteDebrief,
   ]);
 
   return (

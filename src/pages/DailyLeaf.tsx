@@ -72,6 +72,7 @@ export default function DailyLeaf() {
     toggleHabit,
     addJournalEntry,
     saveDebrief,
+    deleteDebrief,
   } = useApp();
 
   /* ── Date & mode (auto-refresh on tab focus) ────────────────── */
@@ -1039,12 +1040,20 @@ export default function DailyLeaf() {
                       <span className="material-symbols-outlined text-sage text-base">check_circle</span>
                       <p className="text-sm font-body font-medium text-ink">Debrief saved</p>
                     </div>
-                    <button
-                      onClick={() => setRedoDebrief(true)}
-                      className="text-xs font-body text-pencil hover:text-ink underline underline-offset-2 decoration-pencil/30 transition-colors"
-                    >
-                      Redo
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setRedoDebrief(true)}
+                        className="text-xs font-body text-pencil hover:text-ink underline underline-offset-2 decoration-pencil/30 transition-colors"
+                      >
+                        Redo
+                      </button>
+                      <button
+                        onClick={() => deleteDebrief(dateKey)}
+                        className="text-xs font-body text-tension/60 hover:text-tension underline underline-offset-2 decoration-tension/20 transition-colors"
+                      >
+                        Clear
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1113,12 +1122,20 @@ export default function DailyLeaf() {
                       <span className="material-symbols-outlined text-sage text-base">check_circle</span>
                       Debrief saved
                     </p>
-                    <button
-                      onClick={() => setRedoDebrief(true)}
-                      className="text-xs font-body text-pencil hover:text-ink underline underline-offset-2 decoration-pencil/30 transition-colors"
-                    >
-                      Redo
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setRedoDebrief(true)}
+                        className="text-xs font-body text-pencil hover:text-ink underline underline-offset-2 decoration-pencil/30 transition-colors"
+                      >
+                        Redo
+                      </button>
+                      <button
+                        onClick={() => deleteDebrief(dateKey)}
+                        className="text-xs font-body text-tension/60 hover:text-tension underline underline-offset-2 decoration-tension/20 transition-colors"
+                      >
+                        Clear
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
