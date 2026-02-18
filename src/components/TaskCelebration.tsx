@@ -683,41 +683,45 @@ type CelebrateFn = (el: HTMLElement, completedCount: number) => void;
 const effects = [supernova, victoryRibbon, levelUp, auroraWave, gravityDefier];
 let lastEffectIndex = -1;
 
-export function useTaskCelebration(): CelebrateFn {
-  const celebrate = useCallback<CelebrateFn>((el, completedCount) => {
-    try {
-      const origin = getCenter(el);
+/** Standalone celebrate function — can be called from any component without a hook. */
+export function celebrateTask(el: HTMLElement, completedCount: number = 1): void {
+  try {
+    const origin = getCenter(el);
 
-      // Always fire the DOM-based glow (guaranteed visible, no canvas dependency)
-      rowGlowPulse(el);
+    // Always fire the DOM-based glow (guaranteed visible, no canvas dependency)
+    rowGlowPulse(el);
 
-      // Pick a random canvas effect, avoiding the last one used
-      let index: number;
-      do {
-        index = Math.floor(Math.random() * effects.length);
-      } while (index === lastEffectIndex && effects.length > 1);
-      lastEffectIndex = index;
+    // Pick a random canvas effect, avoiding the last one used
+    let index: number;
+    do {
+      index = Math.floor(Math.random() * effects.length);
+    } while (index === lastEffectIndex && effects.length > 1);
+    lastEffectIndex = index;
 
-      const effect = effects[index];
+    const effect = effects[index];
 
-      // Route to the correct signature
-      if (effect === supernova) {
-        supernova(origin);
-      } else if (effect === victoryRibbon) {
-        victoryRibbon(origin, el);
-      } else if (effect === levelUp) {
-        levelUp(origin, completedCount);
-      } else if (effect === auroraWave) {
-        auroraWave(origin, el);
-      } else if (effect === gravityDefier) {
-        gravityDefier(origin, el);
-      }
-    } catch (err) {
-      console.error('[TaskCelebration] Effect error:', err);
+    // Route to the correct signature
+    if (effect === supernova) {
+      supernova(origin);
+    } else if (effect === victoryRibbon) {
+      victoryRibbon(origin, el);
+    } else if (effect === levelUp) {
+      levelUp(origin, completedCount);
+    } else if (effect === auroraWave) {
+      auroraWave(origin, el);
+    } else if (effect === gravityDefier) {
+      gravityDefier(origin, el);
     }
-  }, []);
+  } catch (err) {
+    console.error('[TaskCelebration] Effect error:', err);
+  }
+}
 
-  return celebrate;
+/** React hook wrapper — returns the same celebrateTask function via useCallback. */
+export function useTaskCelebration(): CelebrateFn {
+  return useCallback<CelebrateFn>((el, completedCount) => {
+    celebrateTask(el, completedCount);
+  }, []);
 }
 
 export default useTaskCelebration;

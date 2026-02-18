@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo, useCallback, type ReactElement } from 'react';
 import { useApp } from '../context/AppContext';
 import { parseNaturalEntry } from '../lib/nlParser';
+import { celebrateTask } from '../components/TaskCelebration';
 import type { RapidLogEntry } from '../context/AppContext';
 import { formatLocalDate, dateStr, todayStr } from '../lib/dateUtils';
 
@@ -206,8 +207,10 @@ function TaskCard({
     setEditing(false);
   };
 
-  const toggleDone = () => {
+  const toggleDone = (el?: HTMLElement) => {
+    const wasUndone = entry.status !== 'done';
     onUpdate(entry.id, { status: entry.status === 'done' ? 'todo' : 'done' });
+    if (wasUndone && el) celebrateTask(el);
   };
 
   const isDone = entry.status === 'done';
@@ -244,7 +247,7 @@ function TaskCard({
 
         {/* Checkbox */}
         {!bulkMode && (
-          <button onClick={toggleDone} className="shrink-0 mt-0.5">
+          <button onClick={(e) => toggleDone(e.currentTarget as HTMLElement)} className="shrink-0 mt-0.5">
             <span className={`material-symbols-outlined text-[18px] transition-colors ${
               isDone ? 'text-sage' : 'text-primary hover:text-primary/70'
             }`}>
@@ -573,8 +576,10 @@ function ResizableTimelineCard({
     document.addEventListener('pointerup', handleUp);
   }, [entry.id, entry.duration, slotHeight, sectionEndMin, timeMin, onUpdate]);
 
-  const toggleDone = () => {
+  const toggleDone = (el?: HTMLElement) => {
+    const wasUndone = entry.status !== 'done';
     onUpdate(entry.id, { status: entry.status === 'done' ? 'todo' : 'done' });
+    if (wasUndone && el) celebrateTask(el);
   };
 
   const heightPx = spanSlots * slotHeight;
@@ -597,7 +602,7 @@ function ResizableTimelineCard({
       {/* Content */}
       <div className="flex items-start gap-2 p-2 flex-1 min-h-0">
         {/* Checkbox */}
-        <button onClick={toggleDone} className="shrink-0 mt-0.5">
+        <button onClick={(e) => toggleDone(e.currentTarget as HTMLElement)} className="shrink-0 mt-0.5">
           <span className={`material-symbols-outlined text-[16px] transition-colors ${
             isDone ? 'text-sage' : 'text-primary hover:text-primary/70'
           }`}>
