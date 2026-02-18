@@ -757,7 +757,10 @@ function ZoomedSection({
     setDragOverSlot(null);
     const payload = decodeDrag(e.dataTransfer.getData('application/json'));
     if (payload) {
-      onDrop(payload.entryId, section.id, slotTime);
+      // Handle all entries in bulk drag, not just the primary
+      for (const id of payload.entryIds) {
+        onDrop(id, section.id, slotTime);
+      }
     }
   };
 
@@ -1815,13 +1818,16 @@ export default function FlowView() {
     saveSections(newSections);
   }, []);
 
-  // Parking lot: unscheduled tasks (type='task', no timeBlock, status='todo')
+  // Parking lot: truly unscheduled tasks — today's or undated tasks without a section
+  // (don't show future-dated tasks here; they belong in their day column)
   const parkingLotEntries = useMemo(() => {
+    const today = dateStr(0);
     return entries.filter(e =>
       e.type === 'task' &&
       !e.timeBlock &&
       !e.section &&
-      e.status === 'todo'
+      e.status === 'todo' &&
+      (!e.date || e.date <= today)
     );
   }, [entries]);
 
@@ -1964,7 +1970,7 @@ export default function FlowView() {
   };
 
   const scheduleToToday = (entryId: string) => {
-    updateEntry(entryId, { date: dateStr(0) });
+    updateEntry(entryId, { date: dateStr(0), timeBlock: undefined });
   };
 
   /* ── Parking lot drop zone ─────────────────────────────────────────── */

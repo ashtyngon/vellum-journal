@@ -203,9 +203,10 @@ function readWal(uid: string): WalData | null {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as WalData;
-    // Only use WAL if it belongs to this user and is recent (< 5 minutes)
-    if (parsed.uid === uid && Date.now() - parsed.ts < 5 * 60_000) return parsed;
-    // Stale or different user — clear it
+    // Only use WAL if it belongs to this user (no time limit —
+    // WAL is cleared after confirmed Firestore write, so if it exists, it's needed)
+    if (parsed.uid === uid) return parsed;
+    // Different user — clear it
     localStorage.removeItem(LS_KEY);
     return null;
   } catch { return null; }
