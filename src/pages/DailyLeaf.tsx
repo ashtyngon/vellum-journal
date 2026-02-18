@@ -9,6 +9,7 @@ import JournalWalkthrough from '../components/JournalWalkthrough';
 import ProcrastinationUnpacker from '../components/ProcrastinationUnpacker';
 import DayRecovery from '../components/DayRecovery';
 import DayDebriefComponent from '../components/DayDebrief';
+import { useTaskCelebration } from '../components/TaskCelebration';
 import { parseNaturalEntry } from '../lib/nlParser';
 import { todayStr, dayAfter, formatLocalDate } from '../lib/dateUtils';
 import type { RapidLogEntry, JournalStep, JournalEntry } from '../context/AppContext';
@@ -331,16 +332,24 @@ export default function DailyLeaf() {
 
   /* ── Handlers: Toggle task done ──────────────────────────────── */
 
+  const celebrate = useTaskCelebration();
+
   const handleToggleTask = useCallback(
-    (id: string) => {
+    (id: string, checkboxEl?: HTMLElement) => {
       const entry = entries.find((e) => e.id === id);
       if (entry && entry.type === 'task') {
+        const wasUndone = entry.status !== 'done';
         updateEntry(id, {
           status: entry.status === 'done' ? 'todo' : 'done',
         });
+        // Fire celebration when marking as DONE (not when unchecking)
+        if (wasUndone && checkboxEl) {
+          const newCount = todayTasks.filter(t => t.status === 'done').length + 1;
+          celebrate(checkboxEl, newCount);
+        }
       }
     },
-    [entries, updateEntry],
+    [entries, updateEntry, todayTasks, celebrate],
   );
 
   /* ── Handlers: Inline editing ────────────────────────────────── */
@@ -721,7 +730,7 @@ export default function DailyLeaf() {
                       >
                         {isTask ? (
                           <button
-                            onClick={() => handleToggleTask(entry.id)}
+                            onClick={(e) => handleToggleTask(entry.id, e.currentTarget as HTMLElement)}
                             className="flex-shrink-0 focus:outline-none mt-0.5 hover:scale-125 transition-transform"
                           >
                             {bulletForEntry(entry)}
@@ -790,9 +799,15 @@ export default function DailyLeaf() {
                                 Stuck?
                               </button>
                             )}
-                            <Link to="/migration" className="text-pencil hover:text-tension transition-colors">
-                              <span className="material-symbols-outlined text-[16px]">east</span>
-                            </Link>
+                            {isTask && !isDone && (
+                              <button
+                                onClick={() => updateEntry(entry.id, { date: tomorrow, movedCount: (entry.movedCount ?? 0) + 1 })}
+                                className="text-pencil hover:text-primary transition-colors"
+                                title="Move to tomorrow"
+                              >
+                                <span className="material-symbols-outlined text-[16px]">east</span>
+                              </button>
+                            )}
                             <button onClick={() => deleteEntry(entry.id)} className="text-pencil hover:text-tension transition-colors">
                               <span className="material-symbols-outlined text-[16px]">delete</span>
                             </button>
@@ -1315,7 +1330,7 @@ export default function DailyLeaf() {
                       >
                         {isTask ? (
                           <button
-                            onClick={() => handleToggleTask(entry.id)}
+                            onClick={(e) => handleToggleTask(entry.id, e.currentTarget as HTMLElement)}
                             className="flex-shrink-0 focus:outline-none mt-0.5 hover:scale-125 transition-transform"
                           >
                             {bulletForEntry(entry)}
@@ -1384,9 +1399,15 @@ export default function DailyLeaf() {
                                 Stuck?
                               </button>
                             )}
-                            <Link to="/migration" className="text-pencil hover:text-tension transition-colors">
-                              <span className="material-symbols-outlined text-[16px]">east</span>
-                            </Link>
+                            {isTask && !isDone && (
+                              <button
+                                onClick={() => updateEntry(entry.id, { date: tomorrow, movedCount: (entry.movedCount ?? 0) + 1 })}
+                                className="text-pencil hover:text-primary transition-colors"
+                                title="Move to tomorrow"
+                              >
+                                <span className="material-symbols-outlined text-[16px]">east</span>
+                              </button>
+                            )}
                             <button onClick={() => deleteEntry(entry.id)} className="text-pencil hover:text-tension transition-colors">
                               <span className="material-symbols-outlined text-[16px]">delete</span>
                             </button>
