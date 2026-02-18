@@ -362,16 +362,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     loadData();
   }, [user]);
 
-  // Save to Firestore on changes (debounced 300ms) + immediate localStorage WAL
+  // Save to Firestore on EVERY change — no debounce.
+  // Also writes to localStorage WAL as a synchronous backup.
   // CRITICAL: Only save AFTER Firestore data has been loaded to prevent
   // overwriting real data with empty/stale state.
-  const pendingSaveRef = useRef(false);
   const latestDataRef = useRef({ entries, habits, journalEntries, collections, debriefs });
   latestDataRef.current = { entries, habits, journalEntries, collections, debriefs };
 
   const flushSave = useCallback(() => {
-    if (!user || !dataLoadedRef.current || !pendingSaveRef.current) return;
-    pendingSaveRef.current = false;
+    if (!user || !dataLoadedRef.current) return;
     const data = latestDataRef.current;
     setDoc(doc(db, 'users', user.uid), {
       ...data,
@@ -386,12 +385,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!user || !dataLoadedRef.current) return;
-    // IMMEDIATELY write to localStorage (synchronous, survives page refresh)
+    // IMMEDIATELY write to localStorage (synchronous backup)
     writeWal(user.uid, latestDataRef.current);
-    // Then debounce the async Firestore write
-    pendingSaveRef.current = true;
-    const timeout = setTimeout(flushSave, 300);
-    return () => clearTimeout(timeout);
+    // Save to Firestore immediately — no debounce
+    flushSave();
   }, [entries, habits, journalEntries, collections, debriefs, user, flushSave]);
 
   // Flush any pending save when the page is about to unload.
