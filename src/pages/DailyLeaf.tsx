@@ -731,7 +731,8 @@ export default function DailyLeaf() {
                         {isTask ? (
                           <button
                             onClick={(e) => handleToggleTask(entry.id, e.currentTarget as HTMLElement)}
-                            className="flex-shrink-0 focus:outline-none mt-0.5 hover:scale-125 transition-transform"
+                            className="flex-shrink-0 focus:outline-none p-1.5 -m-1.5 rounded hover:bg-primary/10 transition-all"
+                            title={isDone ? 'Mark as todo' : 'Mark as done'}
                           >
                             {bulletForEntry(entry)}
                           </button>
@@ -756,7 +757,8 @@ export default function DailyLeaf() {
                                   : isNote ? 'text-ink/60 italic'
                                   : 'text-ink hover:text-ink-light'
                               }`}
-                              onClick={() => startEditing(entry.id, entry.title)}
+                              onDoubleClick={() => startEditing(entry.id, entry.title)}
+                              onClick={() => { if (isTask) handleToggleTask(entry.id); }}
                             >
                               {entry.title}
                             </button>
@@ -1331,7 +1333,8 @@ export default function DailyLeaf() {
                         {isTask ? (
                           <button
                             onClick={(e) => handleToggleTask(entry.id, e.currentTarget as HTMLElement)}
-                            className="flex-shrink-0 focus:outline-none mt-0.5 hover:scale-125 transition-transform"
+                            className="flex-shrink-0 focus:outline-none p-1.5 -m-1.5 rounded hover:bg-primary/10 transition-all"
+                            title={isDone ? 'Mark as todo' : 'Mark as done'}
                           >
                             {bulletForEntry(entry)}
                           </button>
@@ -1356,7 +1359,8 @@ export default function DailyLeaf() {
                                   : isNote ? 'text-ink/60 italic'
                                   : 'text-ink hover:text-ink-light'
                               }`}
-                              onClick={() => startEditing(entry.id, entry.title)}
+                              onDoubleClick={() => startEditing(entry.id, entry.title)}
+                              onClick={() => { if (isTask) handleToggleTask(entry.id); }}
                             >
                               {entry.title}
                             </button>
