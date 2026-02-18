@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, useMemo, useCallback, type KeyboardEvent }
 import { Link } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import { useApp } from '../context/AppContext';
-import { generateMorningPrompt } from '../lib/prompts';
 import { getPlaceholder, SIGNIFIER_TOOLTIPS } from '../lib/bujoHints';
 import { JOURNAL_METHODS } from '../lib/journalMethods';
 import JournalWalkthrough from '../components/JournalWalkthrough';
@@ -229,19 +228,6 @@ export default function DailyLeaf() {
       setShowDayRecovery(true);
     }
   }, [shouldAutoShowRecovery]);
-
-  /* ── Morning prompt ──────────────────────────────────────────── */
-
-  const morningPrompt = useMemo(
-    () =>
-      generateMorningPrompt({
-        entries,
-        habits,
-        journalEntries,
-        debriefs,
-      }),
-    [entries, habits, journalEntries, debriefs],
-  );
 
   /* ── Capacity warning ────────────────────────────────────────── */
 
@@ -648,16 +634,6 @@ export default function DailyLeaf() {
 
           {/* ── LEFT SIDEBAR ────────────────────────────────────── */}
           <aside className="hidden lg:flex flex-col gap-5 sticky top-6">
-            {/* Morning Prompt */}
-            <div className="bg-paper rounded-xl p-5 shadow-soft border border-wood-light/15">
-              <p className="font-body text-sm text-ink/70 leading-relaxed mb-2">
-                {morningPrompt.contextual}
-              </p>
-              <p className="font-handwriting text-sm text-pencil/50 italic">
-                {morningPrompt.inspirational}
-              </p>
-            </div>
-
             {/* Upcoming Events */}
             {upcomingEvents.length > 0 && (
               <div className="bg-paper rounded-xl p-5 shadow-soft border border-wood-light/15">
@@ -764,16 +740,6 @@ export default function DailyLeaf() {
 
           {/* ── CENTER: Main journal ────────────────────────────── */}
           <main className="min-w-0">
-            {/* Mobile-only: Morning prompt */}
-            <div className="lg:hidden mb-4">
-              <p className="font-body text-base text-ink/70 leading-relaxed">
-                {morningPrompt.contextual}
-              </p>
-              <p className="font-handwriting text-sm text-pencil/50 italic mt-1">
-                {morningPrompt.inspirational}
-              </p>
-            </div>
-
             {/* Intention */}
             <div className="mb-5">
               <label className="block font-mono text-[10px] text-accent uppercase tracking-[0.15em] mb-1.5">
