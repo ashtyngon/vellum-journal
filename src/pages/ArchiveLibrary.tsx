@@ -426,7 +426,10 @@ function JournalsTab({
                       <h4 className="font-display text-base font-semibold text-ink mb-1">{entry.title}</h4>
                     )}
 
-                    <p className="font-body text-sm text-ink leading-relaxed whitespace-pre-wrap line-clamp-3">{entry.content}</p>
+                    {/* Show content only if it's not just a duplicate of the wins */}
+                    {entry.content && !(entry.wins?.length === 1 && entry.wins[0] === entry.content) && (
+                      <p className="font-body text-sm text-ink leading-relaxed whitespace-pre-wrap line-clamp-3">{entry.content}</p>
+                    )}
 
                     {entry.tags && entry.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mt-3">
