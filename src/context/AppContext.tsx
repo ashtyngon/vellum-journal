@@ -98,6 +98,7 @@ interface AppContextType {
   // Entries CRUD
   addEntry: (entry: RapidLogEntry) => void;
   updateEntry: (id: string, updates: Partial<RapidLogEntry>) => void;
+  batchUpdateEntries: (updates: Array<{ id: string; updates: Partial<RapidLogEntry> }>) => void;
   deleteEntry: (id: string) => void;
   restoreEntry: (id: string) => void;
   permanentlyDeleteEntry: (id: string) => void;
@@ -392,6 +393,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const updateEntry = useCallback((id: string, updates: Partial<RapidLogEntry>) =>
     setEntries(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e)), []);
 
+  // Atomic batch update — single state change for multiple entries
+  const batchUpdateEntries = useCallback((updates: Array<{ id: string; updates: Partial<RapidLogEntry> }>) => {
+    setEntries(prev => {
+      const updateMap = new Map(updates.map(u => [u.id, u.updates]));
+      return prev.map(e => {
+        const u = updateMap.get(e.id);
+        return u ? { ...e, ...u } : e;
+      });
+    });
+  }, []);
+
   // Soft-delete: mark with deletedAt timestamp (kept for 7 days)
   const deleteEntry = useCallback((id: string) =>
     setEntries(prev => prev.map(e =>
@@ -492,7 +504,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     <AppContext.Provider value={{
       entries: activeEntries, trash: trashEntries,
       habits, journalEntries, collections, debriefs, loading,
-      addEntry, updateEntry, deleteEntry, restoreEntry, permanentlyDeleteEntry,
+      addEntry, updateEntry, batchUpdateEntries, deleteEntry, restoreEntry, permanentlyDeleteEntry,
       toggleHabit, addHabit, updateHabit, deleteHabit,
       addJournalEntry, updateJournalEntry, deleteJournalEntry,
       addCollection, updateCollection, deleteCollection,

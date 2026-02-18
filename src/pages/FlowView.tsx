@@ -878,11 +878,11 @@ function ZoomedSection({
 
 function AddTaskInline({
   date,
-  timeBlockDefault,
+  sectionId,
   onAdd,
 }: {
   date: string;
-  timeBlockDefault?: string;
+  sectionId?: string;
   onAdd: (entry: RapidLogEntry) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -913,7 +913,10 @@ function AddTaskInline({
           date: parsed.date || date,
           priority: 'medium',
           movedCount: 0,
-          timeBlock: parsed.time || timeBlockDefault,
+          // Only pin to a time slot if the user explicitly typed a time.
+          // Otherwise just assign to the section (no timeBlock).
+          ...(parsed.time ? { timeBlock: parsed.time } : {}),
+          ...(sectionId ? { section: sectionId } : {}),
         });
       }
       setTitle('');
@@ -1292,6 +1295,7 @@ function SectionBody({
   onDelete,
   onAdd,
   onDrop,
+  onBatchDrop,
   draggingId,
   onDragStartEntry,
   selectedIds,
@@ -1307,6 +1311,7 @@ function SectionBody({
   onDelete: (id: string) => void;
   onAdd: (entry: RapidLogEntry) => void;
   onDrop: (entryId: string, targetSectionId: string) => void;
+  onBatchDrop: (entryIds: string[], targetSectionId: string) => void;
   draggingId: string | null;
   onDragStartEntry: (e: React.DragEvent, entryId: string) => void;
   selectedIds?: Set<string>;
@@ -1351,14 +1356,14 @@ function SectionBody({
 
     const payload = decodeDrag(e.dataTransfer.getData('application/json'));
     if (payload) {
-      // Bulk drop: move all selected entries
-      for (const id of payload.entryIds) {
-        onDrop(id, section.id);
+      if (payload.entryIds.length > 1) {
+        // Atomic batch drop for multiple entries
+        onBatchDrop(payload.entryIds, section.id);
+      } else {
+        onDrop(payload.entryIds[0], section.id);
       }
     }
   };
-
-  const timeBlockDefault = minutesToTimeStr(section.startHour * 60);
 
   return (
     <div
@@ -1399,7 +1404,7 @@ function SectionBody({
       )}
 
       {/* Add task inline */}
-      <AddTaskInline date={date} timeBlockDefault={timeBlockDefault} onAdd={onAdd} />
+      <AddTaskInline date={date} sectionId={section.id} onAdd={onAdd} />
 
       {/* Task detail modal */}
       {detailEntry && (
@@ -1422,6 +1427,7 @@ function DayColumn({
   sections,
   sectionNames,
   onUpdate,
+  onBatchUpdate,
   onDelete,
   onAdd,
   onDrop,
@@ -1440,6 +1446,7 @@ function DayColumn({
   sections: DaySection[];
   sectionNames: Record<string, string>;
   onUpdate: (id: string, updates: Partial<RapidLogEntry>) => void;
+  onBatchUpdate: (updates: Array<{ id: string; updates: Partial<RapidLogEntry> }>) => void;
   onDelete: (id: string) => void;
   onAdd: (entry: RapidLogEntry) => void;
   onDrop: (entryId: string, targetSectionId: string, targetDate: string) => void;
@@ -1533,6 +1540,13 @@ function DayColumn({
 
   const handleDrop = (entryId: string, targetSectionId: string) => {
     onDrop(entryId, targetSectionId, info.iso);
+  };
+
+  const handleBatchDrop = (entryIds: string[], targetSectionId: string) => {
+    onBatchUpdate(entryIds.map(id => ({
+      id,
+      updates: { date: info.iso, section: targetSectionId, timeBlock: undefined },
+    })));
   };
 
   const handleDropZoomed = (entryId: string, targetSectionId: string, timeBlock?: string) => {
@@ -1630,10 +1644,12 @@ function DayColumn({
                 onToggleCollapse={() => toggleCollapse(section.id)}
                 onZoom={() => setZoomedSection(section.id)}
                 onUnpinTimes={() => {
-                  for (const t of sectionTasks) {
-                    if (t.timeBlock) {
-                      onUpdate(t.id, { timeBlock: undefined, section: section.id });
-                    }
+                  const timed = sectionTasks.filter(t => !!t.timeBlock);
+                  if (timed.length > 0) {
+                    onBatchUpdate(timed.map(t => ({
+                      id: t.id,
+                      updates: { timeBlock: undefined, section: section.id },
+                    })));
                   }
                 }}
                 taskCount={sectionTasks.length}
@@ -1651,6 +1667,7 @@ function DayColumn({
                   onDelete={onDelete}
                   onAdd={onAdd}
                   onDrop={handleDrop}
+                  onBatchDrop={handleBatchDrop}
                   draggingId={draggingId}
                   onDragStartEntry={handleDragStart}
                   selectedIds={selectedIds}
@@ -1670,7 +1687,7 @@ function DayColumn({
 /* ── Main FlowView ────────────────────────────────────────────────────────── */
 
 export default function FlowView() {
-  const { entries, addEntry, updateEntry, deleteEntry, habits, toggleHabit } = useApp();
+  const { entries, addEntry, updateEntry, batchUpdateEntries, deleteEntry, habits, toggleHabit } = useApp();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [parkingInput, setParkingInput] = useState('');
@@ -1943,10 +1960,11 @@ export default function FlowView() {
     setParkingDragOver(false);
     const payload = decodeDrag(e.dataTransfer.getData('application/json'));
     if (payload) {
-      // Unschedule: remove timeBlock and section assignment (bulk aware)
-      for (const id of payload.entryIds) {
-        updateEntry(id, { timeBlock: undefined, section: undefined });
-      }
+      // Unschedule: remove timeBlock and section assignment (atomic batch)
+      batchUpdateEntries(payload.entryIds.map(id => ({
+        id,
+        updates: { timeBlock: undefined, section: undefined },
+      })));
       clearSelection();
     }
   };
@@ -2261,6 +2279,7 @@ export default function FlowView() {
                 sections={sections}
                 sectionNames={sectionNames}
                 onUpdate={updateEntry}
+                onBatchUpdate={batchUpdateEntries}
                 onDelete={deleteEntry}
                 onAdd={addEntry}
                 onDrop={handleDropToSection}
