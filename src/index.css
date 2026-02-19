@@ -2,6 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Theme CSS custom properties ─────────────────────────────── */
+:root {
+  /* Semantic colors — light mode */
+  --color-primary: #ec7f13;
+  --color-bg: #f8f7f6;
+  --color-surface: #fffefc;
+  --color-paper: #fffefb;
+  --color-ink: #1b140d;
+  --color-ink-light: #9a734c;
+  --color-pencil: #A8A29E;
+  --color-border: #e8e0d5;
+  --shadow-soft: 0 4px 20px -2px rgba(27, 20, 13, 0.08);
+
+  /* Accent (overridden by Color of the Day) */
+  --color-accent: hsl(24, 85%, 50%);
+  --color-accent-h: 24;
+  --color-accent-s: 85%;
+  --color-accent-l: 50%;
+}
+
+/* Dark mode — flips all semantic tokens */
+.dark {
+  --color-primary: #f0a050;
+  --color-bg: #141210;
+  --color-surface: #1e1b18;
+  --color-paper: #1a1816;
+  --color-ink: #ede8e3;
+  --color-ink-light: #c4a882;
+  --color-pencil: #6b6560;
+  --color-border: #2a2520;
+  --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+  color-scheme: dark;
+}
+
 @layer utilities {
     .bg-wood-texture {
         background-color: #f3ede7;

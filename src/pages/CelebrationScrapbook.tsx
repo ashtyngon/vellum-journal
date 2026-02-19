@@ -70,7 +70,7 @@ function getGrowthStage(count: number) {
 /* ── Main Component ────────────────────────────────────────────────── */
 
 export default function CelebrationScrapbook() {
-  const { journalEntries, deleteJournalEntry, addJournalEntry } = useApp();
+  const { journalEntries, deleteJournalEntry, addJournalEntry, entries } = useApp();
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [newWinTitle, setNewWinTitle] = useState('');
@@ -80,29 +80,48 @@ export default function CelebrationScrapbook() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const addInputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Only manual wins and journal entries that have wins
+  // All wins: journal entries with wins[] + completed tasks
   const wins = useMemo(() => {
     const items: WinItem[] = [];
 
+    // Journal-based wins
     for (const j of journalEntries) {
-      // Entries with wins field
       if (j.wins && j.wins.length > 0) {
         items.push({
           id: j.id,
           originalId: j.id,
           date: j.date,
           title: j.title || 'A Quiet Win',
-          content: j.wins.join(' · '),
+          content: j.wins.join(' \u00b7 '),
           method: j.method,
           mood: j.mood,
         });
       }
     }
 
+    // Task-based wins: completed tasks grouped by day
+    const tasksByDate = new Map<string, string[]>();
+    for (const e of entries) {
+      if (e.type === 'task' && e.status === 'done') {
+        const existing = tasksByDate.get(e.date) || [];
+        existing.push(e.title);
+        tasksByDate.set(e.date, existing);
+      }
+    }
+    for (const [date, titles] of tasksByDate) {
+      items.push({
+        id: `tasks-${date}`,
+        originalId: `tasks-${date}`,
+        date,
+        title: `${titles.length} task${titles.length !== 1 ? 's' : ''} done`,
+        content: titles.slice(0, 5).join(' \u00b7 ') + (titles.length > 5 ? ` +${titles.length - 5} more` : ''),
+      });
+    }
+
     return items.sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
     );
-  }, [journalEntries]);
+  }, [journalEntries, entries]);
 
   const grouped = useMemo(() => groupByMonth(wins), [wins]);
   const totalWins = wins.length;

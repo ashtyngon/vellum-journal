@@ -102,10 +102,10 @@ export function getPlaceholder(type: 'task' | 'event' | 'note'): string {
 /* ── Signifier Tooltips ───────────────────────────────────────────────── */
 
 export const SIGNIFIER_TOOLTIPS: Array<{ symbol: string; meaning: string }> = [
-  { symbol: '\u2022', meaning: 'Task \u2014 something to do' },
-  { symbol: '\u00d7', meaning: 'Done \u2014 completed' },
-  { symbol: '>', meaning: 'Migrated \u2014 moved forward' },
-  { symbol: '\u25cb', meaning: 'Event \u2014 something that happened or is planned' },
-  { symbol: '\u2014', meaning: 'Note \u2014 a thought, idea, or observation' },
-  { symbol: '*', meaning: 'Priority \u2014 important' },
+  { symbol: '\u25cf', meaning: 'Task \u2014 something to do' },
+  { symbol: '\u2713', meaning: 'Done \u2014 completed' },
+  { symbol: '\u2717', meaning: 'Not doing \u2014 cancelled' },
+  { symbol: '\u2192', meaning: 'Migrated \u2014 moved forward' },
+  { symbol: '\u25cb', meaning: 'Event \u2014 scheduled' },
+  { symbol: '\u2014', meaning: 'Note \u2014 thought or observation' },
 ];

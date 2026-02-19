@@ -12,7 +12,7 @@ export interface RapidLogEntry {
   title: string;
   date: string;
   // Task-specific
-  status?: 'todo' | 'done' | 'migrated' | 'deferred';
+  status?: 'todo' | 'done' | 'migrated' | 'deferred' | 'cancelled';
   priority?: 'low' | 'medium' | 'high';
   movedCount?: number;
   timeBlock?: string;

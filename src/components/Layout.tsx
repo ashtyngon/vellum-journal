@@ -1,12 +1,45 @@
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getColorOfTheDay, DEFAULT_PRIMARY, applyAccentColor } from '../lib/colorOfTheDay';
+import { todayStr } from '../lib/dateUtils';
 
 const Layout = ({ children }: { children: ReactNode }) => {
   const { pathname } = useLocation();
   const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+
+  // ── Dark mode ──────────────────────────────────────────────
+  const [darkMode, setDarkMode] = useState(() =>
+    localStorage.getItem('vellum-theme') === 'dark'
+  );
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode);
+    localStorage.setItem('vellum-theme', darkMode ? 'dark' : 'light');
+  }, [darkMode]);
+
+  // ── Color of the Day ──────────────────────────────────────
+  const today = todayStr();
+  const dailyColor = useMemo(() => getColorOfTheDay(today), [today]);
+  const [useDefaultColor, setUseDefaultColor] = useState(() =>
+    localStorage.getItem('vellum-color-reverted') === today
+  );
+
+  useEffect(() => {
+    const color = useDefaultColor ? DEFAULT_PRIMARY : dailyColor;
+    applyAccentColor(color, darkMode);
+  }, [dailyColor, darkMode, useDefaultColor]);
+
+  const revertColor = () => {
+    setUseDefaultColor(true);
+    localStorage.setItem('vellum-color-reverted', today);
+  };
+  const restoreDailyColor = () => {
+    setUseDefaultColor(false);
+    localStorage.removeItem('vellum-color-reverted');
+  };
 
   // Listen for focus-mode class on documentElement (set by DailyLeaf)
   const [focusMode, setFocusMode] = useState(false);
@@ -53,6 +86,46 @@ const Layout = ({ children }: { children: ReactNode }) => {
           </nav>
 
           <div className="flex items-center gap-3">
+            {/* Color of the Day indicator */}
+            {!useDefaultColor && (
+              <div className="hidden sm:flex items-center gap-1.5 text-xs font-mono text-pencil/50">
+                <span
+                  className="inline-block size-3 rounded-full"
+                  style={{ backgroundColor: dailyColor.css }}
+                />
+                <span className="tracking-wider">today&rsquo;s color</span>
+                <button
+                  onClick={revertColor}
+                  className="text-pencil/30 hover:text-pencil transition-colors"
+                  title="Revert to default amber"
+                >
+                  <span className="material-symbols-outlined text-[14px]">close</span>
+                </button>
+              </div>
+            )}
+            {useDefaultColor && (
+              <button
+                onClick={restoreDailyColor}
+                className="hidden sm:inline-flex items-center gap-1 text-xs font-mono text-pencil/30 hover:text-pencil/50 transition-colors tracking-wider"
+                title="Bring back today's color"
+              >
+                <span
+                  className="inline-block size-2.5 rounded-full opacity-40"
+                  style={{ backgroundColor: dailyColor.css }}
+                />
+                color?
+              </button>
+            )}
+
+            {/* Dark mode toggle */}
+            <button
+              onClick={() => setDarkMode(d => !d)}
+              className="text-pencil/50 hover:text-ink transition-colors p-1"
+              title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              <span className="material-symbols-outlined text-xl">{darkMode ? 'light_mode' : 'dark_mode'}</span>
+            </button>
+
             <div className="relative">
               <button
                 onClick={() => setShowProfile(!showProfile)}
