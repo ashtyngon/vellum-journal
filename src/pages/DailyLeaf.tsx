@@ -1122,7 +1122,7 @@ export default function DailyLeaf() {
                   return (
                     <div key={entry.id}>
                       <div
-                        className={`group/entry flex items-center gap-3 py-1 hover:bg-surface-light/60 -mx-3 px-3 rounded transition-colors ${isInactive ? 'opacity-60' : ''}`}
+                        className={`group/entry flex items-center gap-3 py-1 hover:bg-surface-light/60 -mx-3 px-3 rounded transition-colors ${isInactive ? 'opacity-60' : ''} ${isNote ? 'mt-1.5 pt-1.5 border-t border-wood-light/10' : ''}`}
                       >
                         {isTask ? (
                           <button
@@ -1137,6 +1137,9 @@ export default function DailyLeaf() {
                         )}
 
                         <div className="flex-1 min-w-0 flex items-center gap-2">
+                          {isNote && !isEditing && (
+                            <span className="font-mono text-[9px] text-pencil/50 uppercase tracking-widest flex-shrink-0">note</span>
+                          )}
                           {isEditing ? (
                             <input
                               ref={editInputRef}
@@ -1151,7 +1154,7 @@ export default function DailyLeaf() {
                               className={`text-left text-lg leading-tight font-body transition-colors ${
                                 isCancelled ? 'line-through decoration-tension/40 text-ink/40'
                                   : isDone ? 'text-ink/50'
-                                  : isNote ? 'text-ink/60 italic'
+                                  : isNote ? 'text-ink/70'
                                   : 'text-ink hover:text-ink-light'
                               }`}
                               onDoubleClick={() => startEditing(entry.id, entry.title)}
