@@ -1456,7 +1456,15 @@ function DayColumn({
   const isToday = offset === 0;
   const isYesterday = offset === -1;
 
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  // Sections default to collapsed; persist user's explicit choices
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
+    try {
+      const raw = localStorage.getItem('flowview-section-collapsed');
+      if (raw) return JSON.parse(raw);
+    } catch { /* ignore */ }
+    // Default: all collapsed
+    return {};
+  });
   const [zoomedSection, setZoomedSection] = useState<string | null>(null);
 
   const dateLabel =
@@ -1527,7 +1535,13 @@ function DayColumn({
   }, [entries, visibleSections]);
 
   const toggleCollapse = (sectionId: string) => {
-    setCollapsed(prev => ({ ...prev, [sectionId]: !prev[sectionId] }));
+    setCollapsed(prev => {
+      // Default is collapsed (true), so if key is missing, current state is collapsed
+      const currentlyCollapsed = prev[sectionId] ?? true;
+      const next = { ...prev, [sectionId]: !currentlyCollapsed };
+      try { localStorage.setItem('flowview-section-collapsed', JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
   };
 
   const handleDrop = (entryId: string, targetSectionId: string) => {
@@ -1631,7 +1645,7 @@ function DayColumn({
         {visibleSections.map(section => {
           const sectionTasks = tasksBySection[section.id] ?? [];
           const sectionEvents = eventsBySection[section.id] ?? [];
-          const isCollapsed = collapsed[section.id] ?? false;
+          const isCollapsed = collapsed[section.id] ?? true;
           const isZoomed = zoomedSection === section.id;
           const name = sectionNames[section.id] ?? section.name;
 

@@ -64,6 +64,7 @@ export default function DailyLeaf() {
     debriefs,
     addEntry,
     updateEntry,
+    batchUpdateEntries,
     deleteEntry,
     toggleHabit,
     addJournalEntry,
@@ -221,6 +222,33 @@ export default function DailyLeaf() {
   }, [entries, today]);
 
   const todaysCompletedTasks = todayTasks.filter((t) => t.status === 'done');
+
+  // Overdue tasks: incomplete tasks from past days
+  const overdueTasks = useMemo(
+    () => entries.filter((e) => e.type === 'task' && e.status === 'todo' && e.date < today),
+    [entries, today],
+  );
+
+  const [overdueExpanded, setOverdueExpanded] = useState(false);
+
+  const rescheduleAll = useCallback(() => {
+    if (overdueTasks.length === 0) return;
+    batchUpdateEntries(overdueTasks.map(t => ({
+      id: t.id,
+      updates: { date: today, movedCount: (t.movedCount ?? 0) + 1 },
+    })));
+  }, [overdueTasks, today, batchUpdateEntries]);
+
+  const rescheduleOne = useCallback((id: string) => {
+    const task = overdueTasks.find(t => t.id === id);
+    if (task) {
+      updateEntry(id, { date: today, movedCount: (task.movedCount ?? 0) + 1 });
+    }
+  }, [overdueTasks, today, updateEntry]);
+
+  const dismissOverdue = useCallback((id: string) => {
+    updateEntry(id, { status: 'done' });
+  }, [updateEntry]);
 
   const todaysJournalEntries = useMemo(
     () => journalEntries.filter((j) => j.date === today),
@@ -866,6 +894,70 @@ export default function DailyLeaf() {
                     <span className="text-xs font-mono text-pencil/50">+{todaysCompletedTasks.length - 5} more</span>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* ── Overdue Tasks — always visible (even in focus mode) ── */}
+            {overdueTasks.length > 0 && (
+              <div className="mb-4 bg-tension/5 border border-tension/20 rounded-xl overflow-hidden">
+                <div
+                  className="flex items-center justify-between px-4 py-3 cursor-pointer select-none"
+                  onClick={() => setOverdueExpanded(v => !v)}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="material-symbols-outlined text-tension text-lg">schedule</span>
+                    <span className="font-body text-sm text-ink">
+                      <span className="font-semibold">{overdueTasks.length}</span> task{overdueTasks.length !== 1 ? 's' : ''} left behind
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); rescheduleAll(); }}
+                      className="text-xs font-mono text-primary hover:text-primary/80 bg-primary/10 hover:bg-primary/15 px-2.5 py-1 rounded-full transition-colors uppercase tracking-wider"
+                    >
+                      Move all to today
+                    </button>
+                    <span className={`material-symbols-outlined text-pencil text-lg transition-transform ${overdueExpanded ? '' : '-rotate-90'}`}>
+                      expand_more
+                    </span>
+                  </div>
+                </div>
+                {overdueExpanded && (
+                  <div className="px-4 pb-3 space-y-1">
+                    {overdueTasks.map(task => (
+                      <div key={task.id} className="group/ot flex items-center gap-3 py-1.5 px-2 -mx-2 rounded hover:bg-tension/5 transition-colors">
+                        <span className="inline-block size-2 rounded-full bg-ink flex-shrink-0" />
+                        <span className="flex-1 font-body text-sm text-ink truncate">{task.title}</span>
+                        <span className="font-mono text-[10px] text-pencil/50 flex-shrink-0">
+                          {new Date(task.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
+                        <div className="flex items-center gap-1 opacity-0 group-hover/ot:opacity-100 transition-opacity flex-shrink-0">
+                          <button
+                            onClick={() => rescheduleOne(task.id)}
+                            className="text-primary hover:text-primary/80 transition-colors"
+                            title="Move to today"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                          </button>
+                          <button
+                            onClick={() => dismissOverdue(task.id)}
+                            className="text-pencil hover:text-sage transition-colors"
+                            title="Mark done"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">check</span>
+                          </button>
+                          <button
+                            onClick={() => deleteEntry(task.id)}
+                            className="text-pencil hover:text-tension transition-colors"
+                            title="Delete"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">close</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
