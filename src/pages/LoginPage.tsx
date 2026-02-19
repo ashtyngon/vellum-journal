@@ -9,7 +9,7 @@ export default function LoginPage() {
         <span className="material-symbols-outlined text-primary text-4xl mb-2">auto_stories</span>
         <h1 className="text-5xl font-header italic text-ink mb-2">Soft Vellum</h1>
         <p className="text-ink-light font-body text-lg mb-12 text-center">
-          Your personal space for tasks, reflections, and rituals.
+          Your personal space for tasks, reflections, and habits.
         </p>
 
         <div className="w-full bg-paper rounded-lg shadow-paper p-8 flex flex-col items-center gap-6 border border-wood-light/30">

@@ -1443,11 +1443,11 @@ export default function DailyLeaf() {
           }`}>
             {/* Habits */}
             {habits.length > 0 && (
-              <div className="bg-paper rounded-xl p-5 shadow-soft border border-wood-light/15">
-                <h3 className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em] mb-3">
-                  Daily Rituals
+              <div className="bg-paper rounded-xl p-4 shadow-soft border border-wood-light/15">
+                <h3 className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em] mb-2.5">
+                  Habits
                 </h3>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="flex flex-wrap gap-2">
                   {habits.map((habit) => {
                     const isCompleted = habit.completedDates.includes(today);
                     const colorMap: Record<string, string> = { primary: 'bg-primary', sage: 'bg-sage', accent: 'bg-accent', tension: 'bg-rose' };
@@ -1458,18 +1458,22 @@ export default function DailyLeaf() {
                       <button
                         key={habit.id}
                         onClick={() => toggleHabit(habit.id, today)}
-                        className="group/habit flex flex-col items-center gap-1.5"
+                        className={`group/habit flex items-center gap-1.5 px-2 py-1 rounded-full border transition-all ${
+                          isCompleted
+                            ? `${borderColor} ${bgColor}/10`
+                            : 'border-pencil/20 hover:border-pencil/40'
+                        }`}
                       >
-                        <div className={`size-10 rounded-full border-2 flex items-center justify-center transition-all ${isCompleted ? borderColor : 'border-pencil/30 group-hover/habit:border-pencil/50'}`}>
-                          <div className={`size-10 rounded-full flex items-center justify-center text-white transition-transform ${isCompleted ? `${bgColor} scale-100` : 'scale-0'}`}>
-                            <span className="material-symbols-outlined text-[16px]">check</span>
-                          </div>
+                        <div className={`size-4 rounded-full flex items-center justify-center transition-all ${
+                          isCompleted ? `${bgColor} text-white` : 'border border-pencil/30'
+                        }`}>
+                          {isCompleted && <span className="material-symbols-outlined text-[10px]">check</span>}
                         </div>
-                        <span className={`text-[11px] font-mono text-center leading-tight ${isCompleted ? 'text-ink' : 'text-pencil'}`}>
+                        <span className={`text-[11px] font-mono leading-none ${isCompleted ? 'text-ink' : 'text-pencil'}`}>
                           {habit.name}
                         </span>
                         {habit.streak > 0 && (
-                          <span className="text-[9px] font-mono text-pencil/50 -mt-1">{habit.streak}d</span>
+                          <span className="text-[9px] font-mono text-pencil/40">{habit.streak}d</span>
                         )}
                       </button>
                     );

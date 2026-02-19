@@ -2137,10 +2137,10 @@ export default function FlowView() {
             ))}
           </div>
 
-          {/* Daily Rituals (habits) — draggable into sections */}
+          {/* Habits — draggable into sections */}
           {habits.length > 0 && (
             <div className="px-4 py-2 border-t border-wood-light/20">
-              <p className="text-[10px] font-mono text-pencil uppercase tracking-widest mb-2">Daily Rituals</p>
+              <p className="text-[10px] font-mono text-pencil uppercase tracking-widest mb-2">Habits</p>
               <div className="space-y-1.5">
                 {habits.map(habit => {
                   const isCompleted = habit.completedDates.includes(dateKey);
