@@ -54,6 +54,28 @@ function getGreeting(): string {
   return 'evening';
 }
 
+/** Suggest journal exercises based on time of day */
+function getSuggestedMethodIds(): string[] {
+  const hour = new Date().getHours();
+  if (hour < 12) {
+    // Morning: brain dump + anxiety prep
+    return ['morning-pages', 'anxiety-reality-check'];
+  }
+  if (hour < 17) {
+    // Afternoon: mid-day reflection
+    return ['pattern-breaker', 'positive-data-log', 'five-whys'];
+  }
+  // Evening: wind-down + gratitude
+  return ['three-good-things', 'integration', 'body-scan'];
+}
+
+function getTimeLabel(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'morning';
+  if (hour < 17) return 'afternoon';
+  return 'evening';
+}
+
 /* ── Main Component ───────────────────────────────────────────────── */
 
 export default function DailyLeaf() {
@@ -149,30 +171,7 @@ export default function DailyLeaf() {
   const [debriefOverlayOpen, setDebriefOverlayOpen] = useState(false);
   const [showDebriefEarly, setShowDebriefEarly] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
-  const [fitToPage, setFitToPage] = useState(false);
-  const rapidLogRef = useRef<HTMLDivElement>(null);
 
-  // Fit-to-page: scale rapid log to fit viewport
-  useEffect(() => {
-    if (!fitToPage || !rapidLogRef.current) return;
-    const el = rapidLogRef.current;
-    const recalc = () => {
-      el.style.transform = '';
-      el.style.transformOrigin = 'top center';
-      const availableH = window.innerHeight - el.getBoundingClientRect().top - 16;
-      const contentH = el.scrollHeight;
-      if (contentH > availableH && contentH > 0) {
-        const scale = Math.max(0.5, availableH / contentH);
-        el.style.transform = `scale(${scale})`;
-      }
-    };
-    recalc();
-    const ro = new ResizeObserver(recalc);
-    ro.observe(el);
-    window.addEventListener('resize', recalc);
-    return () => { ro.disconnect(); window.removeEventListener('resize', recalc); el.style.transform = ''; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fitToPage]);
 
   // Sync focus mode to document so Layout can hide the nav bar
   useEffect(() => {
@@ -651,7 +650,7 @@ export default function DailyLeaf() {
                     type="text"
                     value={planTarget === 'today' ? intention : tomorrowIntention}
                     onChange={e => planTarget === 'today' ? setIntention(e.target.value) : setTomorrowIntention(e.target.value)}
-                    placeholder={planTarget === 'today' ? 'Redefine the day...' : 'How would you like tomorrow to feel?'}
+                    placeholder={planTarget === 'today' ? 'Redefine the day...' : 'Intention for tomorrow'}
                     className="w-full bg-transparent border-none p-0 text-xl font-display text-ink placeholder:text-pencil/30 focus:ring-0 focus:outline-none italic"
                   />
                   <div className="mt-1 h-[1.5px] bg-wood-light/20" />
@@ -733,7 +732,7 @@ export default function DailyLeaf() {
 
               {planEntries.length === 0 && (
                 <p className="text-center py-4 text-base font-handwriting text-ink-light/40">
-                  Even one task is enough. Start small.
+                  Nothing here yet.
                 </p>
               )}
             </div>
@@ -752,7 +751,7 @@ export default function DailyLeaf() {
                 </div>
                 <div>
                   <h2 className="font-header italic text-2xl text-ink">Day Debrief</h2>
-                  <p className="text-sm font-body text-pencil">Take a breath. Reflect on today.</p>
+                  <p className="text-sm font-body text-pencil">How did today go?</p>
                 </div>
               </div>
               <button onClick={() => { setDebriefOverlayOpen(false); setDebriefDismissed(true); }} className="text-pencil hover:text-ink transition-colors p-1">
@@ -811,9 +810,12 @@ export default function DailyLeaf() {
                   <h1 className="font-display italic text-ink leading-tight text-3xl sm:text-4xl">
                     {todayDisplay}
                   </h1>
-                  <span className="font-body text-sm text-pencil/60">
-                    Good {getGreeting()}
-                  </span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="inline-block w-8 h-[2px] rounded-full bg-accent/60" />
+                    <span className="font-body text-sm text-pencil/60">
+                      Good {getGreeting()}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-3">
                   {/* Progress */}
@@ -968,7 +970,7 @@ export default function DailyLeaf() {
                   <div className="relative group/input">
                     <input
                       className="w-full bg-transparent border-none p-0 text-xl sm:text-2xl font-display text-ink placeholder:text-pencil/30 focus:ring-0 focus:outline-none italic"
-                      placeholder="What is the one thing that matters today?"
+                      placeholder="What matters today?"
                       type="text"
                       value={intention}
                       onChange={(e) => setIntention(e.target.value)}
@@ -980,7 +982,7 @@ export default function DailyLeaf() {
                 {/* Day Recovery */}
                 {showDayRecovery && (
                   <div className="mb-4">
-                    <DayRecovery entries={entries} onDismiss={() => setShowDayRecovery(false)} />
+                    <DayRecovery entries={entries} onUpdateEntry={updateEntry} onDismiss={() => setShowDayRecovery(false)} />
                   </div>
                 )}
                 {!showDayRecovery && todayTasks.length > 0 && (
@@ -1001,41 +1003,6 @@ export default function DailyLeaf() {
                 )}
               </>
             )}
-
-            {/* ── Wins Banner — hidden in focus mode ─────────── */}
-            {!focusMode && (todaysCompletedTasks.length > 0 || todaysJournalWins.length > 0) && (() => {
-              const totalWins = todaysCompletedTasks.length + todaysJournalWins.length;
-              return (
-                <div className="mb-4 bg-gradient-to-r from-primary/5 via-primary/8 to-primary/5 border border-primary/15 rounded-xl px-5 py-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2.5">
-                      <span className="font-mono text-2xl font-bold text-primary tabular-nums">{totalWins}</span>
-                      <span className="font-body text-sm text-ink/70">
-                        {totalWins === 1 ? 'win today' : 'wins today'}
-                      </span>
-                    </div>
-                    <button onClick={fireConfetti} className="text-pencil hover:text-primary transition-colors" title="Celebrate!">
-                      <span className="material-symbols-outlined text-[20px]">celebration</span>
-                    </button>
-                  </div>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1">
-                    {todaysCompletedTasks.slice(0, 3).map((task) => (
-                      <span key={task.id} className="text-sm font-body text-ink/50">
-                        {task.title}
-                      </span>
-                    ))}
-                    {todaysJournalWins.slice(0, 2).map((win, i) => (
-                      <span key={`jw-${i}`} className="text-sm font-body text-primary/50 italic">
-                        {win}
-                      </span>
-                    ))}
-                    {totalWins > 5 && (
-                      <span className="text-xs font-mono text-pencil/50">+{totalWins - 5} more</span>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
 
             {/* ── Overdue Tasks — hidden in focus mode ── */}
             {!focusMode && overdueTasks.length > 0 && (
@@ -1108,26 +1075,17 @@ export default function DailyLeaf() {
             )}
 
             {/* ── Rapid Log ─────────────────────────────────────── */}
-            <div ref={rapidLogRef} className="bg-paper rounded-xl p-5 sm:p-6 shadow-soft border border-wood-light/15">
+            <div className="bg-paper rounded-xl p-5 sm:p-6 shadow-soft border border-wood-light/15">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="font-header italic text-xl text-ink/70">
                   Rapid Log
                 </h2>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setFitToPage(f => !f)}
-                    className={`font-mono text-[10px] uppercase tracking-widest transition-colors ${fitToPage ? 'text-primary' : 'text-pencil/50 hover:text-primary'}`}
-                    title={fitToPage ? 'Disable fit-to-page' : 'Fit to one page'}
-                  >
-                    Fit
-                  </button>
-                  <button
+                <button
                     onClick={() => setShowSignifierHelp((v) => !v)}
                     className="font-mono text-[10px] text-pencil/50 hover:text-primary transition-colors uppercase tracking-widest"
                   >
                     Key
                   </button>
-                </div>
               </div>
 
               {showSignifierHelp && (
@@ -1197,7 +1155,7 @@ export default function DailyLeaf() {
                                   : 'text-ink hover:text-ink-light'
                               }`}
                               onDoubleClick={() => startEditing(entry.id, entry.title)}
-                              onClick={() => { if (isTask && !isCancelled) handleToggleTask(entry.id); }}
+                              onClick={(e) => { if (isTask && !isCancelled) handleToggleTask(entry.id, e.currentTarget as HTMLElement); }}
                             >
                               {entry.title}
                             </button>
@@ -1403,18 +1361,41 @@ export default function DailyLeaf() {
 
               {/* Mobile journal exercises */}
               <div>
-                <h3 className="font-header italic text-lg text-ink/70 mb-3">Journal Exercises</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-header italic text-lg text-ink/70">Journal Exercises</h3>
+                  <span className="font-mono text-[9px] text-primary/50 uppercase tracking-wider">
+                    {getTimeLabel()} picks
+                  </span>
+                </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {JOURNAL_METHODS.map((method) => (
-                    <button
-                      key={method.id}
-                      onClick={() => setActiveMethod(method)}
-                      className="text-left p-3 rounded-lg border border-wood-light/15 hover:bg-surface-light transition-all"
-                    >
-                      <span className="material-symbols-outlined text-lg text-ink/40 mb-1">{method.icon}</span>
-                      <p className="font-body text-sm font-medium text-ink">{method.name}</p>
-                    </button>
-                  ))}
+                  {(() => {
+                    const suggested = getSuggestedMethodIds();
+                    const sorted = [...JOURNAL_METHODS].sort((a, b) => {
+                      const aS = suggested.includes(a.id) ? 0 : 1;
+                      const bS = suggested.includes(b.id) ? 0 : 1;
+                      return aS - bS;
+                    });
+                    return sorted.map((method) => {
+                      const isSuggested = suggested.includes(method.id);
+                      return (
+                        <button
+                          key={method.id}
+                          onClick={() => setActiveMethod(method)}
+                          className={`text-left p-3 rounded-lg border transition-all ${
+                            isSuggested
+                              ? 'border-primary/20 bg-primary/5'
+                              : 'border-wood-light/15 hover:bg-surface-light'
+                          }`}
+                        >
+                          <span className={`material-symbols-outlined text-lg mb-1 ${isSuggested ? 'text-primary/60' : 'text-ink/40'}`}>{method.icon}</span>
+                          <p className="font-body text-sm font-medium text-ink">{method.name}</p>
+                          {isSuggested && (
+                            <span className="font-mono text-[8px] text-primary/60 uppercase tracking-wider">try now</span>
+                          )}
+                        </button>
+                      );
+                    });
+                  })()}
                 </div>
               </div>
 
@@ -1494,7 +1475,7 @@ export default function DailyLeaf() {
                       {todaysCompletedTasks.length + todaysJournalWins.length}
                     </span>
                   </div>
-                  <button onClick={fireConfetti} className="text-pencil hover:text-primary transition-colors" title="Celebrate!">
+                  <button onClick={fireConfetti} className="text-accent hover:text-primary transition-colors" title="Celebrate!">
                     <span className="material-symbols-outlined text-[16px]">celebration</span>
                   </button>
                 </div>
@@ -1517,36 +1498,61 @@ export default function DailyLeaf() {
 
             {/* Journal Exercises */}
             <div className="bg-paper rounded-xl p-5 shadow-soft border border-wood-light/15">
-              <h3 className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em] mb-3">
-                Journal Exercises
-              </h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em]">
+                  Journal Exercises
+                </h3>
+                <span className="font-mono text-[9px] text-primary/50 uppercase tracking-wider">
+                  {getTimeLabel()} picks
+                </span>
+              </div>
               <div className="flex flex-col gap-2">
-                {JOURNAL_METHODS.map((method) => {
-                  const categoryColors: Record<string, string> = {
-                    cbt: 'bg-sage/15 text-sage border-sage/30',
-                    integration: 'bg-accent/15 text-accent border-accent/30',
-                    daily: 'bg-primary/15 text-primary border-primary/30',
-                  };
-                  const categoryStyle = categoryColors[method.category] ?? 'bg-wood-light/30 text-pencil border-wood-light/50';
-                  return (
-                    <button
-                      key={method.id}
-                      onClick={() => setActiveMethod(method)}
-                      className="text-left p-3 rounded-lg border border-wood-light/15 hover:bg-surface-light hover:border-primary/20 transition-all group/method"
-                    >
-                      <div className="flex items-start gap-2">
-                        <span className="material-symbols-outlined text-lg text-ink/40 group-hover/method:text-primary transition-colors mt-0.5">{method.icon}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 mb-0.5">
-                            <span className="font-body text-sm font-medium text-ink">{method.name}</span>
-                            <span className={`font-mono text-[8px] uppercase tracking-widest px-1 py-0.5 rounded-full border ${categoryStyle}`}>{method.category}</span>
+                {(() => {
+                  const suggested = getSuggestedMethodIds();
+                  const sorted = [...JOURNAL_METHODS].sort((a, b) => {
+                    const aS = suggested.includes(a.id) ? 0 : 1;
+                    const bS = suggested.includes(b.id) ? 0 : 1;
+                    return aS - bS;
+                  });
+                  return sorted.map((method) => {
+                    const isSuggested = suggested.includes(method.id);
+                    const categoryColors: Record<string, string> = {
+                      cbt: 'bg-sage/15 text-sage border-sage/30',
+                      integration: 'bg-accent/15 text-accent border-accent/30',
+                      daily: 'bg-primary/15 text-primary border-primary/30',
+                    };
+                    const categoryStyle = categoryColors[method.category] ?? 'bg-wood-light/30 text-pencil border-wood-light/50';
+                    return (
+                      <button
+                        key={method.id}
+                        onClick={() => setActiveMethod(method)}
+                        className={`text-left p-3 rounded-lg border transition-all group/method ${
+                          isSuggested
+                            ? 'border-primary/20 bg-primary/5 hover:bg-primary/10'
+                            : 'border-wood-light/15 hover:bg-surface-light hover:border-primary/20'
+                        }`}
+                      >
+                        <div className="flex items-start gap-2">
+                          <span className={`material-symbols-outlined text-lg mt-0.5 transition-colors ${
+                            isSuggested ? 'text-primary/60 group-hover/method:text-primary' : 'text-ink/40 group-hover/method:text-primary'
+                          }`}>{method.icon}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span className="font-body text-sm font-medium text-ink">{method.name}</span>
+                              {isSuggested && (
+                                <span className="font-mono text-[8px] text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded-full uppercase tracking-widest">
+                                  try now
+                                </span>
+                              )}
+                              <span className={`font-mono text-[8px] uppercase tracking-widest px-1 py-0.5 rounded-full border ${categoryStyle}`}>{method.category}</span>
+                            </div>
+                            <p className="font-body text-xs text-pencil leading-relaxed line-clamp-2">{method.description}</p>
                           </div>
-                          <p className="font-body text-xs text-pencil leading-relaxed line-clamp-2">{method.description}</p>
                         </div>
-                      </div>
-                    </button>
-                  );
-                })}
+                      </button>
+                    );
+                  });
+                })()}
               </div>
             </div>
           </aside>

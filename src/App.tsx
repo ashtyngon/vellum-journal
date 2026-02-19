@@ -4,7 +4,6 @@ import { AppProvider } from './context/AppContext';
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import ArchiveLibrary from './pages/ArchiveLibrary';
-import CelebrationScrapbook from './pages/CelebrationScrapbook';
 import FlowView from './pages/FlowView';
 import HabitTrace from './pages/HabitTrace';
 import DailyLeaf from './pages/DailyLeaf';
@@ -32,7 +31,6 @@ function ProtectedRoutes() {
         <Routes>
           <Route path="/" element={<Navigate to="/daily" replace />} />
           <Route path="/archive" element={<ArchiveLibrary />} />
-          <Route path="/scrapbook" element={<CelebrationScrapbook />} />
           <Route path="/flow" element={<FlowView />} />
           <Route path="/habit-trace" element={<HabitTrace />} />
           <Route path="/daily" element={<DailyLeaf />} />

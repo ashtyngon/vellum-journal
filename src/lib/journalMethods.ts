@@ -30,24 +30,32 @@ export const JOURNAL_METHODS: JournalMethod[] = [
     id: 'morning-pages',
     name: 'Morning Pages',
     description:
-      'Stream-of-consciousness writing. No rules, no editing — just get it out of your head and onto the page.',
+      'Guided brain dump. Four prompts to help you get everything out of your head and onto the page.',
     icon: 'wb_twilight',
     category: 'daily',
     steps: [
       {
-        prompt: 'Just write. Whatever is in your head right now.',
+        prompt: 'What\'s on your mind right now? Dump everything — worries, tasks, random thoughts.',
         placeholder:
-          'Don\'t think. Don\'t edit. Don\'t stop. Just let it flow...',
+          'e.g. I keep thinking about that email I need to send. Also I\'m hungry. The meeting yesterday was weird...',
         inputType: 'textarea',
       },
       {
-        prompt: 'Keep going.',
-        placeholder: 'You\'re not done yet...',
+        prompt: 'What\'s bugging you that you haven\'t said out loud?',
+        placeholder:
+          'e.g. I\'m annoyed that I agreed to that deadline. I feel like I\'m falling behind on the project.',
         inputType: 'textarea',
       },
       {
-        prompt: 'One more page. What else is in there?',
-        placeholder: 'Almost there...',
+        prompt: 'What are you avoiding? What keeps getting pushed to tomorrow?',
+        placeholder:
+          'e.g. Calling the dentist. Starting that proposal. Having that conversation with my manager.',
+        inputType: 'textarea',
+      },
+      {
+        prompt: 'What would make today feel like a good day?',
+        placeholder:
+          'e.g. If I just finished that one report. Or went for a walk. Or actually ate lunch away from my desk.',
         inputType: 'textarea',
       },
     ],
@@ -151,7 +159,7 @@ export const JOURNAL_METHODS: JournalMethod[] = [
       },
       {
         prompt: 'Why?',
-        placeholder: 'You\'re close to the root...',
+        placeholder: 'Keep going...',
         inputType: 'textarea',
       },
     ],
@@ -400,7 +408,7 @@ export const JOURNAL_METHODS: JournalMethod[] = [
         prompt:
           'Looking at all three -- what does this say about you or the world today?',
         placeholder:
-          'e.g. Good things don\'t just happen to me -- I create the conditions for them. When I slow down and show up, life meets me halfway.',
+          'e.g. Today was better than I thought. Small things added up.',
         inputType: 'textarea',
       },
     ],

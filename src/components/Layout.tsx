@@ -9,6 +9,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
   const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [colorInfoOpen, setColorInfoOpen] = useState(false);
 
   // ── Dark mode ──────────────────────────────────────────────
   const [darkMode, setDarkMode] = useState(() =>
@@ -56,7 +57,6 @@ const Layout = ({ children }: { children: ReactNode }) => {
     { to: '/flow', label: 'Flow', icon: 'timeline' },
     { to: '/habit-trace', label: 'Habits', icon: 'show_chart' },
     { to: '/archive', label: 'Archive', icon: 'inventory_2' },
-    { to: '/scrapbook', label: 'Wins', icon: 'celebration' },
   ];
 
   return (
@@ -86,36 +86,50 @@ const Layout = ({ children }: { children: ReactNode }) => {
           </nav>
 
           <div className="flex items-center gap-3">
-            {/* Color of the Day indicator */}
-            {!useDefaultColor && (
-              <div className="hidden sm:flex items-center gap-1.5 text-xs font-mono text-pencil/50">
-                <span
-                  className="inline-block size-3 rounded-full"
-                  style={{ backgroundColor: dailyColor.css }}
-                />
-                <span className="tracking-wider">today&rsquo;s color</span>
-                <button
-                  onClick={revertColor}
-                  className="text-pencil/30 hover:text-pencil transition-colors"
-                  title="Revert to default amber"
-                >
-                  <span className="material-symbols-outlined text-[14px]">close</span>
-                </button>
-              </div>
-            )}
-            {useDefaultColor && (
+            {/* Color of the Day */}
+            <div className="relative group/color">
               <button
-                onClick={restoreDailyColor}
-                className="hidden sm:inline-flex items-center gap-1 text-xs font-mono text-pencil/30 hover:text-pencil/50 transition-colors tracking-wider"
-                title="Bring back today's color"
+                onClick={() => setColorInfoOpen(v => !v)}
+                className="flex items-center gap-1.5 text-xs font-mono text-pencil/50 hover:text-pencil transition-colors"
+                title="Today's accent color"
               >
                 <span
-                  className="inline-block size-2.5 rounded-full opacity-40"
-                  style={{ backgroundColor: dailyColor.css }}
+                  className="inline-block size-4 sm:size-3 rounded-full transition-transform group-hover/color:scale-125"
+                  style={{
+                    backgroundColor: dailyColor.css,
+                    opacity: useDefaultColor ? 0.4 : 1,
+                    boxShadow: `0 0 0 2px var(--color-paper, #fff), 0 0 0 3.5px ${dailyColor.css}`,
+                  }}
                 />
-                color?
+                <span className="hidden sm:inline tracking-wider">{useDefaultColor ? 'color?' : 'today\u2019s color'}</span>
               </button>
-            )}
+              {/* Popover — click-triggered, works on mobile */}
+              {colorInfoOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setColorInfoOpen(false)} />
+                  <div className="absolute right-0 top-full mt-2 w-64 p-4 bg-paper rounded-xl shadow-lifted border border-wood-light/30 z-50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span
+                        className="inline-block size-5 rounded-full"
+                        style={{ backgroundColor: dailyColor.css }}
+                      />
+                      <span className="font-mono text-[10px] text-pencil uppercase tracking-widest">
+                        Today&rsquo;s accent
+                      </span>
+                    </div>
+                    <p className="font-body text-sm text-ink leading-relaxed mb-3">
+                      Every day the app picks a fresh accent color — buttons, highlights, and borders all shift. Keeps things from getting stale.
+                    </p>
+                    <button
+                      onClick={() => { useDefaultColor ? restoreDailyColor() : revertColor(); setColorInfoOpen(false); }}
+                      className="w-full text-center py-1.5 rounded-lg border border-wood-light/30 font-mono text-[11px] text-pencil hover:text-primary hover:border-primary/30 transition-all uppercase tracking-wider"
+                    >
+                      {useDefaultColor ? 'Use today\u2019s color' : 'Revert to default amber'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
 
             {/* Dark mode toggle */}
             <button

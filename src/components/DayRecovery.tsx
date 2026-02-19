@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type ReactElement } from 'react';
+import { useState } from 'react';
 import type { RapidLogEntry } from '../context/AppContext';
 import { todayStr } from '../lib/dateUtils';
 
@@ -6,284 +6,175 @@ import { todayStr } from '../lib/dateUtils';
 
 interface DayRecoveryProps {
   entries: RapidLogEntry[];
+  onUpdateEntry: (id: string, updates: Partial<RapidLogEntry>) => void;
   onDismiss: () => void;
-}
-
-/* ── Helpers ──────────────────────────────────────────────────────── */
-
-function formatTime(date: Date): string {
-  return date.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
-}
-
-function getRemainingHours(): number {
-  return Math.max(0, 22 - new Date().getHours());
-}
-
-function getTimeOfDayLabel(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return 'half-day';
-  if (hour < 17) return 'afternoon';
-  return 'evening';
 }
 
 /* ── Component ────────────────────────────────────────────────────── */
 
-const DayRecovery = ({ entries, onDismiss }: DayRecoveryProps) => {
-  /* ── State ─────────────────────────────────────────────────────── */
-  const [step, setStep] = useState<0 | 1 | 2>(0);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const [timerActive, setTimerActive] = useState(false);
-  const [timerSeconds, setTimerSeconds] = useState(900); // 15 minutes
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-
-  /* fade transition */
-  const [visible, setVisible] = useState(true);
-  const pendingStep = useRef<(0 | 1 | 2) | null>(null);
-
-  /* ── Derived ───────────────────────────────────────────────────── */
-
+const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) => {
   const today = todayStr();
-  const undoneTasks = entries.filter(
-    (e) => e.type === 'task' && e.status === 'todo' && e.date === today
+
+  // All tasks that need attention: today's undone + overdue from past
+  const actionableTasks = entries.filter(
+    (e) => e.type === 'task' && e.status === 'todo' && e.date <= today
   );
-  const selectedTask = entries.find((e) => e.id === selectedTaskId);
-  const remainingHours = getRemainingHours();
-  const timeLabel = getTimeOfDayLabel();
 
-  const minutes = Math.floor(timerSeconds / 60);
-  const seconds = timerSeconds % 60;
+  // Track which tasks user wants to keep, skip, or defer
+  // By default everything is "keep" (stays as-is for today)
+  const [decisions, setDecisions] = useState<Record<string, 'keep' | 'skip' | 'defer'>>({});
 
-  /* ── Priority styles ───────────────────────────────────────────── */
+  const getDecision = (id: string) => decisions[id] || 'keep';
 
+  const setDecision = (id: string, decision: 'keep' | 'skip' | 'defer') => {
+    setDecisions((prev) => ({ ...prev, [id]: decision }));
+  };
+
+  const handleApply = () => {
+    for (const task of actionableTasks) {
+      const d = getDecision(task.id);
+      if (d === 'skip') {
+        // Move to parking lot (remove section/timeBlock, keep on today)
+        onUpdateEntry(task.id, { date: today, section: undefined, timeBlock: undefined });
+      } else if (d === 'defer') {
+        // Push to tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().split('T')[0];
+        onUpdateEntry(task.id, { date: tomorrowStr, movedCount: (task.movedCount ?? 0) + 1 });
+      } else if (d === 'keep' && task.date < today) {
+        // Overdue task being kept → move to today
+        onUpdateEntry(task.id, { date: today, movedCount: (task.movedCount ?? 0) + 1 });
+      }
+    }
+    onDismiss();
+  };
+
+  const keepCount = actionableTasks.filter((t) => getDecision(t.id) === 'keep').length;
+
+  if (actionableTasks.length === 0) {
+    return (
+      <div className="bg-surface-light/50 border border-wood-light/20 rounded-xl p-5">
+        <p className="font-body text-sm text-pencil">No open tasks. You're clear.</p>
+        <button
+          onClick={onDismiss}
+          className="mt-2 text-xs font-mono text-primary hover:underline"
+        >
+          Dismiss
+        </button>
+      </div>
+    );
+  }
+
+  // Priority styling helper
   const priorityDot: Record<string, string> = {
     low: 'bg-sage',
     medium: 'bg-bronze',
     high: 'bg-tension',
   };
 
-  /* ── Step transitions ──────────────────────────────────────────── */
-
-  const goToStep = (next: 0 | 1 | 2) => {
-    setVisible(false);
-    pendingStep.current = next;
-  };
-
-  useEffect(() => {
-    if (!visible && pendingStep.current !== null) {
-      const timeout = setTimeout(() => {
-        setStep(pendingStep.current!);
-        pendingStep.current = null;
-        setVisible(true);
-      }, 200);
-      return () => clearTimeout(timeout);
-    }
-  }, [visible]);
-
-  /* ── Timer ─────────────────────────────────────────────────────── */
-
-  useEffect(() => {
-    if (!timerActive) return;
-
-    const interval = setInterval(() => {
-      setTimerSeconds((prev) => {
-        if (prev <= 1) {
-          setTimerActive(false);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [timerActive]);
-
-  const startTimer = () => {
-    setTimerSeconds(900);
-    setTimerActive(true);
-  };
-
-  /* ── Render: Step 0 — Warm banner ──────────────────────────────── */
-
-  const renderStep0 = () => (
-    <div className="space-y-4">
-      <p className="font-body text-lg text-ink leading-relaxed">
-        It's{' '}
-        <span className="font-semibold">{formatTime(new Date())}</span>.
-        You still have{' '}
-        <span className="font-display italic font-semibold text-primary text-xl">
-          {remainingHours} hours
-        </span>{' '}
-        before evening. That's a full {timeLabel}.
-      </p>
-
-      <button
-        onClick={() => goToStep(1)}
-        className="px-6 py-2.5 rounded-xl bg-primary text-white font-body text-base tracking-wide hover:bg-primary-dark transition-all shadow-soft"
-      >
-        Pick one thing &rarr;
-      </button>
-    </div>
-  );
-
-  /* ── Render: Step 1 — Pick ONE task ────────────────────────────── */
-
-  const handleSelectTask = (id: string) => {
-    setSelectedTaskId(id);
-    setTimeout(() => goToStep(2), 300);
-  };
-
-  const handleAddQuickTask = () => {
-    if (!newTaskTitle.trim()) return;
-    // Create a temporary ID for the new task selection
-    const tempId = `recovery-${Date.now()}`;
-    setSelectedTaskId(tempId);
-    // We store the title directly since this task doesn't exist in entries
-    setNewTaskTitle(newTaskTitle.trim());
-    setTimeout(() => goToStep(2), 300);
-  };
-
-  const renderStep1 = () => (
-    <div className="space-y-5">
-      <p className="font-body text-lg text-ink leading-relaxed">
-        Pick just <span className="font-semibold">one</span> thing to do
-        before the next hour. Just one.
-      </p>
-
-      {undoneTasks.length > 0 ? (
-        <div className="space-y-2">
-          {undoneTasks.map((task) => (
-            <button
-              key={task.id}
-              onClick={() => handleSelectTask(task.id)}
-              className={`w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all ${
-                selectedTaskId === task.id
-                  ? 'border-primary bg-primary/10'
-                  : 'border-wood-light/40 hover:border-primary/40 hover:bg-primary/5'
-              }`}
-            >
-              <span
-                className={`flex-shrink-0 inline-block size-2 rounded-full ${
-                  priorityDot[task.priority || 'medium']
-                } opacity-70`}
-              />
-              <span className="font-body text-ink text-base">{task.title}</span>
-            </button>
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          <p className="font-body text-pencil text-sm italic">
-            Nothing on your list? Add one small thing.
+  return (
+    <div className="bg-paper border border-wood-light/20 rounded-xl shadow-soft overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-3 border-b border-wood-light/15">
+        <div>
+          <h3 className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em]">
+            Reset My Day
+          </h3>
+          <p className="font-body text-sm text-ink/70 mt-0.5">
+            {actionableTasks.length} task{actionableTasks.length !== 1 ? 's' : ''} — pick what
+            you're doing today
           </p>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newTaskTitle}
-              onChange={(e) => setNewTaskTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleAddQuickTask();
-              }}
-              placeholder="One small thing..."
-              className="flex-1 px-4 py-2.5 rounded-xl border-2 border-wood-light bg-white/60 font-body text-ink placeholder:text-pencil/50 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-colors"
-              autoFocus
-            />
-            <button
-              onClick={handleAddQuickTask}
-              disabled={!newTaskTitle.trim()}
-              className="px-5 py-2.5 rounded-xl bg-primary text-white font-body text-sm hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-            >
-              Go
-            </button>
-          </div>
         </div>
-      )}
-    </div>
-  );
-
-  /* ── Render: Step 2 — Focus mode ───────────────────────────────── */
-
-  const focusTitle = selectedTask
-    ? selectedTask.title
-    : newTaskTitle || 'Your chosen task';
-
-  const renderStep2 = () => (
-    <div className="space-y-6 text-center">
-      <p className="font-body text-pencil text-sm uppercase tracking-widest">
-        Your only job right now is
-      </p>
-
-      <p className="font-display italic text-2xl text-primary leading-snug px-4">
-        {focusTitle}
-      </p>
-
-      <p className="font-body text-pencil text-base italic">
-        Everything else can wait.
-      </p>
-
-      {/* Timer section */}
-      {timerActive || timerSeconds < 900 ? (
-        <div className="space-y-4">
-          <p className="font-mono text-4xl text-ink tabular-nums">
-            {String(minutes).padStart(2, '0')}:
-            {String(seconds).padStart(2, '0')}
-          </p>
-          {timerSeconds === 0 && (
-            <p className="font-body text-sage text-sm">
-              Sprint complete. Nice work.
-            </p>
-          )}
-        </div>
-      ) : (
-        <button
-          onClick={startTimer}
-          className="px-6 py-2.5 rounded-xl border-2 border-primary/30 text-primary font-body text-base hover:bg-primary/5 transition-all"
-        >
-          Start 15-min sprint
-        </button>
-      )}
-
-      <div>
         <button
           onClick={onDismiss}
-          className="px-6 py-2.5 rounded-xl bg-primary text-white font-body text-base tracking-wide hover:bg-primary-dark transition-all shadow-soft"
+          className="p-1.5 rounded-full text-pencil hover:text-ink hover:bg-wood-light/40 transition-colors"
+          aria-label="Dismiss"
         >
-          I'm done &#10003;
+          <span className="material-symbols-outlined text-lg">close</span>
         </button>
       </div>
-    </div>
-  );
 
-  /* ── Step router ───────────────────────────────────────────────── */
+      {/* Task list */}
+      <div className="divide-y divide-wood-light/10 max-h-[50vh] overflow-y-auto">
+        {actionableTasks.map((task) => {
+          const decision = getDecision(task.id);
+          const isOverdue = task.date < today;
+          return (
+            <div
+              key={task.id}
+              className={`flex items-center gap-3 px-5 py-2.5 transition-colors ${
+                decision === 'skip' || decision === 'defer' ? 'opacity-40' : ''
+              }`}
+            >
+              {/* Priority dot */}
+              <span
+                className={`flex-shrink-0 size-2 rounded-full ${priorityDot[task.priority || 'medium']} opacity-60`}
+              />
 
-  const steps: Record<number, () => ReactElement> = {
-    0: renderStep0,
-    1: renderStep1,
-    2: renderStep2,
-  };
+              {/* Task title */}
+              <div className="flex-1 min-w-0">
+                <span
+                  className={`font-body text-sm text-ink ${decision !== 'keep' ? 'line-through' : ''}`}
+                >
+                  {task.title}
+                </span>
+                {isOverdue && (
+                  <span className="ml-2 font-mono text-[9px] text-tension/60 uppercase tracking-wider">
+                    overdue
+                  </span>
+                )}
+              </div>
 
-  /* ── Main render ───────────────────────────────────────────────── */
+              {/* Quick action pills */}
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <button
+                  onClick={() => setDecision(task.id, decision === 'keep' ? 'skip' : 'keep')}
+                  className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider transition-all ${
+                    decision === 'keep'
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-pencil/40 hover:text-pencil'
+                  }`}
+                >
+                  today
+                </button>
+                <button
+                  onClick={() => setDecision(task.id, decision === 'skip' ? 'keep' : 'skip')}
+                  className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider transition-all ${
+                    decision === 'skip'
+                      ? 'bg-pencil/10 text-pencil'
+                      : 'text-pencil/40 hover:text-pencil'
+                  }`}
+                >
+                  skip
+                </button>
+                <button
+                  onClick={() => setDecision(task.id, decision === 'defer' ? 'keep' : 'defer')}
+                  className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider transition-all ${
+                    decision === 'defer'
+                      ? 'bg-bronze/10 text-bronze'
+                      : 'text-pencil/40 hover:text-pencil'
+                  }`}
+                >
+                  tomorrow
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
-  return (
-    <div className="relative bg-primary/5 border border-primary/20 rounded-2xl p-6 sm:p-8">
-      {/* Dismiss button */}
-      <button
-        onClick={onDismiss}
-        className="absolute top-4 right-4 p-1.5 rounded-full text-pencil hover:text-ink hover:bg-wood-light/40 transition-colors"
-        aria-label="Dismiss"
-      >
-        <span className="material-symbols-outlined text-xl">close</span>
-      </button>
-
-      {/* Content with fade transition */}
-      <div
-        className="transition-opacity duration-200"
-        style={{ opacity: visible ? 1 : 0 }}
-      >
-        {steps[step]()}
+      {/* Footer */}
+      <div className="flex items-center justify-between px-5 py-3 border-t border-wood-light/15 bg-surface-light/30">
+        <span className="font-mono text-[10px] text-pencil">
+          Keeping {keepCount} of {actionableTasks.length}
+        </span>
+        <button
+          onClick={handleApply}
+          className="px-5 py-2 rounded-lg bg-primary text-white font-body text-sm hover:bg-primary/90 transition-colors shadow-soft"
+        >
+          Apply
+        </button>
       </div>
     </div>
   );
