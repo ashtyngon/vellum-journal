@@ -145,7 +145,9 @@ export default function DailyLeaf() {
   const [activeMethod, setActiveMethod] = useState<JournalMethod | null>(null);
   const [showSignifierHelp, setShowSignifierHelp] = useState(false);
   const [planOverlayOpen, setPlanOverlayOpen] = useState(false);
+  const [debriefOverlayOpen, setDebriefOverlayOpen] = useState(false);
   const [showDebriefEarly, setShowDebriefEarly] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
   const [tomorrowAddInput, setTomorrowAddInput] = useState('');
   const tomorrowInputRef = useRef<HTMLInputElement>(null);
 
@@ -415,15 +417,24 @@ export default function DailyLeaf() {
   const [redoDebrief, setRedoDebrief] = useState(false);
   const debriefHidden = (debriefDismissed || todayDebriefExists) && !redoDebrief;
 
-  // Debrief is visible when: (auto after 6pm OR manually triggered) AND not dismissed/completed
-  const showDebrief = !debriefHidden && (isEveningTime || showDebriefEarly);
+  // Debrief is available when: (auto after 6pm OR manually triggered) AND not dismissed/completed
+  const debriefAvailable = !debriefHidden && (isEveningTime || showDebriefEarly);
 
   // Reset debrief UI state when the date rolls over
   useEffect(() => {
     setDebriefDismissed(false);
     setRedoDebrief(false);
     setShowDebriefEarly(false);
+    setDebriefOverlayOpen(false);
   }, [dateKey]);
+
+  // Auto-open debrief overlay when it becomes available (6pm or manual trigger)
+  useEffect(() => {
+    if (debriefAvailable && !debriefOverlayOpen) {
+      setDebriefOverlayOpen(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debriefAvailable]);
 
   /* ── Bullet rendering helpers ────────────────────────────────── */
 
@@ -583,6 +594,35 @@ export default function DailyLeaf() {
         </div>
       )}
 
+      {/* ── Debrief Overlay — focused, full-screen, distraction-free ── */}
+      {debriefOverlayOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => { setDebriefOverlayOpen(false); setDebriefDismissed(true); }}>
+          <div className="bg-paper rounded-2xl shadow-lifted w-full max-w-xl mx-4 p-8 sm:p-10" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-sage/15 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-sage text-lg">nights_stay</span>
+                </div>
+                <div>
+                  <h2 className="font-header italic text-2xl text-ink">Day Debrief</h2>
+                  <p className="text-sm font-body text-pencil">Take a breath. Reflect on today.</p>
+                </div>
+              </div>
+              <button onClick={() => { setDebriefOverlayOpen(false); setDebriefDismissed(true); }} className="text-pencil hover:text-ink transition-colors p-1">
+                <span className="material-symbols-outlined text-xl">close</span>
+              </button>
+            </div>
+
+            <DayDebriefComponent
+              todayEntries={todayEntries}
+              date={dateKey}
+              onSave={(debrief) => { saveDebrief(debrief); setDebriefOverlayOpen(false); setDebriefDismissed(true); setRedoDebrief(false); }}
+              onSkip={() => { setDebriefOverlayOpen(false); setDebriefDismissed(true); }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* ── Page ────────────────────────────────────────────────────── */}
 
       <div className="flex-1 overflow-y-auto bg-background-light">
@@ -615,6 +655,19 @@ export default function DailyLeaf() {
                   </span>
                 </div>
               )}
+              {/* Focus mode toggle */}
+              <button
+                onClick={() => setFocusMode(f => !f)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-body transition-all ${
+                  focusMode
+                    ? 'border-primary/40 bg-primary/10 text-primary'
+                    : 'border-wood-light/30 text-pencil hover:text-primary hover:border-primary/30'
+                }`}
+                title={focusMode ? 'Exit focus mode' : 'Focus mode — rapid log only'}
+              >
+                <span className="material-symbols-outlined text-[18px]">{focusMode ? 'visibility' : 'center_focus_strong'}</span>
+                <span className="hidden sm:inline">{focusMode ? 'Full' : 'Focus'}</span>
+              </button>
               {/* Plan button */}
               <button
                 onClick={() => setPlanOverlayOpen(true)}
@@ -630,10 +683,16 @@ export default function DailyLeaf() {
         {/* ══════════════════════════════════════════════════════════
            UNIFIED DAILY PAGE — 3-column layout
            ══════════════════════════════════════════════════════════ */}
-        <div className="max-w-[1400px] mx-auto px-6 sm:px-10 py-6 grid grid-cols-1 lg:grid-cols-[260px_1fr_260px] xl:grid-cols-[300px_1fr_300px] gap-6 items-start">
+        <div className={`max-w-[1400px] mx-auto px-6 sm:px-10 py-6 grid items-start transition-all duration-500 ease-out ${
+          focusMode
+            ? 'grid-cols-1 max-w-3xl'
+            : 'grid-cols-1 lg:grid-cols-[260px_1fr_260px] xl:grid-cols-[300px_1fr_300px] gap-6'
+        }`}>
 
           {/* ── LEFT SIDEBAR ────────────────────────────────────── */}
-          <aside className="hidden lg:flex flex-col gap-5 sticky top-6">
+          <aside className={`hidden lg:flex flex-col gap-5 sticky top-6 transition-all duration-500 ${
+            focusMode ? 'lg:hidden' : ''
+          }`}>
             {/* Upcoming Events */}
             {upcomingEvents.length > 0 && (
               <div className="bg-paper rounded-xl p-5 shadow-soft border border-wood-light/15">
@@ -654,21 +713,6 @@ export default function DailyLeaf() {
               </div>
             )}
 
-            {/* Day Debrief — auto-shows after 6pm, manual trigger before */}
-            {showDebrief && (
-              <div className="bg-paper rounded-xl p-5 shadow-soft border border-wood-light/15">
-                <h3 className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em] mb-3">
-                  Day Debrief
-                </h3>
-                <DayDebriefComponent
-                  todayEntries={todayEntries}
-                  date={dateKey}
-                  onSave={(debrief) => { saveDebrief(debrief); setDebriefDismissed(true); setRedoDebrief(false); }}
-                  onSkip={() => setDebriefDismissed(true)}
-                />
-              </div>
-            )}
-
             {/* Debrief saved indicator */}
             {todayDebriefExists && !redoDebrief && (
               <div className="bg-sage/5 border border-sage/20 rounded-xl p-4">
@@ -679,7 +723,7 @@ export default function DailyLeaf() {
                   </div>
                   <div className="flex items-center gap-3">
                     <button
-                      onClick={() => setRedoDebrief(true)}
+                      onClick={() => { setRedoDebrief(true); setDebriefOverlayOpen(true); }}
                       className="text-xs font-body text-pencil hover:text-ink underline underline-offset-2 decoration-pencil/30 transition-colors"
                     >
                       Redo
@@ -695,14 +739,14 @@ export default function DailyLeaf() {
               </div>
             )}
 
-            {/* Debrief trigger button (before 6pm, when not yet started) */}
-            {!isEveningTime && !showDebriefEarly && !todayDebriefExists && (
+            {/* Debrief trigger button — opens focused overlay */}
+            {!todayDebriefExists && (
               <button
-                onClick={() => setShowDebriefEarly(true)}
+                onClick={() => { setShowDebriefEarly(true); setDebriefOverlayOpen(true); }}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-paper border border-wood-light/15 shadow-soft text-sm font-body text-ink hover:text-primary hover:border-primary/20 transition-all group/link"
               >
                 <span className="material-symbols-outlined text-[18px] text-pencil group-hover/link:text-primary transition-colors">rate_review</span>
-                Start Debrief
+                {isEveningTime ? 'Day Debrief' : 'Start Debrief'}
               </button>
             )}
 
@@ -740,8 +784,8 @@ export default function DailyLeaf() {
 
           {/* ── CENTER: Main journal ────────────────────────────── */}
           <main className="min-w-0">
-            {/* Intention */}
-            <div className="mb-5">
+            {/* Intention — hidden in focus mode */}
+            <div className={`mb-5 transition-all duration-500 ${focusMode ? 'opacity-0 max-h-0 mb-0 overflow-hidden' : 'opacity-100 max-h-40'}`}>
               <label className="block font-mono text-[10px] text-accent uppercase tracking-[0.15em] mb-1.5">
                 Today&rsquo;s Intention
               </label>
@@ -752,18 +796,19 @@ export default function DailyLeaf() {
                   type="text"
                   value={intention}
                   onChange={(e) => setIntention(e.target.value)}
+                  tabIndex={focusMode ? -1 : 0}
                 />
                 <div className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-primary/40 group-focus-within/input:w-full transition-all duration-500" />
               </div>
             </div>
 
-            {/* Day Recovery */}
-            {showDayRecovery && (
+            {/* Day Recovery — hidden in focus mode */}
+            {!focusMode && showDayRecovery && (
               <div className="mb-4">
                 <DayRecovery entries={entries} onDismiss={() => setShowDayRecovery(false)} />
               </div>
             )}
-            {!showDayRecovery && todayTasks.length > 0 && (
+            {!focusMode && !showDayRecovery && todayTasks.length > 0 && (
               <button
                 onClick={() => setShowDayRecovery(true)}
                 className="mb-3 font-mono text-[10px] text-pencil/50 hover:text-primary uppercase tracking-widest transition-colors"
@@ -772,16 +817,16 @@ export default function DailyLeaf() {
               </button>
             )}
 
-            {/* Capacity Warning */}
-            {capacityWarning && (
+            {/* Capacity Warning — hidden in focus mode */}
+            {!focusMode && capacityWarning && (
               <div className="mb-4 bg-bronze/10 border border-bronze/20 rounded-lg px-4 py-3 text-sm font-body text-ink/80">
                 You have <span className="font-semibold">{capacityWarning.count} tasks</span>{' '}
                 (~{capacityWarning.hours}hrs). Could you pick your top 3?
               </div>
             )}
 
-            {/* ── Wins Banner ────────────────────────────────── */}
-            {todaysCompletedTasks.length > 0 && (
+            {/* ── Wins Banner — hidden in focus mode ─────────── */}
+            {!focusMode && todaysCompletedTasks.length > 0 && (
               <div className="mb-4 bg-gradient-to-r from-primary/5 via-primary/8 to-primary/5 border border-primary/15 rounded-xl px-5 py-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2.5">
@@ -998,8 +1043,8 @@ export default function DailyLeaf() {
               </div>
             </div>
 
-            {/* Mobile-only: Events + Habits + Debrief + Journal inline */}
-            <div className="lg:hidden mt-5 space-y-4">
+            {/* Mobile-only: Events + Habits + Debrief + Journal inline — hidden in focus mode */}
+            <div className={`lg:hidden mt-5 space-y-4 transition-all duration-500 ${focusMode ? 'opacity-0 max-h-0 mt-0 overflow-hidden' : 'opacity-100'}`}>
               {upcomingEvents.length > 0 && (
                 <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-wood-light/40">
                   {upcomingEvents.map((ev) => (
@@ -1036,17 +1081,6 @@ export default function DailyLeaf() {
               )}
 
               {/* Mobile debrief */}
-              {showDebrief && (
-                <div>
-                  <h3 className="font-header italic text-lg text-ink/70 mb-3">Day Debrief</h3>
-                  <DayDebriefComponent
-                    todayEntries={todayEntries}
-                    date={dateKey}
-                    onSave={(debrief) => { saveDebrief(debrief); setDebriefDismissed(true); setRedoDebrief(false); }}
-                    onSkip={() => setDebriefDismissed(true)}
-                  />
-                </div>
-              )}
               {todayDebriefExists && !redoDebrief && (
                 <div className="bg-sage/5 border border-sage/20 rounded-lg p-3 flex items-center justify-between">
                   <p className="text-sm font-body text-ink flex items-center gap-2">
@@ -1055,7 +1089,7 @@ export default function DailyLeaf() {
                   </p>
                   <div className="flex items-center gap-3">
                     <button
-                      onClick={() => setRedoDebrief(true)}
+                      onClick={() => { setRedoDebrief(true); setDebriefOverlayOpen(true); }}
                       className="text-xs font-body text-pencil hover:text-ink underline underline-offset-2 decoration-pencil/30 transition-colors"
                     >
                       Redo
@@ -1069,13 +1103,13 @@ export default function DailyLeaf() {
                   </div>
                 </div>
               )}
-              {!isEveningTime && !showDebriefEarly && !todayDebriefExists && (
+              {!todayDebriefExists && (
                 <button
-                  onClick={() => setShowDebriefEarly(true)}
+                  onClick={() => { setShowDebriefEarly(true); setDebriefOverlayOpen(true); }}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-paper border border-wood-light/15 text-sm font-body text-ink hover:text-primary hover:border-primary/20 transition-all"
                 >
                   <span className="material-symbols-outlined text-[18px] text-pencil">rate_review</span>
-                  Start Debrief
+                  {isEveningTime ? 'Day Debrief' : 'Start Debrief'}
                 </button>
               )}
 
@@ -1116,7 +1150,9 @@ export default function DailyLeaf() {
           </main>
 
           {/* ── RIGHT SIDEBAR ───────────────────────────────────── */}
-          <aside className="hidden lg:flex flex-col gap-5 sticky top-6">
+          <aside className={`hidden lg:flex flex-col gap-5 sticky top-6 transition-all duration-500 ${
+            focusMode ? 'lg:hidden' : ''
+          }`}>
             {/* Habits */}
             {habits.length > 0 && (
               <div className="bg-paper rounded-xl p-5 shadow-soft border border-wood-light/15">
