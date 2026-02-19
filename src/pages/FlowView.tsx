@@ -746,6 +746,7 @@ function ZoomedSection({
 
   const handleDrop = (e: React.DragEvent, slotTime: string) => {
     e.preventDefault();
+    e.stopPropagation(); // prevent column-level fallback
     setDragOverSlot(null);
     const payload = decodeDrag(e.dataTransfer.getData('application/json'));
     if (payload) {
@@ -1325,6 +1326,7 @@ function SectionBody({
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // prevent column-level fallback
     setDragOver(false);
 
     // Check if this is a habit drag (text/plain contains habit info)
@@ -1547,6 +1549,34 @@ function DayColumn({
     onDragStartEntry(e, entryId, info.iso);
   };
 
+  // Column-level drop — fallback when dropping between sections or on collapsed sections
+  const [columnDragOver, setColumnDragOver] = useState(false);
+  const handleColumnDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setColumnDragOver(true);
+  };
+  const handleColumnDragLeave = (e: React.DragEvent) => {
+    // Only clear if leaving the column itself (not entering a child)
+    if (e.currentTarget === e.target) setColumnDragOver(false);
+  };
+  const handleColumnDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setColumnDragOver(false);
+    const payload = decodeDrag(e.dataTransfer.getData('application/json'));
+    if (payload) {
+      const fallbackSection = visibleSections[0]?.id ?? null;
+      if (payload.entryIds.length > 1) {
+        onBatchUpdate(payload.entryIds.map(id => ({
+          id,
+          updates: { date: info.iso, section: fallbackSection, timeBlock: undefined },
+        })));
+      } else {
+        onDrop(payload.entryIds[0], fallbackSection ?? '', info.iso);
+      }
+    }
+  };
+
   const opacityClass = isYesterday ? 'opacity-50' : offset >= 2 ? 'opacity-80' : '';
   // In focused mode, let the column fill available space for horizontal section layout
   const widthClass = isFocused
@@ -1558,7 +1588,10 @@ function DayColumn({
 
   return (
     <div
-      className={`${widthClass} h-full flex flex-col px-3 ${isFocused ? 'mx-auto' : 'border-r'} border-dashed border-wood-light/40 ${opacityClass} ${weekendBg} snap-start shrink-0 transition-all duration-300`}
+      onDragOver={handleColumnDragOver}
+      onDragLeave={handleColumnDragLeave}
+      onDrop={handleColumnDrop}
+      className={`${widthClass} h-full flex flex-col px-3 ${isFocused ? 'mx-auto' : 'border-r'} border-dashed border-wood-light/40 ${opacityClass} ${weekendBg} snap-start shrink-0 transition-all duration-300 ${columnDragOver ? 'bg-primary/[0.03]' : ''}`}
       {...(isToday ? { 'data-today': true } : {})}
       data-offset={offset}
     >

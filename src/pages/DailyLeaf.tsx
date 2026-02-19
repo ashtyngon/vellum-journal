@@ -627,22 +627,26 @@ export default function DailyLeaf() {
 
       <div className="flex-1 overflow-y-auto bg-background-light">
         {/* ── Header strip (full width) ──────────────────────────── */}
-        <header className="px-6 sm:px-10 pt-6 pb-4 border-b border-wood-light/15">
-          <div className="max-w-[1400px] mx-auto flex items-end justify-between gap-4">
+        <header className={`px-6 sm:px-10 pt-6 pb-4 border-b border-wood-light/15 transition-all duration-500 ${focusMode ? 'pb-3 pt-5' : ''}`}>
+          <div className={`mx-auto flex items-end justify-between gap-4 ${focusMode ? 'max-w-2xl' : 'max-w-[1400px]'}`}>
             <div>
-              <span className="font-mono text-[11px] text-pencil tracking-[0.2em] uppercase block mb-1">
-                {yearStr}
-              </span>
-              <h1 className="font-display italic text-3xl sm:text-4xl text-ink leading-tight">
+              {!focusMode && (
+                <span className="font-mono text-[11px] text-pencil tracking-[0.2em] uppercase block mb-1">
+                  {yearStr}
+                </span>
+              )}
+              <h1 className={`font-display italic text-ink leading-tight ${focusMode ? 'text-2xl' : 'text-3xl sm:text-4xl'}`}>
                 {todayDisplay}
               </h1>
-              <span className="font-body text-sm text-pencil/60">
-                Good {getGreeting()}
-              </span>
+              {!focusMode && (
+                <span className="font-body text-sm text-pencil/60">
+                  Good {getGreeting()}
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-3">
-              {/* Progress */}
-              {totalTaskCount > 0 && (
+              {/* Progress — hidden in focus mode */}
+              {!focusMode && totalTaskCount > 0 && (
                 <div className="flex items-center gap-2">
                   <div className="w-24 h-[3px] bg-wood-light/30 rounded-full overflow-hidden">
                     <div
@@ -668,14 +672,16 @@ export default function DailyLeaf() {
                 <span className="material-symbols-outlined text-[18px]">{focusMode ? 'visibility' : 'center_focus_strong'}</span>
                 <span className="hidden sm:inline">{focusMode ? 'Full' : 'Focus'}</span>
               </button>
-              {/* Plan button */}
-              <button
-                onClick={() => setPlanOverlayOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-wood-light/30 text-sm font-body text-pencil hover:text-primary hover:border-primary/30 transition-all"
-              >
-                <span className="material-symbols-outlined text-[18px]">event_note</span>
-                <span className="hidden sm:inline">Plan</span>
-              </button>
+              {/* Plan button — hidden in focus mode */}
+              {!focusMode && (
+                <button
+                  onClick={() => setPlanOverlayOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-wood-light/30 text-sm font-body text-pencil hover:text-primary hover:border-primary/30 transition-all"
+                >
+                  <span className="material-symbols-outlined text-[18px]">event_note</span>
+                  <span className="hidden sm:inline">Plan</span>
+                </button>
+              )}
             </div>
           </div>
         </header>
@@ -683,10 +689,10 @@ export default function DailyLeaf() {
         {/* ══════════════════════════════════════════════════════════
            UNIFIED DAILY PAGE — 3-column layout
            ══════════════════════════════════════════════════════════ */}
-        <div className={`max-w-[1400px] mx-auto px-6 sm:px-10 py-6 grid items-start transition-all duration-500 ease-out ${
+        <div className={`mx-auto px-6 sm:px-10 py-6 grid items-start transition-all duration-500 ease-out ${
           focusMode
-            ? 'grid-cols-1 max-w-3xl'
-            : 'grid-cols-1 lg:grid-cols-[260px_1fr_260px] xl:grid-cols-[300px_1fr_300px] gap-6'
+            ? 'grid-cols-1 max-w-2xl'
+            : 'max-w-[1400px] grid-cols-1 lg:grid-cols-[260px_1fr_260px] xl:grid-cols-[300px_1fr_300px] gap-6'
         }`}>
 
           {/* ── LEFT SIDEBAR ────────────────────────────────────── */}
@@ -784,45 +790,49 @@ export default function DailyLeaf() {
 
           {/* ── CENTER: Main journal ────────────────────────────── */}
           <main className="min-w-0">
-            {/* Intention — hidden in focus mode */}
-            <div className={`mb-5 transition-all duration-500 ${focusMode ? 'opacity-0 max-h-0 mb-0 overflow-hidden' : 'opacity-100 max-h-40'}`}>
-              <label className="block font-mono text-[10px] text-accent uppercase tracking-[0.15em] mb-1.5">
-                Today&rsquo;s Intention
-              </label>
-              <div className="relative group/input">
-                <input
-                  className="w-full bg-transparent border-none p-0 text-xl sm:text-2xl font-display text-ink placeholder:text-pencil/30 focus:ring-0 focus:outline-none italic"
-                  placeholder="What is the one thing that matters today?"
-                  type="text"
-                  value={intention}
-                  onChange={(e) => setIntention(e.target.value)}
-                  tabIndex={focusMode ? -1 : 0}
-                />
-                <div className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-primary/40 group-focus-within/input:w-full transition-all duration-500" />
-              </div>
-            </div>
+            {/* Everything above the rapid log — hidden in focus mode */}
+            {!focusMode && (
+              <>
+                {/* Intention */}
+                <div className="mb-5">
+                  <label className="block font-mono text-[10px] text-accent uppercase tracking-[0.15em] mb-1.5">
+                    Today&rsquo;s Intention
+                  </label>
+                  <div className="relative group/input">
+                    <input
+                      className="w-full bg-transparent border-none p-0 text-xl sm:text-2xl font-display text-ink placeholder:text-pencil/30 focus:ring-0 focus:outline-none italic"
+                      placeholder="What is the one thing that matters today?"
+                      type="text"
+                      value={intention}
+                      onChange={(e) => setIntention(e.target.value)}
+                    />
+                    <div className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-primary/40 group-focus-within/input:w-full transition-all duration-500" />
+                  </div>
+                </div>
 
-            {/* Day Recovery — hidden in focus mode */}
-            {!focusMode && showDayRecovery && (
-              <div className="mb-4">
-                <DayRecovery entries={entries} onDismiss={() => setShowDayRecovery(false)} />
-              </div>
-            )}
-            {!focusMode && !showDayRecovery && todayTasks.length > 0 && (
-              <button
-                onClick={() => setShowDayRecovery(true)}
-                className="mb-3 font-mono text-[10px] text-pencil/50 hover:text-primary uppercase tracking-widest transition-colors"
-              >
-                Reset My Day
-              </button>
-            )}
+                {/* Day Recovery */}
+                {showDayRecovery && (
+                  <div className="mb-4">
+                    <DayRecovery entries={entries} onDismiss={() => setShowDayRecovery(false)} />
+                  </div>
+                )}
+                {!showDayRecovery && todayTasks.length > 0 && (
+                  <button
+                    onClick={() => setShowDayRecovery(true)}
+                    className="mb-3 font-mono text-[10px] text-pencil/50 hover:text-primary uppercase tracking-widest transition-colors"
+                  >
+                    Reset My Day
+                  </button>
+                )}
 
-            {/* Capacity Warning — hidden in focus mode */}
-            {!focusMode && capacityWarning && (
-              <div className="mb-4 bg-bronze/10 border border-bronze/20 rounded-lg px-4 py-3 text-sm font-body text-ink/80">
-                You have <span className="font-semibold">{capacityWarning.count} tasks</span>{' '}
-                (~{capacityWarning.hours}hrs). Could you pick your top 3?
-              </div>
+                {/* Capacity Warning */}
+                {capacityWarning && (
+                  <div className="mb-4 bg-bronze/10 border border-bronze/20 rounded-lg px-4 py-3 text-sm font-body text-ink/80">
+                    You have <span className="font-semibold">{capacityWarning.count} tasks</span>{' '}
+                    (~{capacityWarning.hours}hrs). Could you pick your top 3?
+                  </div>
+                )}
+              </>
             )}
 
             {/* ── Wins Banner — hidden in focus mode ─────────── */}
@@ -1044,7 +1054,7 @@ export default function DailyLeaf() {
             </div>
 
             {/* Mobile-only: Events + Habits + Debrief + Journal inline — hidden in focus mode */}
-            <div className={`lg:hidden mt-5 space-y-4 transition-all duration-500 ${focusMode ? 'opacity-0 max-h-0 mt-0 overflow-hidden' : 'opacity-100'}`}>
+            {!focusMode && <div className="lg:hidden mt-5 space-y-4">
               {upcomingEvents.length > 0 && (
                 <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-wood-light/40">
                   {upcomingEvents.map((ev) => (
@@ -1146,7 +1156,7 @@ export default function DailyLeaf() {
               <Link to="/flow" className="inline-flex items-center gap-1.5 font-body text-sm text-primary hover:text-primary/80 transition-colors">
                 Plan in Flow <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
               </Link>
-            </div>
+            </div>}
           </main>
 
           {/* ── RIGHT SIDEBAR ───────────────────────────────────── */}
