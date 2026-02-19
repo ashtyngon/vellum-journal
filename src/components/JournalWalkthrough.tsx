@@ -240,22 +240,24 @@ export default function JournalWalkthrough({
       }
 
       default: {
-        // textarea (default)
+        // textarea (default) — morning pages gets a bigger, more freeform feel
+        const isMorningPages = methodId === 'morning-pages';
         return (
-          <div className="w-full max-w-xl mx-auto mt-8">
+          <div className={`w-full mx-auto mt-8 ${isMorningPages ? 'max-w-2xl' : 'max-w-xl'}`}>
             <textarea
               ref={textareaRef}
               value={currentAnswer}
               onChange={e => setAnswer(currentStep, e.target.value)}
               onKeyDown={handleTextareaKeyDown}
               placeholder={step.placeholder || 'Write your thoughts...'}
-              rows={4}
-              className="w-full min-h-[120px] resize-none bg-transparent
-                         font-body text-lg text-ink leading-relaxed
+              rows={isMorningPages ? 10 : 4}
+              className={`w-full resize-none bg-transparent
+                         font-body text-ink leading-relaxed
                          placeholder:text-pencil/50 placeholder:italic
                          border-0 border-b-2 border-wood-light
                          focus:border-primary focus:outline-none
-                         transition-colors duration-300 p-3"
+                         transition-colors duration-300 p-3
+                         ${isMorningPages ? 'min-h-[280px] text-xl' : 'min-h-[120px] text-lg'}`}
             />
             <p className="text-xs font-mono text-pencil/50 mt-2 text-right">
               Shift + Enter for new line &middot; Enter to continue
@@ -406,6 +408,16 @@ export default function JournalWalkthrough({
               </div>
             );
           })}
+        </div>
+      );
+    }
+
+    // Morning Pages: continuous text, no prompts shown — just flow
+    if (methodId === 'morning-pages') {
+      const fullText = journalSteps.map(s => s.answer).filter(Boolean).join('\n\n');
+      return (
+        <div className="py-4">
+          <p className="font-body text-ink leading-loose whitespace-pre-wrap text-lg">{fullText}</p>
         </div>
       );
     }

@@ -156,10 +156,14 @@ export default function DailyLeaf() {
     return () => { document.documentElement.classList.remove('focus-mode'); };
   }, [focusMode]);
 
-  const [tomorrowAddInput, setTomorrowAddInput] = useState('');
-  const tomorrowInputRef = useRef<HTMLInputElement>(null);
+  const [planAddInput, setPlanAddInput] = useState('');
+  const planInputRef = useRef<HTMLInputElement>(null);
+  const [planTarget, setPlanTarget] = useState<'today' | 'tomorrow' | 'week'>('tomorrow');
 
-  /* ── Tomorrow intention (separate from today) ──────────────────── */
+  // Compute the target date for the plan overlay
+  const planTargetDate = planTarget === 'today' ? today : planTarget === 'tomorrow' ? tomorrow : today;
+
+  /* ── Plan target intention (stored per date) ──────────────────── */
 
   const tomorrowIntentionKey = `vellum-intention-${tomorrow}`;
   const [tomorrowIntention, setTomorrowIntention] = useState(() =>
@@ -210,6 +214,21 @@ export default function DailyLeaf() {
     [entries, tomorrow],
   );
 
+  // Week range: from today through end of next 6 days
+  const weekEnd = useMemo(() => {
+    const d = new Date(dateKey + 'T12:00:00');
+    d.setDate(d.getDate() + 6);
+    return formatLocalDate(d);
+  }, [dateKey]);
+
+  // Entries for the plan overlay based on target
+  const planEntries = useMemo(() => {
+    if (planTarget === 'today') return todayEntries;
+    if (planTarget === 'tomorrow') return tomorrowEntries;
+    // week: all entries in the next 7 days
+    return entries.filter((e) => e.date >= today && e.date <= weekEnd);
+  }, [planTarget, todayEntries, tomorrowEntries, entries, today, weekEnd]);
+
   const upcomingEvents = useMemo(() => {
     const cutoff = formatLocalDate((() => { const d = new Date(dateKey + 'T12:00:00'); d.setDate(d.getDate() + 7); return d; })());
     return entries
@@ -236,6 +255,14 @@ export default function DailyLeaf() {
     batchUpdateEntries(overdueTasks.map(t => ({
       id: t.id,
       updates: { date: today, movedCount: (t.movedCount ?? 0) + 1 },
+    })));
+  }, [overdueTasks, today, batchUpdateEntries]);
+
+  const parkAll = useCallback(() => {
+    if (overdueTasks.length === 0) return;
+    batchUpdateEntries(overdueTasks.map(t => ({
+      id: t.id,
+      updates: { date: today, section: undefined, timeBlock: undefined, movedCount: (t.movedCount ?? 0) + 1 },
     })));
   }, [overdueTasks, today, batchUpdateEntries]);
 
@@ -318,20 +345,20 @@ export default function DailyLeaf() {
     [newTitle, entryType, newPriority, newEventTime, today, addEntry],
   );
 
-  /* ── Handler: Add entry for tomorrow (Plan Tomorrow panel) ──── */
+  /* ── Handler: Add entry via Plan overlay ──────────────────────── */
 
-  const handleAddTomorrowEntry = useCallback(
+  const handleAddPlanEntry = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key !== 'Enter' || !tomorrowAddInput.trim()) return;
+      if (e.key !== 'Enter' || !planAddInput.trim()) return;
 
-      const parsed = parseNaturalEntry(tomorrowAddInput.trim());
+      const parsed = parseNaturalEntry(planAddInput.trim());
       const resolvedType = parsed.type || 'task';
 
       const base: RapidLogEntry = {
         id: Date.now().toString(),
         type: resolvedType,
         title: parsed.title,
-        date: parsed.date || tomorrow,
+        date: parsed.date || planTargetDate,
       };
 
       if (resolvedType === 'task') {
@@ -346,9 +373,9 @@ export default function DailyLeaf() {
       }
 
       addEntry(base);
-      setTomorrowAddInput('');
+      setPlanAddInput('');
     },
-    [tomorrowAddInput, tomorrow, addEntry],
+    [planAddInput, planTargetDate, addEntry],
   );
 
   /* ── Handlers: Toggle task done ──────────────────────────────── */
@@ -522,53 +549,82 @@ export default function DailyLeaf() {
         />
       )}
 
-      {/* ── Plan Tomorrow Overlay ──────────────────────────────────── */}
+      {/* ── Plan Overlay (Today / Tomorrow / Week) ────────────────── */}
       {planOverlayOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setPlanOverlayOpen(false)}>
           <div className="bg-paper rounded-2xl shadow-lifted w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-primary text-lg">event_upcoming</span>
+                  <span className="material-symbols-outlined text-primary text-lg">event_note</span>
                 </div>
-                <div>
-                  <h2 className="font-header italic text-2xl text-ink">Plan Tomorrow</h2>
-                  <p className="text-sm font-body text-ink-light">Set yourself up for a gentle start</p>
-                </div>
+                <h2 className="font-header italic text-2xl text-ink">Plan</h2>
               </div>
               <button onClick={() => setPlanOverlayOpen(false)} className="text-pencil hover:text-ink transition-colors p-1">
                 <span className="material-symbols-outlined text-xl">close</span>
               </button>
             </div>
 
-            <div className="space-y-5">
-              <div>
-                <label className="block font-mono text-[10px] text-accent uppercase tracking-[0.15em] mb-1.5">
-                  Tomorrow&rsquo;s intention
-                </label>
-                <input
-                  type="text"
-                  value={tomorrowIntention}
-                  onChange={e => setTomorrowIntention(e.target.value)}
-                  placeholder="How would you like tomorrow to feel?"
-                  className="w-full bg-transparent border-none p-0 text-xl font-display text-ink placeholder:text-pencil/30 focus:ring-0 focus:outline-none italic"
-                />
-                <div className="mt-1 h-[1.5px] bg-wood-light/20" />
-              </div>
+            {/* Tab selector: Today / Tomorrow / Week */}
+            <div className="flex gap-1 mb-5 bg-surface-light rounded-lg p-1">
+              {([
+                { key: 'today' as const, label: 'Today', icon: 'today' },
+                { key: 'tomorrow' as const, label: 'Tomorrow', icon: 'event_upcoming' },
+                { key: 'week' as const, label: 'This Week', icon: 'date_range' },
+              ]).map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setPlanTarget(tab.key)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-sm font-body transition-all ${
+                    planTarget === tab.key
+                      ? 'bg-paper shadow-sm text-ink font-medium'
+                      : 'text-pencil hover:text-ink'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[16px]">{tab.icon}</span>
+                  {tab.label}
+                </button>
+              ))}
+            </div>
 
-              {tomorrowEntries.length > 0 && (
+            <div className="space-y-5">
+              {/* Intention — only for today/tomorrow (not week) */}
+              {planTarget !== 'week' && (
+                <div>
+                  <label className="block font-mono text-[10px] text-accent uppercase tracking-[0.15em] mb-1.5">
+                    {planTarget === 'today' ? "Today\u2019s intention" : "Tomorrow\u2019s intention"}
+                  </label>
+                  <input
+                    type="text"
+                    value={planTarget === 'today' ? intention : tomorrowIntention}
+                    onChange={e => planTarget === 'today' ? setIntention(e.target.value) : setTomorrowIntention(e.target.value)}
+                    placeholder={planTarget === 'today' ? 'Redefine the day...' : 'How would you like tomorrow to feel?'}
+                    className="w-full bg-transparent border-none p-0 text-xl font-display text-ink placeholder:text-pencil/30 focus:ring-0 focus:outline-none italic"
+                  />
+                  <div className="mt-1 h-[1.5px] bg-wood-light/20" />
+                </div>
+              )}
+
+              {/* Entries list */}
+              {planEntries.length > 0 && (
                 <div>
                   <p className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em] mb-2 flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-[14px]">checklist</span>
-                    {tomorrowEntries.length} item{tomorrowEntries.length !== 1 ? 's' : ''} planned
+                    {planEntries.length} item{planEntries.length !== 1 ? 's' : ''} {planTarget === 'today' ? 'today' : 'planned'}
                   </p>
                   <div className="space-y-0.5">
-                    {tomorrowEntries.map((entry) => (
+                    {planEntries.map((entry) => (
                       <div key={entry.id} className="group/item flex items-start gap-3 py-2 hover:bg-surface-light/60 -mx-3 px-3 rounded transition-colors">
                         {bulletForEntry(entry)}
                         <span className={`font-body text-base flex-1 leading-snug ${entry.type === 'note' ? 'text-ink/60 italic' : 'text-ink'}`}>
                           {entry.title}
                         </span>
+                        {/* Show date label in week view */}
+                        {planTarget === 'week' && entry.date !== today && (
+                          <span className="font-mono text-[10px] text-pencil/50 flex-shrink-0">
+                            {new Date(entry.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}
+                          </span>
+                        )}
                         {entry.type === 'event' && entry.time && (
                           <span className="font-mono text-[10px] text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded flex-shrink-0">{entry.time}</span>
                         )}
@@ -584,21 +640,23 @@ export default function DailyLeaf() {
                 </div>
               )}
 
+              {/* Add entry input */}
               <div className="flex items-center gap-3 py-2 px-3 rounded-lg bg-surface-light/50 border border-wood-light/15 focus-within:border-primary/30 transition-all">
                 <span className="material-symbols-outlined text-lg text-primary/40">add</span>
                 <input
-                  ref={tomorrowInputRef}
+                  ref={planInputRef}
                   type="text"
-                  value={tomorrowAddInput}
-                  onChange={e => setTomorrowAddInput(e.target.value)}
-                  onKeyDown={handleAddTomorrowEntry}
-                  placeholder='e.g. "3pm: standup" or "review PR"'
+                  value={planAddInput}
+                  onChange={e => setPlanAddInput(e.target.value)}
+                  onKeyDown={handleAddPlanEntry}
+                  placeholder={planTarget === 'today' ? 'Add to today...' : planTarget === 'tomorrow' ? 'e.g. "3pm: standup" or "review PR"' : 'Add to this week...'}
                   className="flex-1 min-w-0 bg-transparent border-none p-0 text-base font-body text-ink placeholder:text-pencil/40 focus:ring-0 focus:outline-none"
                 />
               </div>
 
+              {/* Work hours nudge */}
               {(() => {
-                const tasks = tomorrowEntries.filter(e => e.type === 'task');
+                const tasks = planEntries.filter(e => e.type === 'task');
                 const totalMin = tasks.reduce((sum, t) => {
                   if (!t.duration) return sum;
                   let m = 0;
@@ -608,18 +666,19 @@ export default function DailyLeaf() {
                   if (mMatch) m += parseInt(mMatch[1], 10);
                   return sum + m;
                 }, 0);
-                if (totalMin <= 360) return null;
+                const threshold = planTarget === 'week' ? 2400 : 360;
+                if (totalMin <= threshold) return null;
                 return (
                   <div className="flex items-start gap-2 p-3 rounded-lg bg-accent/10 border border-accent/20">
                     <span className="material-symbols-outlined text-accent text-base mt-0.5">emoji_objects</span>
                     <p className="text-sm font-body text-ink-light">
-                      ~{Math.round(totalMin / 60)}h of scheduled work tomorrow.
+                      ~{Math.round(totalMin / 60)}h of scheduled work{planTarget === 'week' ? ' this week' : planTarget === 'tomorrow' ? ' tomorrow' : ' today'}.
                     </p>
                   </div>
                 );
               })()}
 
-              {tomorrowEntries.length === 0 && !tomorrowIntention && (
+              {planEntries.length === 0 && (
                 <p className="text-center py-4 text-base font-handwriting text-ink-light/40">
                   Even one task is enough. Start small.
                 </p>
@@ -663,61 +722,81 @@ export default function DailyLeaf() {
       <div className="flex-1 overflow-y-auto bg-background-light">
         {/* ── Header strip (full width) ──────────────────────────── */}
         <header className={`px-6 sm:px-10 pt-6 pb-4 border-b border-wood-light/15 transition-all duration-500 ${focusMode ? 'pb-3 pt-5' : ''}`}>
-          <div className={`mx-auto flex items-end justify-between gap-4 ${focusMode ? 'max-w-2xl' : 'max-w-[1400px]'}`}>
-            <div>
-              {!focusMode && (
-                <span className="font-mono text-[11px] text-pencil tracking-[0.2em] uppercase block mb-1">
-                  {yearStr}
-                </span>
-              )}
-              <h1 className={`font-display italic text-ink leading-tight ${focusMode ? 'text-2xl' : 'text-3xl sm:text-4xl'}`}>
-                {todayDisplay}
-              </h1>
-              {!focusMode && (
-                <span className="font-body text-sm text-pencil/60">
-                  Good {getGreeting()}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-3">
-              {/* Progress — hidden in focus mode */}
-              {!focusMode && totalTaskCount > 0 && (
-                <div className="flex items-center gap-2">
-                  <div className="w-24 h-[3px] bg-wood-light/30 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary/70 rounded-full transition-all duration-700 ease-out"
-                      style={{ width: `${(completedCount / totalTaskCount) * 100}%` }}
+          <div className={`mx-auto ${focusMode ? 'max-w-2xl relative' : 'max-w-[1400px] flex items-end justify-between gap-4'}`}>
+            {focusMode ? (
+              <>
+                {/* Focus mode: centered day + intention, tiny exit button */}
+                <div className="text-center">
+                  <h1 className="font-display italic text-ink leading-tight text-2xl">
+                    {todayDisplay}
+                  </h1>
+                  <div className="mt-2 max-w-md mx-auto">
+                    <input
+                      className="w-full bg-transparent border-none p-0 text-center text-lg font-display text-ink/70 placeholder:text-pencil/25 focus:ring-0 focus:outline-none italic"
+                      placeholder="intention..."
+                      type="text"
+                      value={intention}
+                      onChange={(e) => setIntention(e.target.value)}
                     />
                   </div>
-                  <span className="font-mono text-xs text-pencil tabular-nums">
-                    {completedCount}/{totalTaskCount}
+                </div>
+                <button
+                  onClick={() => setFocusMode(false)}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 text-pencil/30 hover:text-pencil/60 transition-colors"
+                  title="Exit focus mode"
+                >
+                  <span className="material-symbols-outlined text-[16px]">visibility</span>
+                </button>
+              </>
+            ) : (
+              <>
+                {/* Normal mode: left-aligned header */}
+                <div>
+                  <span className="font-mono text-[11px] text-pencil tracking-[0.2em] uppercase block mb-1">
+                    {yearStr}
+                  </span>
+                  <h1 className="font-display italic text-ink leading-tight text-3xl sm:text-4xl">
+                    {todayDisplay}
+                  </h1>
+                  <span className="font-body text-sm text-pencil/60">
+                    Good {getGreeting()}
                   </span>
                 </div>
-              )}
-              {/* Focus mode toggle */}
-              <button
-                onClick={() => setFocusMode(f => !f)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-body transition-all ${
-                  focusMode
-                    ? 'border-primary/40 bg-primary/10 text-primary'
-                    : 'border-wood-light/30 text-pencil hover:text-primary hover:border-primary/30'
-                }`}
-                title={focusMode ? 'Exit focus mode' : 'Focus mode — rapid log only'}
-              >
-                <span className="material-symbols-outlined text-[18px]">{focusMode ? 'visibility' : 'center_focus_strong'}</span>
-                <span className="hidden sm:inline">{focusMode ? 'Full' : 'Focus'}</span>
-              </button>
-              {/* Plan button — hidden in focus mode */}
-              {!focusMode && (
-                <button
-                  onClick={() => setPlanOverlayOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-wood-light/30 text-sm font-body text-pencil hover:text-primary hover:border-primary/30 transition-all"
-                >
-                  <span className="material-symbols-outlined text-[18px]">event_note</span>
-                  <span className="hidden sm:inline">Plan</span>
-                </button>
-              )}
-            </div>
+                <div className="flex items-center gap-3">
+                  {/* Progress */}
+                  {totalTaskCount > 0 && (
+                    <div className="flex items-center gap-2">
+                      <div className="w-24 h-[3px] bg-wood-light/30 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-primary/70 rounded-full transition-all duration-700 ease-out"
+                          style={{ width: `${(completedCount / totalTaskCount) * 100}%` }}
+                        />
+                      </div>
+                      <span className="font-mono text-xs text-pencil tabular-nums">
+                        {completedCount}/{totalTaskCount}
+                      </span>
+                    </div>
+                  )}
+                  {/* Focus mode toggle */}
+                  <button
+                    onClick={() => setFocusMode(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-wood-light/30 text-sm font-body text-pencil hover:text-primary hover:border-primary/30 transition-all"
+                    title="Focus mode — rapid log only"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">center_focus_strong</span>
+                    <span className="hidden sm:inline">Focus</span>
+                  </button>
+                  {/* Plan button */}
+                  <button
+                    onClick={() => setPlanOverlayOpen(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-wood-light/30 text-sm font-body text-pencil hover:text-primary hover:border-primary/30 transition-all"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">event_note</span>
+                    <span className="hidden sm:inline">Plan</span>
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </header>
 
@@ -897,8 +976,8 @@ export default function DailyLeaf() {
               </div>
             )}
 
-            {/* ── Overdue Tasks — always visible (even in focus mode) ── */}
-            {overdueTasks.length > 0 && (
+            {/* ── Overdue Tasks — hidden in focus mode ── */}
+            {!focusMode && overdueTasks.length > 0 && (
               <div className="mb-4 bg-tension/5 border border-tension/20 rounded-xl overflow-hidden">
                 <div
                   className="flex items-center justify-between px-4 py-3 cursor-pointer select-none"
@@ -915,7 +994,13 @@ export default function DailyLeaf() {
                       onClick={(e) => { e.stopPropagation(); rescheduleAll(); }}
                       className="text-xs font-mono text-primary hover:text-primary/80 bg-primary/10 hover:bg-primary/15 px-2.5 py-1 rounded-full transition-colors uppercase tracking-wider"
                     >
-                      Move all to today
+                      → Today
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); parkAll(); }}
+                      className="text-xs font-mono text-pencil hover:text-ink bg-surface-light hover:bg-wood-light/20 px-2.5 py-1 rounded-full transition-colors uppercase tracking-wider"
+                    >
+                      → Parking lot
                     </button>
                     <span className={`material-symbols-outlined text-pencil text-lg transition-transform ${overdueExpanded ? '' : '-rotate-90'}`}>
                       expand_more

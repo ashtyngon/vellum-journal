@@ -164,6 +164,8 @@ function decodeDrag(data: string): DragPayload | null {
     const parsed = JSON.parse(data);
     // Backward compat: if entryIds is missing, derive from entryId
     if (!parsed.entryIds && parsed.entryId) parsed.entryIds = [parsed.entryId];
+    // Guarantee entryIds is always a valid non-empty array
+    if (!Array.isArray(parsed.entryIds) || parsed.entryIds.length === 0) return null;
     return parsed;
   } catch { return null; }
 }

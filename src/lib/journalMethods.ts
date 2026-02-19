@@ -25,6 +25,34 @@ export interface JournalMethod {
 /* ── Method Definitions ───────────────────────────────────────────────── */
 
 export const JOURNAL_METHODS: JournalMethod[] = [
+  /* ─── 0. Morning Pages (Daily) ─────────────────────────────────────── */
+  {
+    id: 'morning-pages',
+    name: 'Morning Pages',
+    description:
+      'Stream-of-consciousness writing. No rules, no editing — just get it out of your head and onto the page.',
+    icon: 'wb_twilight',
+    category: 'daily',
+    steps: [
+      {
+        prompt: 'Just write. Whatever is in your head right now.',
+        placeholder:
+          'Don\'t think. Don\'t edit. Don\'t stop. Just let it flow...',
+        inputType: 'textarea',
+      },
+      {
+        prompt: 'Keep going.',
+        placeholder: 'You\'re not done yet...',
+        inputType: 'textarea',
+      },
+      {
+        prompt: 'One more page. What else is in there?',
+        placeholder: 'Almost there...',
+        inputType: 'textarea',
+      },
+    ],
+  },
+
   /* ─── 1. Thought Record (CBT) ─────────────────────────────────────── */
   {
     id: 'thought-record',
