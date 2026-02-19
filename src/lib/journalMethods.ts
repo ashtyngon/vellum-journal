@@ -102,41 +102,28 @@ export const JOURNAL_METHODS: JournalMethod[] = [
         inputType: 'textarea',
       },
       {
-        prompt: 'Why does that bother you?',
-        placeholder:
-          'e.g. Because I don\'t want to be the kind of person who takes frustration out on people I love.',
+        prompt: 'Why?',
+        placeholder: 'Keep going...',
         inputType: 'textarea',
       },
       {
-        prompt: 'Why does that matter to you?',
-        placeholder:
-          'e.g. Because I watched my father do the same thing and I swore I\'d be different.',
+        prompt: 'Why?',
+        placeholder: 'Keep going...',
         inputType: 'textarea',
       },
       {
-        prompt: 'Go deeper. Why is that significant?',
-        placeholder:
-          'e.g. Because I\'m afraid that I\'m becoming someone I don\'t respect.',
+        prompt: 'Why?',
+        placeholder: 'Keep going...',
         inputType: 'textarea',
       },
       {
-        prompt: 'One more time -- why?',
-        placeholder:
-          'e.g. Because I tie my self-worth to how well I treat others, and when I fail at that I feel fundamentally flawed.',
+        prompt: 'Why?',
+        placeholder: 'Keep going...',
         inputType: 'textarea',
       },
       {
-        prompt:
-          'You\'ve reached a root belief. Write it as a single sentence.',
-        placeholder:
-          'e.g. I believe that if I can\'t control my emotions perfectly, I\'m not a good person.',
-        inputType: 'textarea',
-      },
-      {
-        prompt:
-          'What did you discover? Does this belief feel true, exaggerated, or somewhere in between?',
-        placeholder:
-          'e.g. It\'s exaggerated. One bad moment doesn\'t erase everything else. I can apologize and do better.',
+        prompt: 'Why?',
+        placeholder: 'You\'re close to the root...',
         inputType: 'textarea',
       },
     ],
@@ -292,13 +279,18 @@ export const JOURNAL_METHODS: JournalMethod[] = [
         options: [
           'Head',
           'Jaw / Face',
+          'Neck',
           'Throat',
           'Chest',
           'Stomach',
           'Shoulders',
-          'Back',
+          'Upper Back',
+          'Lower Back',
+          'Arms',
           'Hands',
+          'Hips',
           'Legs',
+          'Feet',
           'Whole body',
         ],
       },

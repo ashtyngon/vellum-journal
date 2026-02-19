@@ -200,6 +200,7 @@ export default function JournalWalkthrough({
       case 'select':
       case 'body-picker': {
         const options = step.inputType === 'body-picker' ? BODY_AREAS : (step.options ?? []);
+        const isCustom = currentAnswer.trim() !== '' && !options.includes(currentAnswer);
         return (
           <div className="w-full max-w-lg mx-auto mt-8">
             <div className="flex flex-wrap justify-center gap-2">
@@ -219,6 +220,20 @@ export default function JournalWalkthrough({
                   </button>
                 );
               })}
+            </div>
+            {/* Custom entry */}
+            <div className="mt-4 flex justify-center">
+              <input
+                type="text"
+                value={isCustom ? currentAnswer : ''}
+                onChange={e => setAnswer(currentStep, e.target.value)}
+                placeholder="Or type your own..."
+                className={`text-center text-sm font-body bg-transparent border-b-2 px-3 py-1.5 w-48 focus:outline-none transition-colors ${
+                  isCustom
+                    ? 'border-primary text-ink'
+                    : 'border-wood-light/40 text-pencil placeholder:text-pencil/40'
+                }`}
+              />
             </div>
           </div>
         );
@@ -364,6 +379,37 @@ export default function JournalWalkthrough({
       });
     }
 
+    // Five Whys: chain visualization — connected chain of answers drilling deeper
+    if (methodId === 'five-whys') {
+      return (
+        <div className="space-y-0">
+          {journalSteps.map((s, i) => {
+            const isFirst = i === 0;
+            const isLast = i === journalSteps.length - 1;
+            return (
+              <div key={i} className="relative flex gap-4">
+                {/* Vertical chain line + dot */}
+                <div className="flex flex-col items-center flex-shrink-0 w-6">
+                  {!isFirst && <div className="w-0.5 h-4 bg-primary/30" />}
+                  <div className={`w-3 h-3 rounded-full flex-shrink-0 ${isLast ? 'bg-primary ring-4 ring-primary/20' : isFirst ? 'bg-ink/50' : 'bg-primary/50'}`} />
+                  {!isLast && <div className="w-0.5 flex-1 bg-primary/30" />}
+                </div>
+                {/* Content */}
+                <div className={`flex-1 pb-6 ${isFirst ? 'pt-0' : 'pt-1'}`}>
+                  <p className={`font-mono text-[10px] uppercase tracking-widest mb-1.5 ${isFirst ? 'text-ink/50' : isLast ? 'text-primary font-bold' : 'text-primary/60'}`}>
+                    {isFirst ? 'Starting point' : `Why #${i}`}
+                  </p>
+                  <p className={`font-body leading-relaxed whitespace-pre-wrap ${isLast ? 'text-ink font-medium text-lg' : 'text-ink'}`}>
+                    {s.answer}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
     // Default: simple stacked cards
     return journalSteps.map((s, i) => (
       <div key={i} className="py-4 border-b border-wood-light/30 last:border-0">
@@ -497,6 +543,30 @@ export default function JournalWalkthrough({
       {/* Main content — vertically centered */}
       <div className="flex-1 flex items-center justify-center px-6 py-8 overflow-y-auto">
         <div className={`w-full max-w-2xl ${stepTransition}`}>
+          {/* Five Whys: show chain of previous answers above current step */}
+          {methodId === 'five-whys' && currentStep > 0 && (
+            <div className="mb-8 max-w-lg mx-auto">
+              {answers.slice(0, currentStep).map((a, i) => {
+                if (!a.trim()) return null;
+                return (
+                  <div key={i} className="relative flex gap-3 mb-0">
+                    <div className="flex flex-col items-center flex-shrink-0 w-4">
+                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${i === 0 ? 'bg-ink/40' : 'bg-primary/40'}`} />
+                      <div className="w-0.5 flex-1 bg-primary/20" />
+                    </div>
+                    <div className="flex-1 pb-3">
+                      <p className="font-body text-sm text-pencil/70 leading-snug">{a}</p>
+                    </div>
+                  </div>
+                );
+              })}
+              {/* Arrow pointing down to current prompt */}
+              <div className="flex justify-center -mt-1 mb-2">
+                <span className="material-symbols-outlined text-primary/40 text-lg">arrow_downward</span>
+              </div>
+            </div>
+          )}
+
           {/* Prompt */}
           <h3 className="font-display italic text-2xl sm:text-3xl text-ink text-center leading-snug px-4">
             {step?.prompt}
