@@ -148,6 +148,13 @@ export default function DailyLeaf() {
   const [debriefOverlayOpen, setDebriefOverlayOpen] = useState(false);
   const [showDebriefEarly, setShowDebriefEarly] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
+
+  // Sync focus mode to document so Layout can hide the nav bar
+  useEffect(() => {
+    document.documentElement.classList.toggle('focus-mode', focusMode);
+    return () => { document.documentElement.classList.remove('focus-mode'); };
+  }, [focusMode]);
+
   const [tomorrowAddInput, setTomorrowAddInput] = useState('');
   const tomorrowInputRef = useRef<HTMLInputElement>(null);
 
