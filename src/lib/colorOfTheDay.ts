@@ -128,95 +128,95 @@ export interface DailyCompanion {
 
 const COMPANIONS: DailyCompanion[] = [
   // 0 – Warm Amber
-  { colorName: 'Warm Amber', animal: '🦊', name: 'Foxie',
-    message: 'You showed up. That\'s literally the hardest part and you already did it.' },
+  { colorName: 'Warm Amber', animal: '🦊', name: 'Fox',
+    message: 'You opened this instead of scrolling. That already says something about you today.' },
   // 1 – Dusty Rose
-  { colorName: 'Dusty Rose', animal: '🐙', name: 'Inky',
-    message: 'Multitasking is a myth. Do one tentacle at a time.' },
+  { colorName: 'Dusty Rose', animal: '🐙', name: 'Octavia',
+    message: 'You don\u2019t have to hold everything at once. Put some things down and see what stays.' },
   // 2 – Burnt Sienna
   { colorName: 'Burnt Sienna', animal: '🦝', name: 'Bandit',
-    message: 'Stole a productive hour from chaos? That counts as winning.' },
+    message: 'The messy middle is where all the real work happens. You\u2019re right on schedule.' },
   // 3 – Ocean Teal
-  { colorName: 'Ocean Teal', animal: '🐋', name: 'Splash',
-    message: 'Deep breaths. Even whales come up for air between dives.' },
+  { colorName: 'Ocean Teal', animal: '🐋', name: 'Atlas',
+    message: 'There\u2019s a version of today where you do less but feel more. That\u2019s the one worth finding.' },
   // 4 – Forest Sage
-  { colorName: 'Forest Sage', animal: '🦉', name: 'Hoot',
-    message: 'Wisdom is knowing when to close the browser tabs.' },
+  { colorName: 'Forest Sage', animal: '🦉', name: 'Sage',
+    message: 'Knowing what to ignore is the most underrated skill you have. Use it generously today.' },
   // 5 – Dusty Lavender
-  { colorName: 'Dusty Lavender', animal: '🦋', name: 'Flutter',
-    message: 'Your brain bounces between ideas because it sees connections others miss.' },
+  { colorName: 'Dusty Lavender', animal: '🦋', name: 'Drift',
+    message: 'Your mind moves fast because it\u2019s making connections. That\u2019s not distraction — it\u2019s how you think.' },
   // 6 – Golden Honey
-  { colorName: 'Golden Honey', animal: '🐝', name: 'Buzz',
-    message: 'Busy doesn\'t mean productive. Are you pollinating or just flying in circles?' },
+  { colorName: 'Golden Honey', animal: '🐝', name: 'Clover',
+    message: 'Not everything that feels urgent is important. Sit with that for a second before you start.' },
   // 7 – Soft Crimson
-  { colorName: 'Soft Crimson', animal: '🦩', name: 'Pinky',
-    message: 'Standing on one leg looks weird but works. Your methods don\'t have to make sense to others.' },
+  { colorName: 'Soft Crimson', animal: '🦩', name: 'Rosie',
+    message: 'You don\u2019t need to explain your process to anyone. If it works, it works.' },
   // 8 – Dark Teal
-  { colorName: 'Dark Teal', animal: '🐢', name: 'Shell',
-    message: 'Going slow isn\'t falling behind. The turtle literally won the race.' },
+  { colorName: 'Dark Teal', animal: '🐢', name: 'Steady',
+    message: 'Slow isn\u2019t the opposite of productive. Sometimes it\u2019s the prerequisite.' },
   // 9 – Warm Ochre
-  { colorName: 'Warm Ochre', animal: '🦁', name: 'Mane',
-    message: 'You don\'t need motivation. You need a 5-minute start. Roar at it.' },
+  { colorName: 'Warm Ochre', animal: '🦁', name: 'Sol',
+    message: 'You don\u2019t need to feel ready. You just need five minutes and something to start with.' },
   // 10 – Slate Blue
-  { colorName: 'Slate Blue', animal: '🐧', name: 'Waddle',
-    message: 'Penguins look ridiculous walking but they\'re incredible swimmers. Play to your element.' },
+  { colorName: 'Slate Blue', animal: '🐧', name: 'Tux',
+    message: 'The gap between who you are and who you\u2019re becoming is smaller than it feels right now.' },
   // 11 – Terracotta
-  { colorName: 'Terracotta', animal: '🦎', name: 'Mosaic',
-    message: 'Dropped your tail yesterday? Cool, it grows back. Start fresh.' },
+  { colorName: 'Terracotta', animal: '🦎', name: 'Ember',
+    message: 'Yesterday ended. You\u2019re here now and that\u2019s the only part that matters.' },
   // 12 – Mauve
-  { colorName: 'Mauve', animal: '🐈', name: 'Naps',
-    message: 'Rest between tasks isn\'t laziness. It\'s being strategically cat-like.' },
+  { colorName: 'Mauve', animal: '🐈', name: 'Velvet',
+    message: 'Rest isn\u2019t a reward you earn. It\u2019s a tool you use. Use it without guilt.' },
   // 13 – Olive
-  { colorName: 'Olive', animal: '🐸', name: 'Leap',
-    message: 'Eat the frog first. Or at least look at the frog. Acknowledging the frog counts.' },
+  { colorName: 'Olive', animal: '🐸', name: 'Ribbit',
+    message: 'Pick the one thing you\u2019ve been avoiding. Just look at it. That\u2019s enough for now.' },
   // 14 – Soft Purple
-  { colorName: 'Soft Purple', animal: '🦄', name: 'Spark',
-    message: 'Your brain isn\'t broken, it just runs on a different operating system.' },
+  { colorName: 'Soft Purple', animal: '🦄', name: 'Rare',
+    message: 'Your brain works differently, and differently is how every interesting thing was ever made.' },
   // 15 – Dark Gold
-  { colorName: 'Dark Gold', animal: '🐕', name: 'Goldie',
-    message: 'Be loyal to your own plans today. Past-you made them for a reason.' },
+  { colorName: 'Dark Gold', animal: '🐕', name: 'Loyal',
+    message: 'Past-you made plans for today. Honor that — even just one small thing from the list.' },
   // 16 – Storm Blue
   { colorName: 'Storm Blue', animal: '🐬', name: 'Echo',
-    message: 'When things get turbulent, ride the wave instead of fighting the current.' },
+    message: 'When the noise gets loud, go toward the thing that\u2019s quiet and clear. That\u2019s usually the right one.' },
   // 17 – Deep Sage
-  { colorName: 'Deep Sage', animal: '🦔', name: 'Bristle',
-    message: 'Small and spiky is a valid life strategy. Protect your time.' },
+  { colorName: 'Deep Sage', animal: '🦔', name: 'Thistle',
+    message: 'It\u2019s okay to protect your time like it\u2019s something valuable. Because it is.' },
   // 18 – Rust
-  { colorName: 'Rust', animal: '🦀', name: 'Snip',
-    message: 'Cut one thing from today\'s list. Seriously. You overpacked it again.' },
+  { colorName: 'Rust', animal: '🦀', name: 'Snap',
+    message: 'Your list is probably too long. Remove one thing right now and watch how much lighter it feels.' },
   // 19 – Periwinkle
-  { colorName: 'Periwinkle', animal: '🐰', name: 'Hop',
-    message: 'Jumping between tasks isn\'t always bad — sometimes that\'s just how the work gets done.' },
+  { colorName: 'Periwinkle', animal: '🐰', name: 'Scout',
+    message: 'Switching between things isn\u2019t failing to focus. Sometimes that\u2019s just your rhythm today.' },
   // 20 – Copper
-  { colorName: 'Copper', animal: '🦅', name: 'Talon',
-    message: 'Zoom out. Half the tasks stressing you out won\'t matter in a week.' },
+  { colorName: 'Copper', animal: '🦅', name: 'Vista',
+    message: 'Most of what\u2019s stressing you won\u2019t matter in a week. Do the things that will.' },
   // 21 – Moss
-  { colorName: 'Moss', animal: '🐊', name: 'Chomp',
-    message: 'Patient. Still. Then decisive. That\'s how crocs get things done.' },
+  { colorName: 'Moss', animal: '🐊', name: 'Still',
+    message: 'You don\u2019t have to move fast. You just have to move with intention when you do.' },
   // 22 – Plum
-  { colorName: 'Plum', animal: '🦜', name: 'Prism',
-    message: 'Talking to yourself while working isn\'t weird, it\'s verbal processing. Keep going.' },
+  { colorName: 'Plum', animal: '🦜', name: 'Chatter',
+    message: 'Thinking out loud isn\u2019t a quirk — it\u2019s you processing in real time. Keep talking.' },
   // 23 – Tangerine
-  { colorName: 'Tangerine', animal: '🐻', name: 'Honey',
-    message: 'You can hibernate when the season\'s over. Right now, one more task.' },
+  { colorName: 'Tangerine', animal: '🐻', name: 'Maple',
+    message: 'One more push today. Not because you have to, but because future-you will be glad you did.' },
   // 24 – Iris
   { colorName: 'Iris', animal: '🦚', name: 'Plume',
-    message: 'Your work doesn\'t have to be perfect to be impressive. Show what you\'ve got.' },
+    message: 'Done is more interesting than perfect. Ship the thing, then make it better.' },
   // 25 – Pine
-  { colorName: 'Pine', animal: '🐺', name: 'Howl',
-    message: 'Lone wolf or pack player — both work. Just don\'t stand still.' },
+  { colorName: 'Pine', animal: '🐺', name: 'North',
+    message: 'Whether you need people or solitude today — trust that instinct. You know what you need.' },
   // 26 – Rosewood
-  { colorName: 'Rosewood', animal: '🦢', name: 'Glide',
-    message: 'Looking graceful is optional. Getting across the lake is the point.' },
+  { colorName: 'Rosewood', animal: '🦢', name: 'Grace',
+    message: 'You don\u2019t need to look put-together to be making progress. Just keep going.' },
   // 27 – Bronze Gold
   { colorName: 'Bronze Gold', animal: '🐝', name: 'Nectar',
-    message: 'Find the sweet spot today: challenging enough to focus, not enough to freeze.' },
+    message: 'Find the task that\u2019s hard enough to be interesting but not so hard you freeze. Start there.' },
   // 28 – Dusk Blue
   { colorName: 'Dusk Blue', animal: '🐋', name: 'Deep',
-    message: 'You don\'t need to see the whole ocean floor. Just the next few feet.' },
+    message: 'You don\u2019t need to see the whole path. Just enough light for the next step.' },
   // 29 – Fern
-  { colorName: 'Fern', animal: '🦥', name: 'Hang',
-    message: 'Moving slowly through your list is still moving through your list.' },
+  { colorName: 'Fern', animal: '🦥', name: 'Lull',
+    message: 'Moving through your list slowly is still moving through your list. Pace is not failure.' },
 ];
 
 /** Get the companion for today's color */

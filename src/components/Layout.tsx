@@ -39,13 +39,28 @@ const Layout = ({ children }: { children: ReactNode }) => {
     return lastSeen !== today && !useDefaultColor;
   });
 
+  const [revealDismissing, setRevealDismissing] = useState(false);
+
+  const dismissReveal = () => {
+    if (revealDismissing) return;
+    setRevealDismissing(true);
+    setTimeout(() => {
+      setShowColorReveal(false);
+      setRevealDismissing(false);
+    }, 400);
+  };
+
   useEffect(() => {
     if (showColorReveal) {
       localStorage.setItem('vellum-color-seen', today);
-      const timer = setTimeout(() => setShowColorReveal(false), 3600);
+      const timer = setTimeout(() => dismissReveal(), 8500);
       return () => clearTimeout(timer);
     }
   }, [showColorReveal, today]);
+
+  const replayReveal = () => {
+    setShowColorReveal(true);
+  };
 
   const colorName = useMemo(() => getColorName(dailyColor), [dailyColor]);
   const companion = useMemo(() => getDailyCompanion(dailyColor), [dailyColor]);
@@ -81,37 +96,40 @@ const Layout = ({ children }: { children: ReactNode }) => {
       {/* ── Color of the Day reveal — full-screen companion greeting ── */}
       {showColorReveal && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none"
-          style={{ animation: 'colorReveal 3.5s ease-out forwards' }}
+          className="fixed inset-0 z-[100] flex items-center justify-center cursor-pointer"
+          onClick={dismissReveal}
+          style={{ animation: revealDismissing ? 'revealDismiss 0.4s ease-out forwards' : 'colorReveal 8s ease-out forwards' }}
         >
           <div
             className="absolute inset-0"
-            style={{ background: `var(--color-gradient)`, opacity: 0.9 }}
+            style={{ background: `var(--color-gradient)`, opacity: 0.92 }}
           />
-          <div className="relative z-10 text-center max-w-sm px-6" style={{ animation: 'colorRevealText 3.5s ease-out forwards' }}>
+          <div className="relative z-10 text-center max-w-md px-8" style={{ animation: revealDismissing ? 'none' : 'colorRevealText 8s ease-out forwards' }}>
             {/* Animal companion — big and bouncy */}
             <div
-              className="text-7xl mb-3 inline-block"
-              style={{ animation: 'companionBounce 3.5s ease-out forwards', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.2))' }}
+              className="text-8xl mb-4 inline-block"
+              style={{ animation: revealDismissing ? 'none' : 'companionBounce 8s ease-out forwards', filter: 'drop-shadow(0 6px 16px rgba(0,0,0,0.25))' }}
             >
               {companion.animal}
             </div>
-            {/* Companion name + color */}
-            <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-white/70 mb-1">
-              {companion.name} says
-            </p>
             {/* The message — the real content */}
-            <p className="font-body text-lg text-white/95 leading-relaxed mb-4 italic">
-              &ldquo;{companion.message}&rdquo;
+            <p className="font-body text-xl text-white/95 leading-relaxed mb-5" style={{ textShadow: '0 1px 8px rgba(0,0,0,0.15)' }}>
+              {companion.message}
             </p>
-            {/* Color badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-sm">
+            {/* Color badge + companion name */}
+            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/15 backdrop-blur-sm">
               <span
-                className="inline-block size-3 rounded-full"
-                style={{ backgroundColor: dailyColor.css, boxShadow: '0 0 8px ' + dailyColor.css }}
+                className="inline-block size-3.5 rounded-full"
+                style={{ backgroundColor: dailyColor.css, boxShadow: '0 0 10px ' + dailyColor.css }}
               />
               <span className="font-mono text-[10px] text-white/80 uppercase tracking-wider">{colorName}</span>
+              <span className="text-white/40 text-[10px]">·</span>
+              <span className="font-mono text-[10px] text-white/50 uppercase tracking-wider">{companion.name}</span>
             </div>
+            {/* Tap hint */}
+            <p className="mt-6 font-mono text-[9px] text-white/30 uppercase tracking-[0.4em]">
+              tap anywhere to continue
+            </p>
           </div>
         </div>
       )}
@@ -173,28 +191,43 @@ const Layout = ({ children }: { children: ReactNode }) => {
                 <div className="absolute right-16 top-14 w-72 p-5 bg-paper rounded-xl shadow-lifted border border-wood-light/30 z-50">
                   <div className="flex items-center gap-3 mb-3">
                     <div
-                      className="size-10 rounded-xl shadow-md"
+                      className="size-10 rounded-xl shadow-md flex items-center justify-center text-2xl"
                       style={{ background: `var(--color-gradient)` }}
-                    />
+                    >
+                      {companion.animal}
+                    </div>
                     <div>
                       <p className="font-header italic text-lg text-ink">{colorName}</p>
-                      <p className="font-mono text-[9px] text-pencil uppercase tracking-widest">today&rsquo;s accent</p>
+                      <p className="font-mono text-[9px] text-pencil uppercase tracking-widest">{companion.name} · today&rsquo;s companion</p>
                     </div>
                   </div>
-                  <p className="font-body text-sm text-ink/70 leading-relaxed mb-3">
-                    Every day the whole app shifts to a new color — buttons, highlights, progress bars, everything. A fresh coat of paint to keep things interesting.
+                  <p className="font-body text-sm text-ink/70 leading-relaxed mb-3 italic">
+                    &ldquo;{companion.message}&rdquo;
                   </p>
-                  <button
-                    onClick={() => { useDefaultColor ? restoreDailyColor() : revertColor(); setColorInfoOpen(false); }}
-                    className="w-full text-center py-2 rounded-lg font-mono text-[11px] uppercase tracking-wider transition-all"
-                    style={{
-                      backgroundColor: useDefaultColor ? 'var(--color-tint-medium)' : 'transparent',
-                      border: '1px solid var(--color-border)',
-                      color: 'var(--color-ink)',
-                    }}
-                  >
-                    {useDefaultColor ? 'Use today\u2019s color' : 'Revert to default amber'}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { replayReveal(); setColorInfoOpen(false); }}
+                      className="flex-1 text-center py-2 rounded-lg font-mono text-[11px] uppercase tracking-wider transition-all"
+                      style={{
+                        backgroundColor: 'var(--color-tint-medium)',
+                        border: '1px solid var(--color-primary)',
+                        color: 'var(--color-primary)',
+                      }}
+                    >
+                      Replay ✨
+                    </button>
+                    <button
+                      onClick={() => { useDefaultColor ? restoreDailyColor() : revertColor(); setColorInfoOpen(false); }}
+                      className="flex-1 text-center py-2 rounded-lg font-mono text-[11px] uppercase tracking-wider transition-all"
+                      style={{
+                        backgroundColor: 'transparent',
+                        border: '1px solid var(--color-border)',
+                        color: 'var(--color-ink)',
+                      }}
+                    >
+                      {useDefaultColor ? 'Use color' : 'Default'}
+                    </button>
+                  </div>
                 </div>
               </>
             )}
