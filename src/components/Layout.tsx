@@ -136,11 +136,17 @@ const Layout = ({ children }: { children: ReactNode }) => {
 
       {/* ── Bold color stripe at very top ── */}
       <div
-        className={`h-1 w-full flex-none transition-all duration-300 ${focusMode ? 'h-0' : ''}`}
-        style={{ background: useDefaultColor ? 'transparent' : `var(--color-gradient)` }}
+        className={`h-1.5 w-full flex-none transition-all duration-300 ${focusMode ? 'h-0' : ''}`}
+        style={{ background: useDefaultColor ? 'transparent' : `var(--color-gradient-wide)` }}
       />
 
-      <header className={`sticky top-0 z-40 bg-paper/90 backdrop-blur-sm border-b border-wood-light/50 px-4 md:px-6 py-3 shadow-sm transition-all duration-300 ${focusMode ? 'h-0 overflow-hidden border-none py-0 opacity-0' : ''}`}>
+      <header
+        className={`sticky top-0 z-40 backdrop-blur-sm border-b px-4 md:px-6 py-3 shadow-sm transition-all duration-300 ${focusMode ? 'h-0 overflow-hidden border-none py-0 opacity-0' : ''}`}
+        style={{
+          backgroundColor: useDefaultColor ? 'var(--color-paper)' : 'var(--color-tint-panel)',
+          borderColor: useDefaultColor ? 'var(--color-border)' : 'var(--color-border-accent)',
+        }}
+      >
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 group">
             <span className="material-symbols-outlined text-primary text-2xl group-hover:rotate-12 transition-transform duration-300">auto_stories</span>

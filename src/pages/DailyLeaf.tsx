@@ -802,7 +802,7 @@ export default function DailyLeaf() {
         {/* ── Header strip (full width) — color-washed ──────────── */}
         <header
           className={`px-6 sm:px-10 pt-6 pb-4 border-b border-wood-light/15 transition-all duration-500 ${focusMode ? 'pb-3 pt-5' : ''}`}
-          style={{ backgroundColor: 'var(--color-tint-soft)' }}
+          style={{ backgroundColor: 'var(--color-tint-header)' }}
         >
           <div className={`mx-auto ${focusMode ? 'max-w-2xl relative' : 'max-w-[1400px] flex items-end justify-between gap-4'}`}>
             {focusMode ? (
@@ -963,8 +963,8 @@ export default function DailyLeaf() {
           }`}>
             {/* Upcoming Events */}
             {upcomingEvents.length > 0 && (
-              <div className="bg-paper rounded-xl p-5 shadow-soft border border-wood-light/15">
-                <h3 className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em] mb-3">
+              <div className="rounded-xl p-5 shadow-soft border" style={{ backgroundColor: 'var(--color-tint-panel)', borderColor: 'var(--color-border-accent)' }}>
+                <h3 className="font-mono text-[10px] uppercase tracking-[0.15em] mb-3" style={{ color: 'var(--color-primary)' }}>
                   Upcoming Events
                 </h3>
                 <div className="space-y-2">
@@ -1011,17 +1011,18 @@ export default function DailyLeaf() {
             {!todayDebriefExists && (
               <button
                 onClick={() => { setShowDebriefEarly(true); setDebriefOverlayOpen(true); }}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-paper border border-wood-light/15 shadow-soft text-sm font-body text-ink hover:text-primary hover:border-primary/20 transition-all group/link"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg border shadow-soft text-sm font-body text-ink hover:text-primary transition-all group/link"
+                style={{ backgroundColor: 'var(--color-tint-panel)', borderColor: 'var(--color-border-accent)' }}
               >
-                <span className="material-symbols-outlined text-[18px] text-pencil group-hover/link:text-primary transition-colors">rate_review</span>
+                <span className="material-symbols-outlined text-[18px] transition-colors" style={{ color: 'var(--color-primary)' }}>rate_review</span>
                 {isEveningTime ? 'Day Debrief' : 'Start Debrief'}
               </button>
             )}
 
             {/* Today's Journal Entries */}
             {todaysJournalEntries.length > 0 && (
-              <div className="bg-paper rounded-xl p-5 shadow-soft border border-wood-light/15">
-                <h3 className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em] mb-3">
+              <div className="rounded-xl p-5 shadow-soft border" style={{ backgroundColor: 'var(--color-tint-panel)', borderColor: 'var(--color-border-accent)' }}>
+                <h3 className="font-mono text-[10px] uppercase tracking-[0.15em] mb-3" style={{ color: 'var(--color-primary)' }}>
                   Journal Entries
                 </h3>
                 <div className="space-y-2">
@@ -1042,9 +1043,10 @@ export default function DailyLeaf() {
             <div className="flex flex-col gap-2">
               <Link
                 to="/flow"
-                className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-paper border border-wood-light/15 shadow-soft text-sm font-body text-ink hover:text-primary hover:border-primary/20 transition-all group/link"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg border shadow-soft text-sm font-body text-ink hover:text-primary transition-all group/link"
+                style={{ backgroundColor: 'var(--color-tint-panel)', borderColor: 'var(--color-border-accent)' }}
               >
-                <span className="material-symbols-outlined text-[18px] text-pencil group-hover/link:text-primary transition-colors">calendar_view_day</span>
+                <span className="material-symbols-outlined text-[18px] transition-colors" style={{ color: 'var(--color-primary)' }}>calendar_view_day</span>
                 Flow View
               </Link>
             </div>
@@ -1068,7 +1070,7 @@ export default function DailyLeaf() {
                       value={intention}
                       onChange={(e) => setIntention(e.target.value)}
                     />
-                    <div className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-primary/40 group-focus-within/input:w-full transition-all duration-500" />
+                    <div className="absolute bottom-0 left-0 w-0 h-[2px] group-focus-within/input:w-full transition-all duration-500" style={{ background: 'var(--color-gradient)' }} />
                   </div>
                 </div>
 
@@ -1168,9 +1170,9 @@ export default function DailyLeaf() {
             )}
 
             {/* ── Rapid Log ─────────────────────────────────────── */}
-            <div className="bg-paper rounded-xl p-5 sm:p-6 shadow-soft border border-wood-light/15">
+            <div className="rounded-xl p-5 sm:p-6 shadow-soft border" style={{ backgroundColor: 'color-mix(in srgb, var(--color-tint-panel), var(--color-paper) 60%)', borderColor: 'var(--color-border-accent)' }}>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="font-header italic text-xl text-ink/70">
+                <h2 className="font-header italic text-xl" style={{ color: 'var(--color-primary)' }}>
                   Rapid Log
                 </h2>
                 <button
@@ -1520,8 +1522,8 @@ export default function DailyLeaf() {
           }`}>
             {/* Habits */}
             {habits.length > 0 && (
-              <div className="bg-paper rounded-xl p-4 shadow-soft border border-wood-light/15">
-                <h3 className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em] mb-2.5">
+              <div className="rounded-xl p-4 shadow-soft border" style={{ backgroundColor: 'var(--color-tint-panel)', borderColor: 'var(--color-border-accent)' }}>
+                <h3 className="font-mono text-[10px] uppercase tracking-[0.15em] mb-2.5" style={{ color: 'var(--color-primary)' }}>
                   Habits
                 </h3>
                 <div className="flex flex-wrap gap-2">
@@ -1561,10 +1563,10 @@ export default function DailyLeaf() {
 
             {/* Wins — tasks + journal wins */}
             {(todaysCompletedTasks.length > 0 || todaysJournalWins.length > 0) && (
-              <div className="bg-paper rounded-xl p-5 shadow-soft border border-wood-light/15">
+              <div className="rounded-xl p-5 shadow-soft border" style={{ backgroundColor: 'var(--color-tint-panel)', borderColor: 'var(--color-border-accent)' }}>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em]">
+                    <h3 className="font-mono text-[10px] uppercase tracking-[0.15em]" style={{ color: 'var(--color-primary)' }}>
                       Wins
                     </h3>
                     <span className="font-mono text-[10px] text-primary/60 tabular-nums">
@@ -1593,9 +1595,9 @@ export default function DailyLeaf() {
             )}
 
             {/* Journal Exercises */}
-            <div className="bg-paper rounded-xl p-5 shadow-soft border border-wood-light/15">
+            <div className="rounded-xl p-5 shadow-soft border" style={{ backgroundColor: 'var(--color-tint-panel)', borderColor: 'var(--color-border-accent)' }}>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em]">
+                <h3 className="font-mono text-[10px] uppercase tracking-[0.15em]" style={{ color: 'var(--color-primary)' }}>
                   Journal Exercises
                 </h3>
                 <span className="font-mono text-[9px] text-primary/50 uppercase tracking-wider">

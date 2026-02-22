@@ -85,7 +85,8 @@ export const DEFAULT_PRIMARY = {
 };
 
 /** Apply color everywhere — primary, accent, ambient glow, tinted surfaces.
- *  The daily color should be impossible to miss. */
+ *  The daily color should be IMPOSSIBLE TO MISS. Every surface should whisper the color.
+ *  ADHD brains need novelty — this is the novelty engine. */
 export function applyAccentColor(color: DailyColor, isDark: boolean): void {
   const root = document.documentElement;
   const hsl = isDark ? color.cssDark : color.css;
@@ -100,15 +101,35 @@ export function applyAccentColor(color: DailyColor, isDark: boolean): void {
   root.style.setProperty('--color-accent-l', `${l}%`);
   root.style.setProperty('--color-primary', hsl);
 
-  // Ambient tints — subtle color wash across the whole page
-  root.style.setProperty('--color-tint-soft', `hsla(${h}, ${s}%, ${l}%, ${isDark ? 0.06 : 0.04})`);
-  root.style.setProperty('--color-tint-medium', `hsla(${h}, ${s}%, ${l}%, ${isDark ? 0.12 : 0.08})`);
-  root.style.setProperty('--color-tint-strong', `hsla(${h}, ${s}%, ${l}%, ${isDark ? 0.2 : 0.15})`);
-  root.style.setProperty('--color-glow', `hsla(${h}, ${s}%, ${l}%, 0.25)`);
+  // Light-mode tints use a boosted lightness so the wash is visible but not muddy
+  const tintL = isDark ? l : Math.min(l + 20, 85);
 
-  // Gradient string for header strips
+  // Ambient tints — BOLD color wash, not subtle. Every panel, every surface.
+  root.style.setProperty('--color-tint-soft', `hsla(${h}, ${s}%, ${tintL}%, ${isDark ? 0.12 : 0.10})`);
+  root.style.setProperty('--color-tint-medium', `hsla(${h}, ${s}%, ${tintL}%, ${isDark ? 0.20 : 0.18})`);
+  root.style.setProperty('--color-tint-strong', `hsla(${h}, ${s}%, ${tintL}%, ${isDark ? 0.30 : 0.28})`);
+  root.style.setProperty('--color-glow', `hsla(${h}, ${s}%, ${l}%, 0.35)`);
+
+  // Header-level bold wash — for the DailyLeaf header strip
+  root.style.setProperty('--color-tint-header', `hsla(${h}, ${s}%, ${tintL}%, ${isDark ? 0.18 : 0.15})`);
+
+  // Sidebar panel tint
+  root.style.setProperty('--color-tint-panel', `hsla(${h}, ${s}%, ${tintL}%, ${isDark ? 0.08 : 0.06})`);
+
+  // Border tint — colored borders for sections and cards
+  root.style.setProperty('--color-border-accent', `hsla(${h}, ${s}%, ${l}%, ${isDark ? 0.30 : 0.25})`);
+
+  // Focus ring
+  root.style.setProperty('--color-focus-ring', `hsla(${h}, ${s}%, ${l}%, 0.4)`);
+
+  // Gradient string for header strips, buttons, progress bars
   root.style.setProperty('--color-gradient',
     `linear-gradient(135deg, hsl(${h}, ${s}%, ${l}%), hsl(${(h + 30) % 360}, ${Math.max(s - 10, 30)}%, ${l}%))`
+  );
+
+  // Wider gradient for full-width strips
+  root.style.setProperty('--color-gradient-wide',
+    `linear-gradient(90deg, hsl(${h}, ${s}%, ${l}%), hsl(${(h + 20) % 360}, ${s}%, ${Math.min(l + 8, 65)}%), hsl(${(h + 40) % 360}, ${Math.max(s - 15, 25)}%, ${l}%))`
   );
 }
 
