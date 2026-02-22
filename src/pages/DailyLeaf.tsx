@@ -207,26 +207,22 @@ export default function DailyLeaf() {
   const celebrationTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const CELEBRATION_PHRASES = [
-    'Done. Just like that.',
-    'One less thing.',
-    'Look at you go.',
-    'Checked off. Moving on.',
-    'That\u2019s momentum.',
-    'Told you it wouldn\u2019t take long.',
-    'Progress, not perfection.',
-    'The hardest part was starting.',
-    'And that\u2019s done.',
-    'Small win. Still a win.',
-    'See? You can do hard things.',
-    'That was worth doing.',
-    'Another one down.',
-    'Future you says thanks.',
-    'The list just got shorter.',
-    'You showed up for that one.',
-    'Not bad at all.',
-    'Brick by brick.',
-    'That felt good, didn\u2019t it?',
-    'You\u2019re building something here.',
+    'Done.',
+    'One down.',
+    'Shorter list.',
+    'Next.',
+    'That was quick.',
+    'Momentum.',
+    'Less to carry.',
+    'Cleared.',
+    'Off the list.',
+    'Moving.',
+    'There it goes.',
+    'And done.',
+    'Lighter now.',
+    'Handled.',
+    'That one\u2019s gone.',
+    'Check.',
   ];
 
   const triggerCompanionAnim = useCallback((type: 'bounce' | 'celebrate') => {
@@ -866,11 +862,11 @@ export default function DailyLeaf() {
 
       {/* ── Page ────────────────────────────────────────────────────── */}
 
-      <div className="flex-1 overflow-y-auto bg-background-light">
+      <div className="flex-1 overflow-y-auto" style={{ backgroundColor: 'color-mix(in srgb, var(--color-tint-soft), var(--color-paper) 85%)' }}>
         {/* ── Header strip (full width) — color-washed ──────────── */}
         <header
-          className={`px-6 sm:px-10 pt-6 pb-4 border-b border-wood-light/15 transition-all duration-500 ${focusMode ? 'pb-3 pt-5' : ''}`}
-          style={{ backgroundColor: 'var(--color-tint-header)' }}
+          className={`px-6 sm:px-10 pt-6 pb-4 border-b-2 transition-all duration-500 ${focusMode ? 'pb-3 pt-5' : ''}`}
+          style={{ backgroundColor: 'var(--color-tint-header)', borderColor: 'var(--color-border-accent)' }}
         >
           <div className={`mx-auto ${focusMode ? 'max-w-2xl relative' : 'max-w-[1400px] flex items-end justify-between gap-4'}`}>
             {focusMode ? (
@@ -979,7 +975,7 @@ export default function DailyLeaf() {
                     >
                       {companion.animal}
                     </button>
-                    <p className="font-body text-base text-ink/60 leading-snug italic truncate-2">
+                    <p className="font-body text-lg text-ink/70 leading-snug italic truncate-2">
                       {companion.message}
                     </p>
                   </div>
@@ -1049,7 +1045,7 @@ export default function DailyLeaf() {
                         {formatEventDate(ev.date, today, tomorrow)}
                         {ev.time && ` ${ev.time}`}
                       </span>
-                      <span className="font-body text-sm text-ink/80 truncate">{ev.title}</span>
+                      <span className="font-body text-base text-ink/80 truncate">{ev.title}</span>
                     </div>
                   ))}
                 </div>
@@ -1183,7 +1179,7 @@ export default function DailyLeaf() {
                 >
                   <div className="flex items-center gap-2.5">
                     <span className="material-symbols-outlined text-pencil text-lg">history</span>
-                    <span className="font-body text-sm text-ink">
+                    <span className="font-body text-base text-ink">
                       <span className="font-semibold">{overdueTasks.length}</span> task{overdueTasks.length !== 1 ? 's' : ''} from before — pick what still matters
                     </span>
                   </div>
@@ -1210,7 +1206,7 @@ export default function DailyLeaf() {
                     {overdueTasks.map(task => (
                       <div key={task.id} className="group/ot flex items-center gap-3 py-1.5 px-2 -mx-2 rounded hover:bg-surface-light transition-colors">
                         <span className="inline-block size-2 rounded-full bg-pencil/40 flex-shrink-0" />
-                        <span className="flex-1 font-body text-sm text-ink truncate">{task.title}</span>
+                        <span className="flex-1 font-body text-base text-ink truncate">{task.title}</span>
                         <span className="font-mono text-[10px] text-pencil/50 flex-shrink-0">
                           {new Date(task.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </span>
@@ -1430,8 +1426,8 @@ export default function DailyLeaf() {
                   ))}
                 </div>
 
-                <div className="flex items-center gap-3 py-2 px-3 rounded-lg bg-surface-light/50 border border-wood-light/15 focus-within:border-primary/30 transition-all">
-                  <span className="material-symbols-outlined text-lg text-primary/40">add</span>
+                <div className="flex items-center gap-3 py-2.5 px-4 rounded-lg border-2 transition-all" style={{ backgroundColor: 'var(--color-tint-soft)', borderColor: 'var(--color-border-accent)' }}>
+                  <span className="material-symbols-outlined text-lg" style={{ color: 'var(--color-primary)' }}>add</span>
                   <input
                     ref={newInputRef}
                     className="flex-1 min-w-0 bg-transparent border-none p-0 text-lg font-body text-ink placeholder:text-pencil/40 focus:ring-0 focus:outline-none"

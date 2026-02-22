@@ -136,14 +136,14 @@ const Layout = ({ children }: { children: ReactNode }) => {
 
       {/* ── Bold color stripe at very top ── */}
       <div
-        className={`h-1.5 w-full flex-none transition-all duration-300 ${focusMode ? 'h-0' : ''}`}
+        className={`h-2 w-full flex-none transition-all duration-300 ${focusMode ? 'h-0' : ''}`}
         style={{ background: useDefaultColor ? 'transparent' : `var(--color-gradient-wide)` }}
       />
 
       <header
         className={`sticky top-0 z-40 backdrop-blur-sm border-b px-4 md:px-6 py-3 shadow-sm transition-all duration-300 ${focusMode ? 'h-0 overflow-hidden border-none py-0 opacity-0' : ''}`}
         style={{
-          backgroundColor: useDefaultColor ? 'var(--color-paper)' : 'var(--color-tint-panel)',
+          backgroundColor: useDefaultColor ? 'var(--color-paper)' : 'var(--color-tint-medium)',
           borderColor: useDefaultColor ? 'var(--color-border)' : 'var(--color-border-accent)',
         }}
       >
