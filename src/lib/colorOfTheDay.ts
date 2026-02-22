@@ -114,15 +114,112 @@ export function applyAccentColor(color: DailyColor, isDark: boolean): void {
 
 /** Get a readable name for the color (for display) */
 export function getColorName(color: DailyColor): string {
-  const names: Record<number, string> = {
-    0: 'Warm Amber', 1: 'Dusty Rose', 2: 'Burnt Sienna', 3: 'Ocean Teal',
-    4: 'Forest Sage', 5: 'Dusty Lavender', 6: 'Golden Honey', 7: 'Soft Crimson',
-    8: 'Dark Teal', 9: 'Warm Ochre', 10: 'Slate Blue', 11: 'Terracotta',
-    12: 'Mauve', 13: 'Olive', 14: 'Soft Purple', 15: 'Dark Gold',
-    16: 'Storm Blue', 17: 'Deep Sage', 18: 'Rust', 19: 'Periwinkle',
-    20: 'Copper', 21: 'Moss', 22: 'Plum', 23: 'Tangerine',
-    24: 'Iris', 25: 'Pine', 26: 'Rosewood', 27: 'Bronze Gold',
-    28: 'Dusk Blue', 29: 'Fern',
-  };
-  return names[color.index] ?? 'Today\'s Color';
+  return COMPANIONS[color.index]?.colorName ?? 'Today\'s Color';
+}
+
+/* ── Daily Companions — each color paired with a character + message ─── */
+
+export interface DailyCompanion {
+  colorName: string;
+  animal: string;     // emoji character
+  name: string;       // the companion's name
+  message: string;    // unique daily affirmation (ADHD-friendly, not generic wellness)
+}
+
+const COMPANIONS: DailyCompanion[] = [
+  // 0 – Warm Amber
+  { colorName: 'Warm Amber', animal: '🦊', name: 'Foxie',
+    message: 'You showed up. That\'s literally the hardest part and you already did it.' },
+  // 1 – Dusty Rose
+  { colorName: 'Dusty Rose', animal: '🐙', name: 'Inky',
+    message: 'Multitasking is a myth. Do one tentacle at a time.' },
+  // 2 – Burnt Sienna
+  { colorName: 'Burnt Sienna', animal: '🦝', name: 'Bandit',
+    message: 'Stole a productive hour from chaos? That counts as winning.' },
+  // 3 – Ocean Teal
+  { colorName: 'Ocean Teal', animal: '🐋', name: 'Splash',
+    message: 'Deep breaths. Even whales come up for air between dives.' },
+  // 4 – Forest Sage
+  { colorName: 'Forest Sage', animal: '🦉', name: 'Hoot',
+    message: 'Wisdom is knowing when to close the browser tabs.' },
+  // 5 – Dusty Lavender
+  { colorName: 'Dusty Lavender', animal: '🦋', name: 'Flutter',
+    message: 'Your brain bounces between ideas because it sees connections others miss.' },
+  // 6 – Golden Honey
+  { colorName: 'Golden Honey', animal: '🐝', name: 'Buzz',
+    message: 'Busy doesn\'t mean productive. Are you pollinating or just flying in circles?' },
+  // 7 – Soft Crimson
+  { colorName: 'Soft Crimson', animal: '🦩', name: 'Pinky',
+    message: 'Standing on one leg looks weird but works. Your methods don\'t have to make sense to others.' },
+  // 8 – Dark Teal
+  { colorName: 'Dark Teal', animal: '🐢', name: 'Shell',
+    message: 'Going slow isn\'t falling behind. The turtle literally won the race.' },
+  // 9 – Warm Ochre
+  { colorName: 'Warm Ochre', animal: '🦁', name: 'Mane',
+    message: 'You don\'t need motivation. You need a 5-minute start. Roar at it.' },
+  // 10 – Slate Blue
+  { colorName: 'Slate Blue', animal: '🐧', name: 'Waddle',
+    message: 'Penguins look ridiculous walking but they\'re incredible swimmers. Play to your element.' },
+  // 11 – Terracotta
+  { colorName: 'Terracotta', animal: '🦎', name: 'Mosaic',
+    message: 'Dropped your tail yesterday? Cool, it grows back. Start fresh.' },
+  // 12 – Mauve
+  { colorName: 'Mauve', animal: '🐈', name: 'Naps',
+    message: 'Rest between tasks isn\'t laziness. It\'s being strategically cat-like.' },
+  // 13 – Olive
+  { colorName: 'Olive', animal: '🐸', name: 'Leap',
+    message: 'Eat the frog first. Or at least look at the frog. Acknowledging the frog counts.' },
+  // 14 – Soft Purple
+  { colorName: 'Soft Purple', animal: '🦄', name: 'Spark',
+    message: 'Your brain isn\'t broken, it just runs on a different operating system.' },
+  // 15 – Dark Gold
+  { colorName: 'Dark Gold', animal: '🐕', name: 'Goldie',
+    message: 'Be loyal to your own plans today. Past-you made them for a reason.' },
+  // 16 – Storm Blue
+  { colorName: 'Storm Blue', animal: '🐬', name: 'Echo',
+    message: 'When things get turbulent, ride the wave instead of fighting the current.' },
+  // 17 – Deep Sage
+  { colorName: 'Deep Sage', animal: '🦔', name: 'Bristle',
+    message: 'Small and spiky is a valid life strategy. Protect your time.' },
+  // 18 – Rust
+  { colorName: 'Rust', animal: '🦀', name: 'Snip',
+    message: 'Cut one thing from today\'s list. Seriously. You overpacked it again.' },
+  // 19 – Periwinkle
+  { colorName: 'Periwinkle', animal: '🐰', name: 'Hop',
+    message: 'Jumping between tasks isn\'t always bad — sometimes that\'s just how the work gets done.' },
+  // 20 – Copper
+  { colorName: 'Copper', animal: '🦅', name: 'Talon',
+    message: 'Zoom out. Half the tasks stressing you out won\'t matter in a week.' },
+  // 21 – Moss
+  { colorName: 'Moss', animal: '🐊', name: 'Chomp',
+    message: 'Patient. Still. Then decisive. That\'s how crocs get things done.' },
+  // 22 – Plum
+  { colorName: 'Plum', animal: '🦜', name: 'Prism',
+    message: 'Talking to yourself while working isn\'t weird, it\'s verbal processing. Keep going.' },
+  // 23 – Tangerine
+  { colorName: 'Tangerine', animal: '🐻', name: 'Honey',
+    message: 'You can hibernate when the season\'s over. Right now, one more task.' },
+  // 24 – Iris
+  { colorName: 'Iris', animal: '🦚', name: 'Plume',
+    message: 'Your work doesn\'t have to be perfect to be impressive. Show what you\'ve got.' },
+  // 25 – Pine
+  { colorName: 'Pine', animal: '🐺', name: 'Howl',
+    message: 'Lone wolf or pack player — both work. Just don\'t stand still.' },
+  // 26 – Rosewood
+  { colorName: 'Rosewood', animal: '🦢', name: 'Glide',
+    message: 'Looking graceful is optional. Getting across the lake is the point.' },
+  // 27 – Bronze Gold
+  { colorName: 'Bronze Gold', animal: '🐝', name: 'Nectar',
+    message: 'Find the sweet spot today: challenging enough to focus, not enough to freeze.' },
+  // 28 – Dusk Blue
+  { colorName: 'Dusk Blue', animal: '🐋', name: 'Deep',
+    message: 'You don\'t need to see the whole ocean floor. Just the next few feet.' },
+  // 29 – Fern
+  { colorName: 'Fern', animal: '🦥', name: 'Hang',
+    message: 'Moving slowly through your list is still moving through your list.' },
+];
+
+/** Get the companion for today's color */
+export function getDailyCompanion(color: DailyColor): DailyCompanion {
+  return COMPANIONS[color.index] ?? COMPANIONS[0];
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getColorOfTheDay, DEFAULT_PRIMARY, applyAccentColor, getColorName } from '../lib/colorOfTheDay';
+import { getColorOfTheDay, DEFAULT_PRIMARY, applyAccentColor, getColorName, getDailyCompanion } from '../lib/colorOfTheDay';
 import { todayStr } from '../lib/dateUtils';
 
 const Layout = ({ children }: { children: ReactNode }) => {
@@ -42,12 +42,13 @@ const Layout = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (showColorReveal) {
       localStorage.setItem('vellum-color-seen', today);
-      const timer = setTimeout(() => setShowColorReveal(false), 2200);
+      const timer = setTimeout(() => setShowColorReveal(false), 3600);
       return () => clearTimeout(timer);
     }
   }, [showColorReveal, today]);
 
   const colorName = useMemo(() => getColorName(dailyColor), [dailyColor]);
+  const companion = useMemo(() => getDailyCompanion(dailyColor), [dailyColor]);
 
   const revertColor = () => {
     setUseDefaultColor(true);
@@ -77,23 +78,40 @@ const Layout = ({ children }: { children: ReactNode }) => {
 
   return (
     <div className="min-h-screen flex flex-col font-body text-ink bg-background-light">
-      {/* ── Color of the Day reveal — full-screen flash on first visit ── */}
+      {/* ── Color of the Day reveal — full-screen companion greeting ── */}
       {showColorReveal && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none"
-          style={{ animation: 'colorReveal 2.2s ease-out forwards' }}
+          style={{ animation: 'colorReveal 3.5s ease-out forwards' }}
         >
           <div
             className="absolute inset-0"
-            style={{ background: `var(--color-gradient)`, opacity: 0.85 }}
+            style={{ background: `var(--color-gradient)`, opacity: 0.9 }}
           />
-          <div className="relative z-10 text-center" style={{ animation: 'colorRevealText 2.2s ease-out forwards' }}>
+          <div className="relative z-10 text-center max-w-sm px-6" style={{ animation: 'colorRevealText 3.5s ease-out forwards' }}>
+            {/* Animal companion — big and bouncy */}
             <div
-              className="size-16 rounded-full mx-auto mb-4 shadow-lg"
-              style={{ backgroundColor: dailyColor.css }}
-            />
-            <p className="font-mono text-xs uppercase tracking-[0.3em] text-white/80 mb-1">today&rsquo;s color</p>
-            <p className="font-header italic text-3xl text-white">{colorName}</p>
+              className="text-7xl mb-3 inline-block"
+              style={{ animation: 'companionBounce 3.5s ease-out forwards', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.2))' }}
+            >
+              {companion.animal}
+            </div>
+            {/* Companion name + color */}
+            <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-white/70 mb-1">
+              {companion.name} says
+            </p>
+            {/* The message — the real content */}
+            <p className="font-body text-lg text-white/95 leading-relaxed mb-4 italic">
+              &ldquo;{companion.message}&rdquo;
+            </p>
+            {/* Color badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-sm">
+              <span
+                className="inline-block size-3 rounded-full"
+                style={{ backgroundColor: dailyColor.css, boxShadow: '0 0 8px ' + dailyColor.css }}
+              />
+              <span className="font-mono text-[10px] text-white/80 uppercase tracking-wider">{colorName}</span>
+            </div>
           </div>
         </div>
       )}
