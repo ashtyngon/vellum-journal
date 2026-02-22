@@ -207,22 +207,26 @@ export default function DailyLeaf() {
   const celebrationTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const CELEBRATION_PHRASES = [
-    'Done.',
-    'One down.',
-    'Shorter list.',
-    'Next.',
-    'That was quick.',
-    'Momentum.',
-    'Less to carry.',
-    'Cleared.',
-    'Off the list.',
-    'Moving.',
-    'There it goes.',
-    'And done.',
-    'Lighter now.',
-    'Handled.',
-    'That one\u2019s gone.',
-    'Check.',
+    'Look at you go.',
+    'Knew you had it in you.',
+    'That\u2019s real progress.',
+    'Proud of that one.',
+    'There you go.',
+    'See? You\u2019re moving.',
+    'You showed up for that.',
+    'One less thing to carry.',
+    'Beautiful. Keep going.',
+    'Not as scary as it felt, right?',
+    'The momentum is real.',
+    'That one mattered.',
+    'You didn\u2019t put it off.',
+    'Well done, genuinely.',
+    'One at a time. You\u2019ve got this.',
+    'That took something. Nice.',
+    'You\u2019re doing it.',
+    'Lighter already, right?',
+    'Wow, okay. Keep that energy.',
+    'See how capable you are?',
   ];
 
   const triggerCompanionAnim = useCallback((type: 'bounce' | 'celebrate') => {
@@ -235,7 +239,7 @@ export default function DailyLeaf() {
     if (celebrationTimeout.current) clearTimeout(celebrationTimeout.current);
     const phrase = CELEBRATION_PHRASES[Math.floor(Math.random() * CELEBRATION_PHRASES.length)];
     setCelebrationPhrase(phrase);
-    celebrationTimeout.current = setTimeout(() => setCelebrationPhrase(null), 2000);
+    celebrationTimeout.current = setTimeout(() => setCelebrationPhrase(null), 2800);
   }, []);
 
   // Sync focus mode to document so Layout can hide the nav bar
@@ -661,12 +665,16 @@ export default function DailyLeaf() {
       {/* ── Task completion celebration phrase ────────────────────── */}
       {celebrationPhrase && (
         <div
-          className="fixed top-24 left-1/2 -translate-x-1/2 z-[80] pointer-events-none"
-          style={{ animation: 'celebrationPhrase 2s ease-out forwards' }}
+          className="fixed top-20 left-1/2 -translate-x-1/2 z-[80] pointer-events-none"
+          style={{ animation: 'celebrationPhrase 2.8s ease-out forwards' }}
         >
           <p
-            className="font-display italic text-2xl sm:text-3xl text-center px-6 py-3"
-            style={{ color: 'var(--color-primary)', textShadow: '0 1px 12px var(--color-glow)' }}
+            className="font-display italic text-3xl sm:text-4xl text-center px-8 py-4 whitespace-nowrap"
+            style={{
+              color: 'var(--color-primary)',
+              textShadow: '0 0 24px var(--color-glow), 0 2px 8px rgba(0,0,0,0.1)',
+              filter: 'drop-shadow(0 0 12px var(--color-glow))',
+            }}
           >
             {celebrationPhrase}
           </p>
