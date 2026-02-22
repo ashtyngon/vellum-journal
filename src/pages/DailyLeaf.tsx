@@ -11,6 +11,7 @@ import DayDebriefComponent from '../components/DayDebrief';
 import { useTaskCelebration } from '../components/TaskCelebration';
 import { parseNaturalEntry } from '../lib/nlParser';
 import { todayStr, dayAfter, dayBefore, formatLocalDate } from '../lib/dateUtils';
+import { getColorOfTheDay, getDailyCompanion } from '../lib/colorOfTheDay';
 import type { RapidLogEntry, JournalStep, JournalEntry } from '../context/AppContext';
 import type { JournalMethod } from '../lib/journalMethods';
 
@@ -147,6 +148,10 @@ export default function DailyLeaf() {
     day: 'numeric',
   });
   const yearStr = new Date(dateKey + 'T12:00:00').getFullYear();
+
+  // Daily companion — always visible in the header
+  const dailyColor = useMemo(() => getColorOfTheDay(dateKey), [dateKey]);
+  const companion = useMemo(() => getDailyCompanion(dailyColor), [dailyColor]);
 
   /* ── Intention (persisted per-date in localStorage) ──────────── */
 
@@ -892,6 +897,19 @@ export default function DailyLeaf() {
                     </span>
                   </div>
                 </div>
+
+                {/* ── Daily companion — fills the header center ── */}
+                <div className="hidden md:flex flex-1 items-center justify-center px-4 min-w-0">
+                  <div className="flex items-center gap-3 max-w-lg">
+                    <span className="text-3xl flex-shrink-0" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }}>
+                      {companion.animal}
+                    </span>
+                    <p className="font-body text-sm text-ink/50 leading-snug italic truncate-2">
+                      {companion.message}
+                    </p>
+                  </div>
+                </div>
+
                 <div className="flex items-center gap-3">
                   {/* Progress */}
                   {totalTaskCount > 0 && (

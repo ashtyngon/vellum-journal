@@ -148,6 +148,14 @@
       100% { opacity: 0; }
     }
 
+    /* Multi-line truncation */
+    .truncate-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
     /* Scrollbars */
     .no-scrollbar::-webkit-scrollbar {
         display: none;
