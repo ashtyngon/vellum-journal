@@ -198,6 +198,49 @@ export default function DailyLeaf() {
   const [showDebriefEarly, setShowDebriefEarly] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
 
+  // Companion animation state
+  const [companionAnim, setCompanionAnim] = useState<'idle' | 'bounce' | 'celebrate'>('idle');
+  const companionAnimTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Task completion celebration phrases
+  const [celebrationPhrase, setCelebrationPhrase] = useState<string | null>(null);
+  const celebrationTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const CELEBRATION_PHRASES = [
+    'Done. Just like that.',
+    'One less thing.',
+    'Look at you go.',
+    'Checked off. Moving on.',
+    'That\u2019s momentum.',
+    'Told you it wouldn\u2019t take long.',
+    'Progress, not perfection.',
+    'The hardest part was starting.',
+    'And that\u2019s done.',
+    'Small win. Still a win.',
+    'See? You can do hard things.',
+    'That was worth doing.',
+    'Another one down.',
+    'Future you says thanks.',
+    'The list just got shorter.',
+    'You showed up for that one.',
+    'Not bad at all.',
+    'Brick by brick.',
+    'That felt good, didn\u2019t it?',
+    'You\u2019re building something here.',
+  ];
+
+  const triggerCompanionAnim = useCallback((type: 'bounce' | 'celebrate') => {
+    if (companionAnimTimeout.current) clearTimeout(companionAnimTimeout.current);
+    setCompanionAnim(type);
+    companionAnimTimeout.current = setTimeout(() => setCompanionAnim('idle'), type === 'celebrate' ? 1200 : 600);
+  }, []);
+
+  const showCelebrationPhrase = useCallback(() => {
+    if (celebrationTimeout.current) clearTimeout(celebrationTimeout.current);
+    const phrase = CELEBRATION_PHRASES[Math.floor(Math.random() * CELEBRATION_PHRASES.length)];
+    setCelebrationPhrase(phrase);
+    celebrationTimeout.current = setTimeout(() => setCelebrationPhrase(null), 2000);
+  }, []);
 
   // Sync focus mode to document so Layout can hide the nav bar
   useEffect(() => {
@@ -452,6 +495,8 @@ export default function DailyLeaf() {
         if (wasUndone && checkboxEl) {
           const newCount = todayTasks.filter(t => t.status === 'done').length + 1;
           celebrate(checkboxEl, newCount);
+          triggerCompanionAnim('celebrate');
+          showCelebrationPhrase();
         }
       }
     },
@@ -615,6 +660,21 @@ export default function DailyLeaf() {
       {/* ── Walkthrough for new users ─────────────────────────────── */}
       {isNewUser && (
         <Walkthrough onComplete={completeWalkthrough} />
+      )}
+
+      {/* ── Task completion celebration phrase ────────────────────── */}
+      {celebrationPhrase && (
+        <div
+          className="fixed top-24 left-1/2 -translate-x-1/2 z-[80] pointer-events-none"
+          style={{ animation: 'celebrationPhrase 2s ease-out forwards' }}
+        >
+          <p
+            className="font-display italic text-2xl sm:text-3xl text-center px-6 py-3"
+            style={{ color: 'var(--color-primary)', textShadow: '0 1px 12px var(--color-glow)' }}
+          >
+            {celebrationPhrase}
+          </p>
+        </div>
       )}
 
       {/* ── Full-screen overlays ────────────────────────────────────── */}
@@ -909,9 +969,16 @@ export default function DailyLeaf() {
                 {/* ── Daily companion — fills the header center ── */}
                 <div className="hidden md:flex flex-1 items-center justify-center px-6 min-w-0">
                   <div className="flex items-center gap-4 max-w-xl">
-                    <span className="text-4xl flex-shrink-0" style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.12))' }}>
+                    <button
+                      onClick={() => triggerCompanionAnim('bounce')}
+                      className="text-4xl flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
+                      style={{
+                        filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.12))',
+                        animation: companionAnim === 'bounce' ? 'companionTap 0.6s ease-out' : companionAnim === 'celebrate' ? 'companionCelebrate 1.2s ease-out' : 'none',
+                      }}
+                    >
                       {companion.animal}
-                    </span>
+                    </button>
                     <p className="font-body text-base text-ink/60 leading-snug italic truncate-2">
                       {companion.message}
                     </p>
