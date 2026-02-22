@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getColorOfTheDay, DEFAULT_PRIMARY, applyAccentColor } from '../lib/colorOfTheDay';
+import { getColorOfTheDay, DEFAULT_PRIMARY, applyAccentColor, getColorName } from '../lib/colorOfTheDay';
 import { todayStr } from '../lib/dateUtils';
 
 const Layout = ({ children }: { children: ReactNode }) => {
@@ -33,6 +33,22 @@ const Layout = ({ children }: { children: ReactNode }) => {
     applyAccentColor(color, darkMode);
   }, [dailyColor, darkMode, useDefaultColor]);
 
+  // First-visit-of-the-day reveal
+  const [showColorReveal, setShowColorReveal] = useState(() => {
+    const lastSeen = localStorage.getItem('vellum-color-seen');
+    return lastSeen !== today && !useDefaultColor;
+  });
+
+  useEffect(() => {
+    if (showColorReveal) {
+      localStorage.setItem('vellum-color-seen', today);
+      const timer = setTimeout(() => setShowColorReveal(false), 2200);
+      return () => clearTimeout(timer);
+    }
+  }, [showColorReveal, today]);
+
+  const colorName = useMemo(() => getColorName(dailyColor), [dailyColor]);
+
   const revertColor = () => {
     setUseDefaultColor(true);
     localStorage.setItem('vellum-color-reverted', today);
@@ -61,6 +77,33 @@ const Layout = ({ children }: { children: ReactNode }) => {
 
   return (
     <div className="min-h-screen flex flex-col font-body text-ink bg-background-light">
+      {/* ── Color of the Day reveal — full-screen flash on first visit ── */}
+      {showColorReveal && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none"
+          style={{ animation: 'colorReveal 2.2s ease-out forwards' }}
+        >
+          <div
+            className="absolute inset-0"
+            style={{ background: `var(--color-gradient)`, opacity: 0.85 }}
+          />
+          <div className="relative z-10 text-center" style={{ animation: 'colorRevealText 2.2s ease-out forwards' }}>
+            <div
+              className="size-16 rounded-full mx-auto mb-4 shadow-lg"
+              style={{ backgroundColor: dailyColor.css }}
+            />
+            <p className="font-mono text-xs uppercase tracking-[0.3em] text-white/80 mb-1">today&rsquo;s color</p>
+            <p className="font-header italic text-3xl text-white">{colorName}</p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Bold color stripe at very top ── */}
+      <div
+        className={`h-1 w-full flex-none transition-all duration-300 ${focusMode ? 'h-0' : ''}`}
+        style={{ background: useDefaultColor ? 'transparent' : `var(--color-gradient)` }}
+      />
+
       <header className={`sticky top-0 z-40 bg-paper/90 backdrop-blur-sm border-b border-wood-light/50 px-4 md:px-6 py-3 shadow-sm transition-all duration-300 ${focusMode ? 'h-0 overflow-hidden border-none py-0 opacity-0' : ''}`}>
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 group">
@@ -86,50 +129,57 @@ const Layout = ({ children }: { children: ReactNode }) => {
           </nav>
 
           <div className="flex items-center gap-3">
-            {/* Color of the Day */}
-            <div className="relative group/color">
-              <button
-                onClick={() => setColorInfoOpen(v => !v)}
-                className="flex items-center gap-1.5 text-xs font-mono text-pencil/50 hover:text-pencil transition-colors"
-                title="Today's accent color"
+            {/* Color of the Day — prominent pill */}
+            <button
+              onClick={() => setColorInfoOpen(v => !v)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all hover:scale-105"
+              style={{
+                backgroundColor: useDefaultColor ? 'transparent' : `var(--color-tint-medium)`,
+                border: useDefaultColor ? '1px solid var(--color-border)' : `1.5px solid var(--color-primary)`,
+              }}
+            >
+              <span
+                className="inline-block size-3.5 rounded-full flex-shrink-0"
+                style={{ backgroundColor: dailyColor.css }}
+              />
+              <span className="font-mono text-[10px] uppercase tracking-wider"
+                style={{ color: useDefaultColor ? 'var(--color-pencil)' : 'var(--color-primary)' }}
               >
-                <span
-                  className="inline-block size-4 sm:size-3 rounded-full transition-transform group-hover/color:scale-125"
-                  style={{
-                    backgroundColor: dailyColor.css,
-                    opacity: useDefaultColor ? 0.4 : 1,
-                    boxShadow: `0 0 0 2px var(--color-paper, #fff), 0 0 0 3.5px ${dailyColor.css}`,
-                  }}
-                />
-                <span className="hidden sm:inline tracking-wider">{useDefaultColor ? 'color?' : 'today\u2019s color'}</span>
-              </button>
-              {/* Popover — click-triggered, works on mobile */}
-              {colorInfoOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setColorInfoOpen(false)} />
-                  <div className="absolute right-0 top-full mt-2 w-64 p-4 bg-paper rounded-xl shadow-lifted border border-wood-light/30 z-50">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span
-                        className="inline-block size-5 rounded-full"
-                        style={{ backgroundColor: dailyColor.css }}
-                      />
-                      <span className="font-mono text-[10px] text-pencil uppercase tracking-widest">
-                        Today&rsquo;s accent
-                      </span>
+                {colorName}
+              </span>
+            </button>
+            {/* Color popover */}
+            {colorInfoOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setColorInfoOpen(false)} />
+                <div className="absolute right-16 top-14 w-72 p-5 bg-paper rounded-xl shadow-lifted border border-wood-light/30 z-50">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div
+                      className="size-10 rounded-xl shadow-md"
+                      style={{ background: `var(--color-gradient)` }}
+                    />
+                    <div>
+                      <p className="font-header italic text-lg text-ink">{colorName}</p>
+                      <p className="font-mono text-[9px] text-pencil uppercase tracking-widest">today&rsquo;s accent</p>
                     </div>
-                    <p className="font-body text-sm text-ink leading-relaxed mb-3">
-                      Every day the app picks a fresh accent color — buttons, highlights, and borders all shift. Keeps things from getting stale.
-                    </p>
-                    <button
-                      onClick={() => { useDefaultColor ? restoreDailyColor() : revertColor(); setColorInfoOpen(false); }}
-                      className="w-full text-center py-1.5 rounded-lg border border-wood-light/30 font-mono text-[11px] text-pencil hover:text-primary hover:border-primary/30 transition-all uppercase tracking-wider"
-                    >
-                      {useDefaultColor ? 'Use today\u2019s color' : 'Revert to default amber'}
-                    </button>
                   </div>
-                </>
-              )}
-            </div>
+                  <p className="font-body text-sm text-ink/70 leading-relaxed mb-3">
+                    Every day the whole app shifts to a new color — buttons, highlights, progress bars, everything. A fresh coat of paint to keep things interesting.
+                  </p>
+                  <button
+                    onClick={() => { useDefaultColor ? restoreDailyColor() : revertColor(); setColorInfoOpen(false); }}
+                    className="w-full text-center py-2 rounded-lg font-mono text-[11px] uppercase tracking-wider transition-all"
+                    style={{
+                      backgroundColor: useDefaultColor ? 'var(--color-tint-medium)' : 'transparent',
+                      border: '1px solid var(--color-border)',
+                      color: 'var(--color-ink)',
+                    }}
+                  >
+                    {useDefaultColor ? 'Use today\u2019s color' : 'Revert to default amber'}
+                  </button>
+                </div>
+              </>
+            )}
 
             {/* Dark mode toggle */}
             <button

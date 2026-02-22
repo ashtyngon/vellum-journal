@@ -84,16 +84,45 @@ export const DEFAULT_PRIMARY = {
   index: 0,
 };
 
-/** Apply color as CSS custom property on :root — sets BOTH accent AND primary
- *  so the entire UI (buttons, progress bars, active nav, highlights) shifts. */
+/** Apply color everywhere — primary, accent, ambient glow, tinted surfaces.
+ *  The daily color should be impossible to miss. */
 export function applyAccentColor(color: DailyColor, isDark: boolean): void {
   const root = document.documentElement;
   const hsl = isDark ? color.cssDark : color.css;
-  // Set accent vars (used by a few accent-specific elements)
+  const h = color.hue;
+  const s = color.sat;
+  const l = isDark ? Math.min(color.light + 15, 70) : color.light;
+
+  // Core color tokens
   root.style.setProperty('--color-accent', hsl);
-  root.style.setProperty('--color-accent-h', String(color.hue));
-  root.style.setProperty('--color-accent-s', `${color.sat}%`);
-  root.style.setProperty('--color-accent-l', isDark ? `${Math.min(color.light + 15, 70)}%` : `${color.light}%`);
-  // Set PRIMARY — this is what bg-primary, text-primary, etc. actually use
+  root.style.setProperty('--color-accent-h', String(h));
+  root.style.setProperty('--color-accent-s', `${s}%`);
+  root.style.setProperty('--color-accent-l', `${l}%`);
   root.style.setProperty('--color-primary', hsl);
+
+  // Ambient tints — subtle color wash across the whole page
+  root.style.setProperty('--color-tint-soft', `hsla(${h}, ${s}%, ${l}%, ${isDark ? 0.06 : 0.04})`);
+  root.style.setProperty('--color-tint-medium', `hsla(${h}, ${s}%, ${l}%, ${isDark ? 0.12 : 0.08})`);
+  root.style.setProperty('--color-tint-strong', `hsla(${h}, ${s}%, ${l}%, ${isDark ? 0.2 : 0.15})`);
+  root.style.setProperty('--color-glow', `hsla(${h}, ${s}%, ${l}%, 0.25)`);
+
+  // Gradient string for header strips
+  root.style.setProperty('--color-gradient',
+    `linear-gradient(135deg, hsl(${h}, ${s}%, ${l}%), hsl(${(h + 30) % 360}, ${Math.max(s - 10, 30)}%, ${l}%))`
+  );
+}
+
+/** Get a readable name for the color (for display) */
+export function getColorName(color: DailyColor): string {
+  const names: Record<number, string> = {
+    0: 'Warm Amber', 1: 'Dusty Rose', 2: 'Burnt Sienna', 3: 'Ocean Teal',
+    4: 'Forest Sage', 5: 'Dusty Lavender', 6: 'Golden Honey', 7: 'Soft Crimson',
+    8: 'Dark Teal', 9: 'Warm Ochre', 10: 'Slate Blue', 11: 'Terracotta',
+    12: 'Mauve', 13: 'Olive', 14: 'Soft Purple', 15: 'Dark Gold',
+    16: 'Storm Blue', 17: 'Deep Sage', 18: 'Rust', 19: 'Periwinkle',
+    20: 'Copper', 21: 'Moss', 22: 'Plum', 23: 'Tangerine',
+    24: 'Iris', 25: 'Pine', 26: 'Rosewood', 27: 'Bronze Gold',
+    28: 'Dusk Blue', 29: 'Fern',
+  };
+  return names[color.index] ?? 'Today\'s Color';
 }

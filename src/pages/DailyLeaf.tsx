@@ -772,8 +772,11 @@ export default function DailyLeaf() {
       {/* ── Page ────────────────────────────────────────────────────── */}
 
       <div className="flex-1 overflow-y-auto bg-background-light">
-        {/* ── Header strip (full width) ──────────────────────────── */}
-        <header className={`px-6 sm:px-10 pt-6 pb-4 border-b border-wood-light/15 transition-all duration-500 ${focusMode ? 'pb-3 pt-5' : ''}`}>
+        {/* ── Header strip (full width) — color-washed ──────────── */}
+        <header
+          className={`px-6 sm:px-10 pt-6 pb-4 border-b border-wood-light/15 transition-all duration-500 ${focusMode ? 'pb-3 pt-5' : ''}`}
+          style={{ backgroundColor: 'var(--color-tint-soft)' }}
+        >
           <div className={`mx-auto ${focusMode ? 'max-w-2xl relative' : 'max-w-[1400px] flex items-end justify-between gap-4'}`}>
             {focusMode ? (
               <>
@@ -810,8 +813,11 @@ export default function DailyLeaf() {
                   <h1 className="font-display italic text-ink leading-tight text-3xl sm:text-4xl">
                     {todayDisplay}
                   </h1>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="inline-block w-8 h-[2px] rounded-full bg-accent/60" />
+                  <div className="flex items-center gap-2 mt-1">
+                    <span
+                      className="inline-block w-12 h-[3px] rounded-full"
+                      style={{ background: 'var(--color-gradient)' }}
+                    />
                     <span className="font-body text-sm text-pencil/60">
                       Good {getGreeting()}
                     </span>
@@ -821,10 +827,10 @@ export default function DailyLeaf() {
                   {/* Progress */}
                   {totalTaskCount > 0 && (
                     <div className="flex items-center gap-2">
-                      <div className="w-24 h-[3px] bg-wood-light/30 rounded-full overflow-hidden">
+                      <div className="w-28 h-[5px] rounded-full overflow-hidden" style={{ backgroundColor: 'var(--color-tint-medium)' }}>
                         <div
-                          className="h-full bg-primary/70 rounded-full transition-all duration-700 ease-out"
-                          style={{ width: `${(completedCount / totalTaskCount) * 100}%` }}
+                          className="h-full rounded-full transition-all duration-700 ease-out"
+                          style={{ width: `${(completedCount / totalTaskCount) * 100}%`, background: 'var(--color-gradient)' }}
                         />
                       </div>
                       <span className="font-mono text-xs text-pencil tabular-nums">
