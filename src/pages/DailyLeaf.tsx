@@ -9,6 +9,7 @@ import ProcrastinationUnpacker from '../components/ProcrastinationUnpacker';
 import DayRecovery from '../components/DayRecovery';
 import DayDebriefComponent from '../components/DayDebrief';
 import { useTaskCelebration } from '../components/TaskCelebration';
+import Walkthrough from '../components/Walkthrough';
 import { parseNaturalEntry } from '../lib/nlParser';
 import { todayStr, dayAfter, dayBefore, formatLocalDate } from '../lib/dateUtils';
 import { getColorOfTheDay, getDailyCompanion } from '../lib/colorOfTheDay';
@@ -93,6 +94,8 @@ export default function DailyLeaf() {
     addJournalEntry,
     saveDebrief,
     deleteDebrief,
+    isNewUser,
+    completeWalkthrough,
   } = useApp();
 
   /* ── Date (auto-refresh on tab focus) ────────────────────────── */
@@ -609,6 +612,11 @@ export default function DailyLeaf() {
 
   return (
     <>
+      {/* ── Walkthrough for new users ─────────────────────────────── */}
+      {isNewUser && (
+        <Walkthrough onComplete={completeWalkthrough} />
+      )}
+
       {/* ── Full-screen overlays ────────────────────────────────────── */}
 
       {stuckTask && (
@@ -899,12 +907,12 @@ export default function DailyLeaf() {
                 </div>
 
                 {/* ── Daily companion — fills the header center ── */}
-                <div className="hidden md:flex flex-1 items-center justify-center px-4 min-w-0">
-                  <div className="flex items-center gap-3 max-w-lg">
-                    <span className="text-3xl flex-shrink-0" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }}>
+                <div className="hidden md:flex flex-1 items-center justify-center px-6 min-w-0">
+                  <div className="flex items-center gap-4 max-w-xl">
+                    <span className="text-4xl flex-shrink-0" style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.12))' }}>
                       {companion.animal}
                     </span>
-                    <p className="font-body text-sm text-ink/50 leading-snug italic truncate-2">
+                    <p className="font-body text-base text-ink/60 leading-snug italic truncate-2">
                       {companion.message}
                     </p>
                   </div>

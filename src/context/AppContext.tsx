@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useMemo, u
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from './AuthContext';
-import { todayStr, daysAgo, daysFromNow, formatLocalDate } from '../lib/dateUtils';
+import { formatLocalDate } from '../lib/dateUtils';
 
 /* ── BuJo Rapid Log Entry (replaces old Task) ─────────────────────── */
 
@@ -125,47 +125,14 @@ interface AppContextType {
   // Debriefs
   saveDebrief: (debrief: DayDebrief) => void;
   deleteDebrief: (date: string) => void;
+  // Onboarding
+  isNewUser: boolean;
+  completeWalkthrough: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-/* ── Seed Data ─────────────────────────────────────────────────────── */
-
-function getDefaultEntries(): RapidLogEntry[] {
-  return [
-    { id: '1', type: 'task', title: 'Review quarterly budget', date: todayStr(), status: 'todo', priority: 'high', movedCount: 0, duration: '30m', timeBlock: '09:00' },
-    { id: '2', type: 'task', title: 'Call Mom regarding weekend plans', date: daysAgo(1), status: 'todo', priority: 'medium', movedCount: 3 },
-    { id: '3', type: 'task', title: 'Client Strategy Sync', date: todayStr(), status: 'todo', priority: 'high', movedCount: 0, duration: '1h', timeBlock: '11:30' },
-    { id: '4', type: 'task', title: 'Email Design Team re: assets', date: todayStr(), status: 'done', priority: 'medium', movedCount: 0 },
-    { id: '5', type: 'task', title: 'Pick up dry cleaning', date: daysFromNow(1), status: 'todo', priority: 'low', movedCount: 0 },
-    { id: '6', type: 'task', title: 'Research API limits', date: daysAgo(2), status: 'todo', priority: 'medium', movedCount: 0, tags: ['DEV-102'] },
-    // Events
-    { id: 'e1', type: 'event', title: 'Coffee with Alex', date: daysFromNow(2), time: '10:00' },
-    { id: 'e2', type: 'event', title: 'Dentist appointment', date: daysFromNow(5), time: '14:30' },
-    // Notes
-    { id: 'n1', type: 'note', title: 'Idea: try morning walks before coffee', date: todayStr() },
-    { id: 'n2', type: 'note', title: 'The new podcast on focus was really good', date: daysAgo(1) },
-  ];
-}
-
-function getDefaultHabits(): Habit[] {
-  return [
-    { id: 'h1', name: 'Morning Pages', streak: 4, completedDates: [todayStr(), daysAgo(1), daysAgo(2), daysAgo(3)], color: 'sage' },
-    { id: 'h2', name: 'Deep Work', streak: 2, completedDates: [todayStr(), daysAgo(1)], color: 'accent' },
-    { id: 'h3', name: 'No Sugar', streak: 3, completedDates: [daysAgo(1), daysAgo(2), daysAgo(3)], color: 'tension' },
-    { id: 'h4', name: 'Meditation', streak: 6, completedDates: [todayStr(), daysAgo(1), daysAgo(2), daysAgo(3), daysAgo(4), daysAgo(5)], color: 'primary' },
-  ];
-}
-
-function getDefaultJournalEntries(): JournalEntry[] {
-  return [
-    { id: 'j1', date: daysAgo(60), content: 'Completed the quarterly report ahead of schedule.', tags: ['Work'], wins: ['Completed report'] },
-    { id: 'j2', date: daysAgo(57), content: 'Finally organized the garage shelves.', tags: ['Home'], wins: ['Organized garage'] },
-    { id: 'j3', date: todayStr(), content: 'Today I focused on the small things. The morning coffee was perfect.', mood: 'sentiment_satisfied', tags: ['Reflection'] },
-    { id: 'j4', date: daysAgo(120), title: 'First day at the new office', content: 'Exciting start. The team is welcoming.', tags: ['Work'], wins: ['Started new role'] },
-    { id: 'j5', date: daysAgo(200), title: 'Weekend hike', content: 'Trail was muddy but the view from the summit made it worth it.', tags: ['Outdoors'] },
-  ];
-}
+/* ── No seed data — new users start blank + walkthrough ───────────── */
 
 /* ── Trash cleanup — purge items older than 7 days ────────────────── */
 
@@ -246,6 +213,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [debriefs, setDebriefs] = useState<DayDebrief[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isNewUser, setIsNewUser] = useState(false);
 
   // Track whether Firestore data has been loaded for this user session.
   // This prevents saving stale/empty state back to Firestore before load completes.
@@ -328,17 +296,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           setDebriefs(migrateDebriefs(wal.debriefs));
           clearWal();
         } else {
-          // Brand-new user — seed with defaults once, then save
-          const seedEntries = getDefaultEntries();
-          const seedHabits = getDefaultHabits();
-          const seedJournal = getDefaultJournalEntries();
-          setEntries(seedEntries);
-          setHabits(seedHabits);
-          setJournalEntries(seedJournal);
+          // Brand-new user — start blank, show walkthrough
+          setEntries([]);
+          setHabits([]);
+          setJournalEntries([]);
           setCollections([]);
           setDebriefs([]);
+          if (localStorage.getItem('vellum-walkthrough-done') !== 'true') {
+            setIsNewUser(true);
+          }
           await setDoc(doc(db, 'users', user.uid), {
-            entries: seedEntries, habits: seedHabits, journalEntries: seedJournal,
+            entries: [], habits: [], journalEntries: [],
             collections: [], debriefs: [],
             updatedAt: new Date().toISOString(),
           });
@@ -513,6 +481,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const deleteDebrief = useCallback((date: string) =>
     setDebriefs(prev => prev.filter(d => d.date !== date)), []);
 
+  /* ── Onboarding ────────────────────────────────────────────────── */
+
+  const completeWalkthrough = useCallback(() => {
+    setIsNewUser(false);
+    localStorage.setItem('vellum-walkthrough-done', 'true');
+  }, []);
+
   /* ── Provider ──────────────────────────────────────────────────── */
 
   // Split entries into active and trash for consumers
@@ -528,6 +503,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     addCollection, updateCollection, deleteCollection,
     addCollectionItem, updateCollectionItem, deleteCollectionItem, reorderCollectionItems,
     saveDebrief, deleteDebrief,
+    isNewUser, completeWalkthrough,
   }), [
     activeEntries, trashEntries, habits, journalEntries, collections, debriefs, loading,
     addEntry, updateEntry, batchUpdateEntries, deleteEntry, restoreEntry, permanentlyDeleteEntry,
@@ -536,6 +512,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     addCollection, updateCollection, deleteCollection,
     addCollectionItem, updateCollectionItem, deleteCollectionItem, reorderCollectionItems,
     saveDebrief, deleteDebrief,
+    isNewUser, completeWalkthrough,
   ]);
 
   return (
