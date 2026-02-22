@@ -10,7 +10,7 @@ import DayRecovery from '../components/DayRecovery';
 import DayDebriefComponent from '../components/DayDebrief';
 import { useTaskCelebration } from '../components/TaskCelebration';
 import { parseNaturalEntry } from '../lib/nlParser';
-import { todayStr, dayAfter, formatLocalDate } from '../lib/dateUtils';
+import { todayStr, dayAfter, dayBefore, formatLocalDate } from '../lib/dateUtils';
 import type { RapidLogEntry, JournalStep, JournalEntry } from '../context/AppContext';
 import type { JournalMethod } from '../lib/journalMethods';
 
@@ -98,14 +98,18 @@ export default function DailyLeaf() {
 
   const [dateKey, setDateKey] = useState(todayStr);
   const [isEveningTime, setIsEveningTime] = useState(() => new Date().getHours() >= 18);
+  const [manualNav, setManualNav] = useState(false); // user navigated away from today
 
   // Refresh dateKey + evening state on tab focus AND every 60s
+  // BUT only if user hasn't manually navigated to a different day
   useEffect(() => {
     const refresh = () => {
-      setDateKey((prev) => {
-        const now = todayStr();
-        return prev !== now ? now : prev;
-      });
+      if (!manualNav) {
+        setDateKey((prev) => {
+          const now = todayStr();
+          return prev !== now ? now : prev;
+        });
+      }
       setIsEveningTime(new Date().getHours() >= 18);
     };
     const onVisible = () => {
@@ -117,11 +121,25 @@ export default function DailyLeaf() {
       document.removeEventListener('visibilitychange', onVisible);
       clearInterval(interval);
     };
-  }, []);
+  }, [manualNav]);
 
   // Derive today/tomorrow from dateKey — single source of truth.
   const today = dateKey;
   const tomorrow = dayAfter(dateKey);
+  const realToday = todayStr(); // always the actual current day
+  const isViewingPast = dateKey < realToday;
+  const isViewingToday = dateKey === realToday;
+
+  // Day navigation handlers
+  const goToPrevDay = () => { setDateKey(dayBefore(dateKey)); setManualNav(true); };
+  const goToNextDay = () => {
+    if (dateKey < realToday) {
+      const next = dayAfter(dateKey);
+      setDateKey(next);
+      if (next >= realToday) setManualNav(false);
+    }
+  };
+  const goToToday = () => { setDateKey(realToday); setManualNav(false); };
 
   const todayDisplay = new Date(dateKey + 'T12:00:00').toLocaleDateString('en-US', {
     weekday: 'long',
@@ -265,10 +283,13 @@ export default function DailyLeaf() {
 
   const todaysCompletedTasks = todayTasks.filter((t) => t.status === 'done');
 
-  // Overdue tasks: incomplete tasks from past days
+  // Overdue tasks: incomplete tasks from days before REAL today (not the viewed date)
+  // Only shown when viewing today — not when browsing past days
   const overdueTasks = useMemo(
-    () => entries.filter((e) => e.type === 'task' && e.status === 'todo' && e.date < today),
-    [entries, today],
+    () => isViewingToday
+      ? entries.filter((e) => e.type === 'task' && e.status === 'todo' && e.date < realToday)
+      : [],
+    [entries, realToday, isViewingToday],
   );
 
   // Journal-based wins for today (from exercises like 3 Good Things)
@@ -523,8 +544,8 @@ export default function DailyLeaf() {
   const [redoDebrief, setRedoDebrief] = useState(false);
   const debriefHidden = (debriefDismissed || todayDebriefExists) && !redoDebrief;
 
-  // Debrief is available when: (auto after 6pm OR manually triggered) AND not dismissed/completed
-  const debriefAvailable = !debriefHidden && (isEveningTime || showDebriefEarly);
+  // Debrief is available when: past day (always) OR evening OR manually triggered — AND not dismissed/completed
+  const debriefAvailable = !debriefHidden && (isViewingPast || isEveningTime || showDebriefEarly);
 
   // Reset debrief UI state when the date rolls over
   useEffect(() => {
@@ -535,12 +556,13 @@ export default function DailyLeaf() {
   }, [dateKey]);
 
   // Auto-open debrief overlay when it becomes available (6pm or manual trigger)
+  // Don't auto-open when browsing past days — let user click the button
   useEffect(() => {
-    if (debriefAvailable && !debriefOverlayOpen) {
+    if (debriefAvailable && !debriefOverlayOpen && isViewingToday) {
       setDebriefOverlayOpen(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debriefAvailable]);
+  }, [debriefAvailable, isViewingToday]);
 
   /* ── Bullet rendering helpers ────────────────────────────────── */
 
@@ -782,9 +804,26 @@ export default function DailyLeaf() {
               <>
                 {/* Focus mode: centered day + intention, tiny exit button */}
                 <div className="text-center">
-                  <h1 className="font-display italic text-ink leading-tight text-2xl">
-                    {todayDisplay}
-                  </h1>
+                  <div className="flex items-center justify-center gap-2">
+                    <button onClick={goToPrevDay} className="text-pencil/30 hover:text-pencil/60 transition-colors p-0.5">
+                      <span className="material-symbols-outlined text-xl">chevron_left</span>
+                    </button>
+                    <h1 className="font-display italic text-ink leading-tight text-2xl">
+                      {todayDisplay}
+                    </h1>
+                    <button
+                      onClick={goToNextDay}
+                      disabled={isViewingToday}
+                      className={`p-0.5 transition-colors ${isViewingToday ? 'text-pencil/10 cursor-default' : 'text-pencil/30 hover:text-pencil/60'}`}
+                    >
+                      <span className="material-symbols-outlined text-xl">chevron_right</span>
+                    </button>
+                  </div>
+                  {isViewingPast && (
+                    <button onClick={goToToday} className="mt-1 text-xs font-mono text-primary/60 hover:text-primary transition-colors uppercase tracking-wider">
+                      Back to today
+                    </button>
+                  )}
                   <div className="mt-2 max-w-md mx-auto">
                     <input
                       className="w-full bg-transparent border-none p-0 text-center text-lg font-display text-ink/70 placeholder:text-pencil/25 focus:ring-0 focus:outline-none italic"
@@ -805,21 +844,51 @@ export default function DailyLeaf() {
               </>
             ) : (
               <>
-                {/* Normal mode: left-aligned header */}
+                {/* Normal mode: left-aligned header with day nav */}
                 <div>
                   <span className="font-mono text-[11px] text-pencil tracking-[0.2em] uppercase block mb-1">
                     {yearStr}
                   </span>
-                  <h1 className="font-display italic text-ink leading-tight text-3xl sm:text-4xl">
-                    {todayDisplay}
-                  </h1>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={goToPrevDay}
+                      className="flex-shrink-0 p-1 -ml-1 rounded-lg text-pencil/40 hover:text-ink hover:bg-surface-light transition-all"
+                      title="Previous day"
+                    >
+                      <span className="material-symbols-outlined text-2xl">chevron_left</span>
+                    </button>
+                    <h1 className="font-display italic text-ink leading-tight text-3xl sm:text-4xl">
+                      {todayDisplay}
+                    </h1>
+                    <button
+                      onClick={goToNextDay}
+                      disabled={isViewingToday}
+                      className={`flex-shrink-0 p-1 rounded-lg transition-all ${
+                        isViewingToday
+                          ? 'text-pencil/15 cursor-default'
+                          : 'text-pencil/40 hover:text-ink hover:bg-surface-light'
+                      }`}
+                      title={isViewingToday ? 'Already on today' : 'Next day'}
+                    >
+                      <span className="material-symbols-outlined text-2xl">chevron_right</span>
+                    </button>
+                    {isViewingPast && (
+                      <button
+                        onClick={goToToday}
+                        className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-mono uppercase tracking-wider transition-all"
+                        style={{ backgroundColor: 'var(--color-tint-medium)', color: 'var(--color-primary)' }}
+                      >
+                        Today
+                      </button>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2 mt-1">
                     <span
                       className="inline-block w-12 h-[3px] rounded-full"
                       style={{ background: 'var(--color-gradient)' }}
                     />
                     <span className="font-body text-sm text-pencil/60">
-                      Good {getGreeting()}
+                      {isViewingPast ? 'Past day' : `Good ${getGreeting()}`}
                     </span>
                   </div>
                 </div>

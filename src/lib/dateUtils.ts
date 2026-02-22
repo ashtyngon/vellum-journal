@@ -47,6 +47,13 @@ export function dayAfter(dateString: string): string {
   return formatLocalDate(d);
 }
 
+/** The day before a given YYYY-MM-DD date string, in local timezone. */
+export function dayBefore(dateString: string): string {
+  const d = new Date(dateString + 'T12:00:00');
+  d.setDate(d.getDate() - 1);
+  return formatLocalDate(d);
+}
+
 /** Date string for a given day offset from today. */
 export function dateStr(offset: number): string {
   const d = new Date();
