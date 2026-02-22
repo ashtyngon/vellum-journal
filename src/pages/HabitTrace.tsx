@@ -168,7 +168,7 @@ export default function HabitTrace() {
       {/* Header */}
       <div className="flex-none px-6 md:px-10 py-4 z-40 bg-gradient-to-b from-background-light via-background-light to-transparent">
         <h1 className="text-3xl font-header italic text-ink">Habit Trace</h1>
-        <p className="text-pencil font-handwriting text-sm mt-1">Small steps, steady paths</p>
+        <p className="text-pencil font-mono text-xs mt-1 tracking-wider">Track what you actually do, not what you wish you did</p>
       </div>
 
       {/* Content */}

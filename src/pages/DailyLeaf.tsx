@@ -1004,17 +1004,17 @@ export default function DailyLeaf() {
               </>
             )}
 
-            {/* ── Overdue Tasks — hidden in focus mode ── */}
+            {/* ── Overdue Tasks — neutral, no shame ── */}
             {!focusMode && overdueTasks.length > 0 && (
-              <div className="mb-4 bg-tension/5 border border-tension/20 rounded-xl overflow-hidden">
+              <div className="mb-4 bg-surface-light/60 border border-wood-light/25 rounded-xl overflow-hidden">
                 <div
                   className="flex items-center justify-between px-4 py-3 cursor-pointer select-none"
                   onClick={() => setOverdueExpanded(v => !v)}
                 >
                   <div className="flex items-center gap-2.5">
-                    <span className="material-symbols-outlined text-tension text-lg">schedule</span>
+                    <span className="material-symbols-outlined text-pencil text-lg">history</span>
                     <span className="font-body text-sm text-ink">
-                      <span className="font-semibold">{overdueTasks.length}</span> task{overdueTasks.length !== 1 ? 's' : ''} left behind
+                      <span className="font-semibold">{overdueTasks.length}</span> task{overdueTasks.length !== 1 ? 's' : ''} from before — pick what still matters
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -1026,7 +1026,7 @@ export default function DailyLeaf() {
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); parkAll(); }}
-                      className="text-xs font-mono text-pencil hover:text-ink bg-surface-light hover:bg-wood-light/20 px-2.5 py-1 rounded-full transition-colors uppercase tracking-wider"
+                      className="text-xs font-mono text-pencil hover:text-ink bg-wood-light/20 hover:bg-wood-light/30 px-2.5 py-1 rounded-full transition-colors uppercase tracking-wider"
                     >
                       → Parking lot
                     </button>
@@ -1038,8 +1038,8 @@ export default function DailyLeaf() {
                 {overdueExpanded && (
                   <div className="px-4 pb-3 space-y-1">
                     {overdueTasks.map(task => (
-                      <div key={task.id} className="group/ot flex items-center gap-3 py-1.5 px-2 -mx-2 rounded hover:bg-tension/5 transition-colors">
-                        <span className="inline-block size-2 rounded-full bg-ink flex-shrink-0" />
+                      <div key={task.id} className="group/ot flex items-center gap-3 py-1.5 px-2 -mx-2 rounded hover:bg-surface-light transition-colors">
+                        <span className="inline-block size-2 rounded-full bg-pencil/40 flex-shrink-0" />
                         <span className="flex-1 font-body text-sm text-ink truncate">{task.title}</span>
                         <span className="font-mono text-[10px] text-pencil/50 flex-shrink-0">
                           {new Date(task.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -1061,7 +1061,7 @@ export default function DailyLeaf() {
                           </button>
                           <button
                             onClick={() => deleteEntry(task.id)}
-                            className="text-pencil hover:text-tension transition-colors"
+                            className="text-pencil hover:text-pencil/80 transition-colors"
                             title="Delete"
                           >
                             <span className="material-symbols-outlined text-[16px]">close</span>

@@ -132,9 +132,9 @@ export const JOURNAL_METHODS: JournalMethod[] = [
     category: 'cbt',
     steps: [
       {
-        prompt: 'What\'s bothering you right now?',
+        prompt: 'What\'s the thing?',
         placeholder:
-          'e.g. I snapped at my partner this morning over something trivial.',
+          'e.g. I snapped at my partner over something trivial.',
         inputType: 'textarea',
       },
       {
@@ -144,22 +144,22 @@ export const JOURNAL_METHODS: JournalMethod[] = [
       },
       {
         prompt: 'Why?',
-        placeholder: 'Keep going...',
+        placeholder: 'Dig deeper...',
         inputType: 'textarea',
       },
       {
         prompt: 'Why?',
-        placeholder: 'Keep going...',
+        placeholder: 'Keep pulling the thread...',
         inputType: 'textarea',
       },
       {
         prompt: 'Why?',
-        placeholder: 'Keep going...',
+        placeholder: 'Almost there...',
         inputType: 'textarea',
       },
       {
         prompt: 'Why?',
-        placeholder: 'Keep going...',
+        placeholder: 'What\'s at the root?',
         inputType: 'textarea',
       },
     ],

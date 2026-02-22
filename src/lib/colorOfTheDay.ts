@@ -84,12 +84,16 @@ export const DEFAULT_PRIMARY = {
   index: 0,
 };
 
-/** Apply color as CSS custom property on :root */
+/** Apply color as CSS custom property on :root — sets BOTH accent AND primary
+ *  so the entire UI (buttons, progress bars, active nav, highlights) shifts. */
 export function applyAccentColor(color: DailyColor, isDark: boolean): void {
   const root = document.documentElement;
   const hsl = isDark ? color.cssDark : color.css;
+  // Set accent vars (used by a few accent-specific elements)
   root.style.setProperty('--color-accent', hsl);
   root.style.setProperty('--color-accent-h', String(color.hue));
   root.style.setProperty('--color-accent-s', `${color.sat}%`);
   root.style.setProperty('--color-accent-l', isDark ? `${Math.min(color.light + 15, 70)}%` : `${color.light}%`);
+  // Set PRIMARY — this is what bg-primary, text-primary, etc. actually use
+  root.style.setProperty('--color-primary', hsl);
 }
