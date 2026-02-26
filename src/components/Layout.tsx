@@ -207,33 +207,28 @@ const Layout = ({ children }: { children: ReactNode }) => {
                       <p className="font-mono text-[9px] text-pencil uppercase tracking-widest">{companion.name} · today&rsquo;s companion</p>
                     </div>
                   </div>
-                  <p className="font-body text-sm text-ink/70 leading-relaxed mb-3 italic">
+                  <p className="font-body text-sm text-ink/70 leading-relaxed mb-4 italic">
                     &ldquo;{companion.messages[0]}&rdquo;
                   </p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => { replayReveal(); setColorInfoOpen(false); }}
-                      className="flex-1 text-center py-2 rounded-lg font-mono text-[11px] uppercase tracking-wider transition-all"
-                      style={{
-                        backgroundColor: 'var(--color-tint-medium)',
-                        border: '1px solid var(--color-primary)',
-                        color: 'var(--color-primary)',
-                      }}
-                    >
-                      Replay ✨
-                    </button>
-                    <button
-                      onClick={() => { useDefaultColor ? restoreDailyColor() : revertColor(); setColorInfoOpen(false); }}
-                      className="flex-1 text-center py-2 rounded-lg font-mono text-[11px] uppercase tracking-wider transition-all"
-                      style={{
-                        backgroundColor: 'transparent',
-                        border: '1px solid var(--color-border)',
-                        color: 'var(--color-ink)',
-                      }}
-                    >
-                      {useDefaultColor ? 'Use color' : 'Default'}
-                    </button>
-                  </div>
+                  {/* Color toggle — clear on/off */}
+                  <button
+                    onClick={() => { useDefaultColor ? restoreDailyColor() : revertColor(); setColorInfoOpen(false); }}
+                    className="w-full text-center py-2.5 rounded-lg font-mono text-[11px] uppercase tracking-wider transition-all mb-2"
+                    style={{
+                      backgroundColor: useDefaultColor ? 'var(--color-tint-medium)' : 'transparent',
+                      border: useDefaultColor ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
+                      color: useDefaultColor ? 'var(--color-primary)' : 'var(--color-ink)',
+                    }}
+                  >
+                    {useDefaultColor ? 'Apply color to app' : 'Reset to default color'}
+                  </button>
+                  {/* Replay — secondary action */}
+                  <button
+                    onClick={() => { replayReveal(); setColorInfoOpen(false); }}
+                    className="w-full text-center py-1 font-mono text-[10px] text-pencil/50 hover:text-primary transition-colors uppercase tracking-wider"
+                  >
+                    Replay reveal
+                  </button>
                 </div>
               </>
             )}

@@ -1552,13 +1552,14 @@ function DayColumn({
       } else if (t.section && map[t.section]) {
         // 2. If task has a section assignment, use that
         map[t.section].push(t);
-      } else {
-        // 3. Fallback: first visible section
+      } else if (t.section) {
+        // 3. Task has a section that's no longer visible — use first available
         const firstSection = visibleSections[0];
         if (firstSection) {
           map[firstSection.id].push(t);
         }
       }
+      // else: no section, no time → parking lot task, skip
     }
 
     // Sort: timed tasks first (by time), then by order field
