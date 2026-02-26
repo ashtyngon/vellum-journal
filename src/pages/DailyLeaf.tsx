@@ -123,15 +123,21 @@ export default function DailyLeaf() {
   const tomorrow = dayAfter(dateKey);
   const realToday = todayStr(); // always the actual current day
   const isViewingPast = dateKey < realToday;
+  const isViewingFuture = dateKey > realToday;
   const isViewingToday = dateKey === realToday;
 
   // Day navigation handlers
   const goToPrevDay = () => { setDateKey(dayBefore(dateKey)); setManualNav(true); };
+  // Allow navigating up to 60 days into the future
+  const maxFutureDate = useMemo(() => {
+    const d = new Date(); d.setDate(d.getDate() + 60);
+    return formatLocalDate(d);
+  }, []);
   const goToNextDay = () => {
-    if (dateKey < realToday) {
+    if (dateKey < maxFutureDate) {
       const next = dayAfter(dateKey);
       setDateKey(next);
-      if (next >= realToday) setManualNav(false);
+      setManualNav(next !== realToday);
     }
   };
   const goToToday = () => { setDateKey(realToday); setManualNav(false); };
@@ -977,14 +983,14 @@ export default function DailyLeaf() {
                     </h1>
                     <button
                       onClick={goToNextDay}
-                      disabled={isViewingToday}
+                      disabled={dateKey >= maxFutureDate}
                       className={`flex-shrink-0 p-1 rounded-lg transition-all ${
-                        isViewingToday ? 'text-pencil/15 cursor-default' : 'text-pencil/40 hover:text-ink hover:bg-surface-light'
+                        dateKey >= maxFutureDate ? 'text-pencil/15 cursor-default' : 'text-pencil/40 hover:text-ink hover:bg-surface-light'
                       }`}
                     >
                       <span className="material-symbols-outlined text-xl sm:text-2xl">chevron_right</span>
                     </button>
-                    {isViewingPast && (
+                    {!isViewingToday && (
                       <button
                         onClick={goToToday}
                         className="flex-shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider bg-primary/10 text-primary transition-all"
@@ -994,7 +1000,7 @@ export default function DailyLeaf() {
                     )}
                   </div>
                   <span className="font-body text-xs sm:text-sm text-pencil/50 mt-0.5 block ml-1">
-                    {isViewingPast ? 'Past day' : `Good ${getGreeting()}`}
+                    {isViewingPast ? 'Past day' : isViewingFuture ? 'Upcoming' : `Good ${getGreeting()}`}
                   </span>
                 </div>
 
@@ -1172,13 +1178,13 @@ export default function DailyLeaf() {
                   <h1 className="font-display italic text-ink leading-tight text-2xl">{todayDisplay}</h1>
                   <button
                     onClick={goToNextDay}
-                    disabled={isViewingToday}
-                    className={`p-0.5 transition-colors ${isViewingToday ? 'text-pencil/10 cursor-default' : 'text-pencil/30 hover:text-pencil/60'}`}
+                    disabled={dateKey >= maxFutureDate}
+                    className={`p-0.5 transition-colors ${dateKey >= maxFutureDate ? 'text-pencil/10 cursor-default' : 'text-pencil/30 hover:text-pencil/60'}`}
                   >
                     <span className="material-symbols-outlined text-xl">chevron_right</span>
                   </button>
                 </div>
-                {isViewingPast && (
+                {!isViewingToday && (
                   <button onClick={goToToday} className="mt-1 text-xs font-mono text-primary/60 hover:text-primary transition-colors uppercase tracking-wider">
                     Back to today
                   </button>
@@ -1557,8 +1563,15 @@ export default function DailyLeaf() {
                             {ev.title}
                           </span>
                         )}
-                        {/* Action button — visible on hover */}
+                        {/* Action buttons — visible on hover */}
                         <div className="flex items-center gap-0.5 opacity-0 group-hover/ev:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => { updateEntry(ev.id, { date: realToday, type: 'task', status: 'todo', section: undefined }); }}
+                            className="p-1 rounded text-pencil/40 hover:text-primary hover:bg-primary/5 transition-colors"
+                            title="Move to today's parking lot"
+                          >
+                            <span className="material-symbols-outlined text-sm">move_item</span>
+                          </button>
                           <button
                             onClick={() => deleteEntry(ev.id)}
                             className="p-1 rounded text-pencil/40 hover:text-red-400 hover:bg-red-50 transition-colors"
