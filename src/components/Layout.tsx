@@ -33,35 +33,6 @@ const Layout = ({ children }: { children: ReactNode }) => {
     applyAccentColor(color, darkMode);
   }, [dailyColor, darkMode, useDefaultColor]);
 
-  // First-visit-of-the-day reveal
-  const [showColorReveal, setShowColorReveal] = useState(() => {
-    const lastSeen = localStorage.getItem('vellum-color-seen');
-    return lastSeen !== today && !useDefaultColor;
-  });
-
-  const [revealDismissing, setRevealDismissing] = useState(false);
-
-  const dismissReveal = () => {
-    if (revealDismissing) return;
-    setRevealDismissing(true);
-    setTimeout(() => {
-      setShowColorReveal(false);
-      setRevealDismissing(false);
-    }, 400);
-  };
-
-  useEffect(() => {
-    if (showColorReveal) {
-      localStorage.setItem('vellum-color-seen', today);
-      const timer = setTimeout(() => dismissReveal(), 8500);
-      return () => clearTimeout(timer);
-    }
-  }, [showColorReveal, today]);
-
-  const replayReveal = () => {
-    setShowColorReveal(true);
-  };
-
   const colorName = useMemo(() => getColorName(dailyColor), [dailyColor]);
   const companion = useMemo(() => getDailyCompanion(dailyColor), [dailyColor]);
 
@@ -93,47 +64,6 @@ const Layout = ({ children }: { children: ReactNode }) => {
 
   return (
     <div className="min-h-screen flex flex-col font-body text-ink bg-background-light">
-      {/* ── Color of the Day reveal — full-screen companion greeting ── */}
-      {showColorReveal && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center cursor-pointer"
-          onClick={dismissReveal}
-          style={{ animation: revealDismissing ? 'revealDismiss 0.4s ease-out forwards' : 'colorReveal 8s ease-out forwards' }}
-        >
-          <div
-            className="absolute inset-0"
-            style={{ background: `var(--color-gradient)`, opacity: 0.92 }}
-          />
-          <div className="relative z-10 text-center max-w-md px-8" style={{ animation: revealDismissing ? 'none' : 'colorRevealText 8s ease-out forwards' }}>
-            {/* Animal companion — big and bouncy */}
-            <div
-              className="text-8xl mb-4 inline-block"
-              style={{ animation: revealDismissing ? 'none' : 'companionBounce 8s ease-out forwards', filter: 'drop-shadow(0 6px 16px rgba(0,0,0,0.25))' }}
-            >
-              {companion.animal}
-            </div>
-            {/* The message — the real content */}
-            <p className="font-body text-xl text-white/95 leading-relaxed mb-5" style={{ textShadow: '0 1px 8px rgba(0,0,0,0.15)' }}>
-              {companion.messages[0]}
-            </p>
-            {/* Color badge + companion name */}
-            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/15 backdrop-blur-sm">
-              <span
-                className="inline-block size-3.5 rounded-full"
-                style={{ backgroundColor: dailyColor.css, boxShadow: '0 0 10px ' + dailyColor.css }}
-              />
-              <span className="font-mono text-[10px] text-white/80 uppercase tracking-wider">{colorName}</span>
-              <span className="text-white/40 text-[10px]">·</span>
-              <span className="font-mono text-[10px] text-white/50 uppercase tracking-wider">{companion.name}</span>
-            </div>
-            {/* Tap hint */}
-            <p className="mt-6 font-mono text-[9px] text-white/30 uppercase tracking-[0.4em]">
-              tap anywhere to continue
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* ── Bold color stripe at very top ── */}
       <div
         className={`h-2 w-full flex-none transition-all duration-300 ${focusMode ? 'h-0' : ''}`}
@@ -213,7 +143,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
                   {/* Color toggle — clear on/off */}
                   <button
                     onClick={() => { useDefaultColor ? restoreDailyColor() : revertColor(); setColorInfoOpen(false); }}
-                    className="w-full text-center py-2.5 rounded-lg font-mono text-[11px] uppercase tracking-wider transition-all mb-2"
+                    className="w-full text-center py-2.5 rounded-lg font-mono text-[11px] uppercase tracking-wider transition-all"
                     style={{
                       backgroundColor: useDefaultColor ? 'var(--color-tint-medium)' : 'transparent',
                       border: useDefaultColor ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
@@ -221,13 +151,6 @@ const Layout = ({ children }: { children: ReactNode }) => {
                     }}
                   >
                     {useDefaultColor ? 'Apply color to app' : 'Reset to default color'}
-                  </button>
-                  {/* Replay — secondary action */}
-                  <button
-                    onClick={() => { replayReveal(); setColorInfoOpen(false); }}
-                    className="w-full text-center py-1 font-mono text-[10px] text-pencil/50 hover:text-primary transition-colors uppercase tracking-wider"
-                  >
-                    Replay reveal
                   </button>
                 </div>
               </>

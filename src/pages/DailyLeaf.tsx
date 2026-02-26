@@ -741,11 +741,13 @@ export default function DailyLeaf() {
           style={{ animation: 'celebrationPhrase 2.8s ease-out forwards' }}
         >
           <p
-            className="font-display italic text-3xl sm:text-4xl text-center px-8 py-4 whitespace-nowrap"
+            className="font-display italic text-3xl sm:text-4xl text-center px-8 py-3 whitespace-nowrap rounded-2xl"
             style={{
               color: 'var(--color-primary)',
-              textShadow: '0 0 24px var(--color-glow), 0 2px 8px rgba(0,0,0,0.1)',
-              filter: 'drop-shadow(0 0 12px var(--color-glow))',
+              WebkitTextStroke: '0.5px var(--color-primary)',
+              background: 'var(--color-tint-medium)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid var(--color-border-accent)',
             }}
           >
             {celebrationPhrase}
