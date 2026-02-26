@@ -150,8 +150,6 @@ export default function DailyLeaf() {
     month: 'long',
     day: 'numeric',
   });
-  const yearStr = new Date(dateKey + 'T12:00:00').getFullYear();
-
   // Daily companion — always visible in the header
   const dailyColor = useMemo(() => getColorOfTheDay(dateKey), [dateKey]);
   const companion = useMemo(() => getDailyCompanion(dailyColor), [dailyColor]);
@@ -922,112 +920,104 @@ export default function DailyLeaf() {
 
           {/* ── Header: date + companion + progress ring ────────── */}
           {!focusMode ? (
-            <header className="mb-8">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <span className="font-mono text-[11px] text-pencil tracking-[0.2em] uppercase block mb-1">
-                    {yearStr}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={goToPrevDay}
-                      className="flex-shrink-0 p-1 -ml-1 rounded-lg text-pencil/40 hover:text-ink hover:bg-surface-light transition-all"
-                    >
-                      <span className="material-symbols-outlined text-2xl">chevron_left</span>
-                    </button>
-                    <h1 className="font-display italic text-ink leading-tight text-2xl sm:text-3xl">
+            <header className="mb-6">
+              {/* Row 1: date nav + actions — always horizontal */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1 min-w-0">
+                  <button
+                    onClick={goToPrevDay}
+                    className="flex-shrink-0 p-1 rounded-lg text-pencil/40 hover:text-ink hover:bg-surface-light transition-all"
+                  >
+                    <span className="material-symbols-outlined text-xl">chevron_left</span>
+                  </button>
+                  <div className="min-w-0">
+                    <h1 className="font-display italic text-ink leading-tight text-xl sm:text-2xl md:text-3xl truncate">
                       {todayDisplay}
                     </h1>
-                    <button
-                      onClick={goToNextDay}
-                      disabled={isViewingToday}
-                      className={`flex-shrink-0 p-1 rounded-lg transition-all ${
-                        isViewingToday ? 'text-pencil/15 cursor-default' : 'text-pencil/40 hover:text-ink hover:bg-surface-light'
-                      }`}
-                    >
-                      <span className="material-symbols-outlined text-2xl">chevron_right</span>
-                    </button>
-                    {isViewingPast && (
-                      <button
-                        onClick={goToToday}
-                        className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-mono uppercase tracking-wider bg-primary/10 text-primary transition-all"
-                      >
-                        Today
-                      </button>
-                    )}
+                    <span className="font-body text-xs sm:text-sm text-pencil/50 block">
+                      {isViewingPast ? 'Past day' : `Good ${getGreeting()}`}
+                    </span>
                   </div>
-                  <span className="font-body text-sm text-pencil/50 mt-1 block">
-                    {isViewingPast ? 'Past day' : `Good ${getGreeting()}`}
-                  </span>
+                  <button
+                    onClick={goToNextDay}
+                    disabled={isViewingToday}
+                    className={`flex-shrink-0 p-1 rounded-lg transition-all ${
+                      isViewingToday ? 'text-pencil/15 cursor-default' : 'text-pencil/40 hover:text-ink hover:bg-surface-light'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-xl">chevron_right</span>
+                  </button>
+                  {isViewingPast && (
+                    <button
+                      onClick={goToToday}
+                      className="flex-shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider bg-primary/10 text-primary transition-all"
+                    >
+                      Today
+                    </button>
+                  )}
                 </div>
 
-                {/* Right side: progress ring + companion + actions */}
-                <div className="flex items-center gap-4">
-                  {/* Progress ring */}
+                {/* Right: progress ring + action buttons */}
+                <div className="flex items-center gap-2 shrink-0">
                   {totalTaskCount > 0 && (
                     <div className="relative flex items-center justify-center">
-                      <svg width="56" height="56" viewBox="0 0 56 56" className="-rotate-90">
-                        <circle cx="28" cy="28" r="24" fill="none" stroke="currentColor" className="text-wood-light/20" strokeWidth="3" />
+                      <svg width="44" height="44" viewBox="0 0 44 44" className="-rotate-90">
+                        <circle cx="22" cy="22" r="18" fill="none" stroke="currentColor" className="text-wood-light/20" strokeWidth="2.5" />
                         <circle
-                          cx="28" cy="28" r="24" fill="none"
+                          cx="22" cy="22" r="18" fill="none"
                           stroke="var(--color-primary)"
-                          strokeWidth="3.5"
+                          strokeWidth="3"
                           strokeLinecap="round"
-                          strokeDasharray={`${2 * Math.PI * 24}`}
-                          strokeDashoffset={`${2 * Math.PI * 24 * (1 - completedCount / totalTaskCount)}`}
+                          strokeDasharray={`${2 * Math.PI * 18}`}
+                          strokeDashoffset={`${2 * Math.PI * 18 * (1 - completedCount / totalTaskCount)}`}
                           className="transition-all duration-700 ease-out"
                         />
                       </svg>
-                      <span className="absolute font-mono text-xs text-ink tabular-nums">
+                      <span className="absolute font-mono text-[10px] text-ink tabular-nums">
                         {completedCount}/{totalTaskCount}
                       </span>
                     </div>
                   )}
-
-                  {/* Companion — animal with speech bubble */}
-                  <div
-                    className="flex flex-col items-center cursor-pointer"
-                    onClick={() => triggerCompanionAnim('bounce')}
-                    style={{
-                      animation: companionAnim === 'bounce' ? 'companionTap 0.6s ease-out' : companionAnim === 'celebrate' ? 'companionCelebrate 1.2s ease-out' : 'none',
-                    }}
+                  <button
+                    onClick={() => setFocusMode(true)}
+                    className="p-1.5 rounded-lg text-pencil hover:text-primary hover:bg-primary/5 transition-all"
+                    title="Focus mode"
                   >
-                    <span className="text-3xl mb-1">{companion.animal}</span>
-                    {/* Speech bubble */}
-                    <div className="relative">
-                      {/* Triangle pointer */}
-                      <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 bg-surface-light border-l border-t border-wood-light/25" />
-                      <div className="relative rounded-lg bg-surface-light border border-wood-light/25 px-3 py-1.5 max-w-[160px]">
-                        <p className="font-body italic text-xs text-pencil/70 text-center leading-snug">{companion.message}</p>
-                      </div>
-                    </div>
-                  </div>
+                    <span className="material-symbols-outlined text-lg">center_focus_strong</span>
+                  </button>
+                  <button
+                    onClick={() => setPlanOverlayOpen(true)}
+                    className="p-1.5 rounded-lg text-pencil hover:text-primary hover:bg-primary/5 transition-all"
+                    title="Plan"
+                  >
+                    <span className="material-symbols-outlined text-lg">event_note</span>
+                  </button>
+                </div>
+              </div>
 
-                  {/* Action buttons */}
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => setFocusMode(true)}
-                      className="p-2 rounded-lg text-pencil hover:text-primary hover:bg-primary/5 transition-all"
-                      title="Focus mode"
-                    >
-                      <span className="material-symbols-outlined text-xl">center_focus_strong</span>
-                    </button>
-                    <button
-                      onClick={() => setPlanOverlayOpen(true)}
-                      className="p-2 rounded-lg text-pencil hover:text-primary hover:bg-primary/5 transition-all"
-                      title="Plan"
-                    >
-                      <span className="material-symbols-outlined text-xl">event_note</span>
-                    </button>
+              {/* Row 2: companion speech bubble — full width */}
+              <div
+                className="mt-3 flex items-start gap-2 cursor-pointer"
+                onClick={() => triggerCompanionAnim('bounce')}
+                style={{
+                  animation: companionAnim === 'bounce' ? 'companionTap 0.6s ease-out' : companionAnim === 'celebrate' ? 'companionCelebrate 1.2s ease-out' : 'none',
+                }}
+              >
+                <span className="text-2xl shrink-0 mt-0.5">{companion.animal}</span>
+                <div className="relative flex-1 min-w-0">
+                  {/* Triangle pointer */}
+                  <div className="absolute top-2.5 -left-1.5 w-2.5 h-2.5 rotate-45 bg-surface-light border-l border-b border-wood-light/25" />
+                  <div className="relative rounded-lg bg-surface-light border border-wood-light/25 px-3 py-2">
+                    <p className="font-body italic text-sm text-pencil/70 leading-snug">{companion.message}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Intention */}
-              <div className="mt-4">
+              {/* Row 3: intention input */}
+              <div className="mt-3">
                 <div className="relative group/input">
                   <input
-                    className="w-full bg-transparent border-none p-0 text-xl sm:text-2xl font-display text-ink placeholder:text-pencil/25 focus:ring-0 focus:outline-none italic"
+                    className="w-full bg-transparent border-none p-0 text-lg sm:text-xl font-display text-ink placeholder:text-pencil/25 focus:ring-0 focus:outline-none italic"
                     placeholder="What matters today?"
                     type="text"
                     value={intention}
@@ -1222,11 +1212,11 @@ export default function DailyLeaf() {
               </div>
             )}
 
-            <div className="flex items-center gap-4 py-5 px-6 rounded-2xl bg-surface-light border border-wood-light/20 shadow-sm transition-all focus-within:border-primary/30 focus-within:shadow-md">
-              <span className="material-symbols-outlined text-2xl text-primary/60">add</span>
+            <div className="flex items-center gap-3 sm:gap-4 py-3.5 sm:py-5 px-4 sm:px-6 rounded-2xl bg-surface-light border border-wood-light/20 shadow-sm transition-all focus-within:border-primary/30 focus-within:shadow-md">
+              <span className="material-symbols-outlined text-xl sm:text-2xl text-primary/60">add</span>
               <input
                 ref={newInputRef}
-                className="flex-1 min-w-0 bg-transparent border-none p-0 text-2xl font-body text-ink placeholder:text-pencil/35 focus:ring-0 focus:outline-none"
+                className="flex-1 min-w-0 bg-transparent border-none p-0 text-lg sm:text-2xl font-body text-ink placeholder:text-pencil/35 focus:ring-0 focus:outline-none"
                 placeholder={placeholder}
                 type="text"
                 value={newTitle}
@@ -1272,15 +1262,15 @@ export default function DailyLeaf() {
               const priorityStyle = entry.priority ? PRIORITY_STYLES[entry.priority] : null;
 
               return (
-                <div key={entry.id} className={`group/entry rounded-2xl px-6 py-5 transition-all ${
+                <div key={entry.id} className={`group/entry rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3.5 sm:py-5 transition-all ${
                   isInactive ? 'opacity-50 bg-transparent' : 'bg-surface-light/40 hover:bg-surface-light/80'
                 } ${isNote ? 'border-l-3 border-pencil/15' : ''}`}>
-                  <div className="flex items-center gap-5">
+                  <div className="flex items-center gap-3 sm:gap-5">
                     {/* Checkbox / bullet \u2014 BIG */}
                     {isTask ? (
                       <button
                         onClick={(e) => handleToggleTask(entry.id, e.currentTarget as HTMLElement)}
-                        className={`flex-shrink-0 focus:outline-none rounded-xl transition-all flex items-center justify-center w-12 h-12 border-[2.5px] ${
+                        className={`flex-shrink-0 focus:outline-none rounded-lg sm:rounded-xl transition-all flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 border-2 sm:border-[2.5px] ${
                           isDone
                             ? 'bg-primary border-primary text-white'
                             : isCancelled
@@ -1289,15 +1279,15 @@ export default function DailyLeaf() {
                         }`}
                         title={isDone ? 'Mark as todo' : 'Mark as done'}
                       >
-                        {isDone && <span className="material-symbols-outlined text-2xl">check</span>}
-                        {isCancelled && <span className="material-symbols-outlined text-2xl">close</span>}
+                        {isDone && <span className="material-symbols-outlined text-lg sm:text-2xl">check</span>}
+                        {isCancelled && <span className="material-symbols-outlined text-lg sm:text-2xl">close</span>}
                       </button>
                     ) : (
-                      <div className="flex-shrink-0 flex items-center justify-center w-12 h-12">
+                      <div className="flex-shrink-0 flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12">
                         {isEvent ? (
-                          <span className="inline-flex items-center justify-center size-7 rounded-full border-[3px] border-primary/50" />
+                          <span className="inline-flex items-center justify-center size-5 sm:size-7 rounded-full border-2 sm:border-[3px] border-primary/50" />
                         ) : (
-                          <span className="inline-block w-6 h-[3px] bg-ink/25 rounded-full" />
+                          <span className="inline-block w-5 sm:w-6 h-[2.5px] sm:h-[3px] bg-ink/25 rounded-full" />
                         )}
                       </div>
                     )}
@@ -1307,7 +1297,7 @@ export default function DailyLeaf() {
                       {isEditing ? (
                         <input
                           ref={editInputRef}
-                          className="w-full bg-transparent border-none p-0 text-2xl font-body text-ink focus:ring-0 focus:outline-none"
+                          className="w-full bg-transparent border-none p-0 text-lg sm:text-2xl font-body text-ink focus:ring-0 focus:outline-none"
                           value={editingValue}
                           onChange={(e) => setEditingValue(e.target.value)}
                           onKeyDown={handleEditKeyDown}
@@ -1315,7 +1305,7 @@ export default function DailyLeaf() {
                         />
                       ) : (
                         <button
-                          className={`text-left text-2xl leading-snug font-body transition-colors w-full ${
+                          className={`text-left text-lg sm:text-2xl leading-snug font-body transition-colors w-full ${
                             isCancelled ? 'line-through decoration-tension/40 text-ink/35'
                               : isDone ? 'line-through decoration-pencil/20 text-ink/45'
                               : isNote ? 'text-ink/65 italic'
