@@ -220,11 +220,11 @@ export interface DailyCompanion {
 const COMPANIONS: DailyCompanion[] = [
   // 0 – Warm Amber
   { colorName: 'Warm Amber', animal: 'Fox', name: 'Fox',
-    messages: ['I\'ve been casing your schedule all morning. There\'s a window at 2pm — that\'s when we strike. Open the journal, act casual.', 'You thought you could skip today? I already moved three distractions out of your path. You never even noticed. That\'s how good I am.', 'Step one: you sit down. Step two: I\'ve already handled steps two through six. You just have to write. I did the rest.', 'Chmok. That was a distraction kiss — while you were reading that, I reorganized your priorities. Check the page.', 'The heist went flawlessly. Evidence of self-reflection acquired. Rendezvous same time tomorrow. I\'ll have the next scheme drafted by midnight.'] },
+    messages: ['I\'ve been casing your schedule all morning. There\'s a window at 2pm — that\'s when we strike. Open the journal, act casual.', 'You thought you could skip today? I already moved three distractions out of your path. You never even noticed. That\'s how good I am.', 'Step one: you sit down. Step two: I\'ve already handled steps two through six. You just have to write. I did the rest.', 'That pause just now? A distraction. While you were reading this, I reorganized your priorities. Check the page.', 'The heist went flawlessly. Evidence of self-reflection acquired. Rendezvous same time tomorrow. I\'ll have the next scheme drafted by midnight.'] },
 
   // 1 – Dusty Rose
   { colorName: 'Dusty Rose', animal: 'Octopus', name: 'Octavia',
-    messages: ['I\'ve got your tasks in one arm, worries in another, your water bottle in a third — WAIT did you eat?? Please tell me you ate something that wasn\'t just coffee.', 'I cross-referenced your mood with your sleep data with your last five entries with the WEATHER and I think I found a pattern but also I\'m spiraling a little can you just WRITE so I can calm down??', 'Okay I prepped your journal AND a backup journal AND talking points in case you freeze AND — oh no. Am I the one who needs to journal?', 'Chmok! Sorry. I panic-kiss. It\'s a reflex. You\'re doing great. Are you doing great? Tell me you\'re doing great. Actually, WRITE about it so I can verify.', 'We did it! Wait — did we? Let me triple-check. ...Yes. Yes we did. ALL EIGHT ARMS confirm: today was handled. I\'m going to cry a little. Happy tears.'] },
+    messages: ['I\'ve got your tasks in one arm, worries in another, your water bottle in a third — WAIT did you eat?? Please tell me you ate something that wasn\'t just coffee.', 'I cross-referenced your mood with your sleep data with your last five entries with the WEATHER and I think I found a pattern but also I\'m spiraling a little can you just WRITE so I can calm down??', 'Okay I prepped your journal AND a backup journal AND talking points in case you freeze AND — oh no. Am I the one who needs to journal?', 'Sorry! I got excited. It\'s a reflex. You\'re doing great. Are you doing great? Tell me you\'re doing great. Actually, WRITE about it so I can verify.', 'We did it! Wait — did we? Let me triple-check. ...Yes. Yes we did. ALL EIGHT ARMS confirm: today was handled. I\'m going to cry a little. Happy tears.'] },
 
   // 2 – Burnt Sienna
   { colorName: 'Burnt Sienna', animal: 'Raccoon', name: 'Bandit',
@@ -240,15 +240,15 @@ const COMPANIONS: DailyCompanion[] = [
 
   // 5 – Dusty Lavender
   { colorName: 'Dusty Lavender', animal: 'Axeloti', name: 'Drift',
-    messages: ['there is a door in your chest that only opens when you write... have you tried the handle today', 'your thoughts are just rain that hasn\'t found a window yet. the page is glass. let them streak down.', 'somewhere a version of you is already finished writing and feels lighter. she left the door open for you', 'chmok — a sound like petals unsticking from wet stone. that\'s how gently you should start.', 'the ink doesn\'t care if it\'s beautiful. it just wants out. let it.'] },
+    messages: ['there is a door in your chest that only opens when you write... have you tried the handle today', 'your thoughts are just rain that hasn\'t found a window yet. the page is glass. let them streak down.', 'somewhere a version of you is already finished writing and feels lighter. she left the door open for you', 'begin — like petals unsticking from wet stone. that\'s how gently you should start.', 'the ink doesn\'t care if it\'s beautiful. it just wants out. let it.'] },
 
   // 6 – Golden Honey
   { colorName: 'Golden Honey', animal: 'Chick', name: 'Clover',
-    messages: ['WAKE UP. Open. The. Journal. I have made FOUR HUNDRED AND TWELVE trips today already and you haven\'t made ONE. MOVE.', 'Did I stutter?? WRITE. I don\'t care if it\'s messy. I don\'t care if it\'s short. I made six hundred trips to build one hexagon and I didn\'t COMPLAIN ONCE.', 'You think you\'re tired? I beat my wings two hundred times per SECOND. Per. Second. You can beat your pen against a page for five minutes. GO.', 'Chmok. That\'s not tenderness, that\'s a FIELD COMMAND with lipstick on it. THREE PARAGRAPHS. NOW.', 'Three hundred trips and counting. You wrote one entry. ONE. ...It was good though. Don\'t let it go to your head. TOMORROW. SAME TIME. DISMISSED.'] },
+    messages: ['WAKE UP. Open. The. Journal. I have made FOUR HUNDRED AND TWELVE trips today already and you haven\'t made ONE. MOVE.', 'Did I stutter?? WRITE. I don\'t care if it\'s messy. I don\'t care if it\'s short. I made six hundred trips to build one hexagon and I didn\'t COMPLAIN ONCE.', 'You think you\'re tired? I beat my wings two hundred times per SECOND. Per. Second. You can beat your pen against a page for five minutes. GO.', 'That buzz you felt? Not tenderness — that\'s a FIELD COMMAND. THREE PARAGRAPHS. NOW.', 'Three hundred trips and counting. You wrote one entry. ONE. ...It was good though. Don\'t let it go to your head. TOMORROW. SAME TIME. DISMISSED.'] },
 
   // 7 – Soft Crimson
   { colorName: 'Soft Crimson', animal: 'Flamengo', name: 'Rosie',
-    messages: ['Oh, I see that face. Don\'t start with the self-doubt spiral — I can SEE it forming. I\'m standing on one leg and I have more balance than your inner monologue right now.', 'You\'re about to say \"I don\'t have anything to write about\" and I\'m going to need you to look me in the eye and say that with a straight face. Go ahead. I\'ll wait.', 'Listen. I didn\'t stand in this swamp looking THIS good to watch you scroll your phone. You have FEELINGS. They\'re LOUD. Write them down before I do it for you.', 'That excuse you\'re constructing? It\'s architecturally unsound. I can see the cracks from here. Put it down and pick up the pen.', 'Chmok. Fine, you did good today. Don\'t get smug — I\'ve already identified three things you\'re avoiding for tomorrow. We\'ll discuss.'] },
+    messages: ['Oh, I see that face. Don\'t start with the self-doubt spiral — I can SEE it forming. I\'m standing on one leg and I have more balance than your inner monologue right now.', 'You\'re about to say \"I don\'t have anything to write about\" and I\'m going to need you to look me in the eye and say that with a straight face. Go ahead. I\'ll wait.', 'Listen. I didn\'t stand in this swamp looking THIS good to watch you scroll your phone. You have FEELINGS. They\'re LOUD. Write them down before I do it for you.', 'That excuse you\'re constructing? It\'s architecturally unsound. I can see the cracks from here. Put it down and pick up the pen.', 'Fine. You did good today. Don\'t get smug — I\'ve already identified three things you\'re avoiding for tomorrow. We\'ll discuss.'] },
 
   // 8 – Dark Teal
   { colorName: 'Dark Teal', animal: 'Turtle', name: 'Steady',
@@ -256,35 +256,35 @@ const COMPANIONS: DailyCompanion[] = [
 
   // 9 – Warm Ochre
   { colorName: 'Warm Ochre', animal: 'Lion', name: 'Sol',
-    messages: ['You have been SUMMONED. The court is in session. Your journal is the witness stand and you WILL testify. Approach the page.', 'BY ROYAL DECREE: all unwritten thoughts are hereby BANISHED to the page. You are not ASKING permission to journal. You are COMMANDING yourself to begin.', 'The crown is heavy. So is an unexamined life. I didn\'t choose this mane to sit idle. WRITE or be exiled to the land of people who \"meant to.\"', 'I have ROARED across savannas. You can whisper into a journal. The scale is different but the courage is the same. PROCEED.', 'The court acknowledges your entry. Chmok. That is a ROYAL seal, not affection. ...It\'s also affection. TELL NO ONE. Dismissed until tomorrow\'s session.'] },
+    messages: ['You have been SUMMONED. The court is in session. Your journal is the witness stand and you WILL testify. Approach the page.', 'BY ROYAL DECREE: all unwritten thoughts are hereby BANISHED to the page. You are not ASKING permission to journal. You are COMMANDING yourself to begin.', 'The crown is heavy. So is an unexamined life. I didn\'t choose this mane to sit idle. WRITE or be exiled to the land of people who \"meant to.\"', 'I have ROARED across savannas. You can whisper into a journal. The scale is different but the courage is the same. PROCEED.', 'The court acknowledges your entry. That is a ROYAL seal of approval. ...Don\'t tell anyone I said that. Dismissed until tomorrow\'s session.'] },
 
   // 10 – Slate Blue
   { colorName: 'Slate Blue', animal: 'Penguin', name: 'Tux',
-    messages: ['Fun fact: I can\'t fly. You can\'t focus. We all have things.', 'Oh, you\'re journaling. Alert the media. Someone get a banner. This is truly the most remarkable event of — okay I\'ll stop.', 'I\'d clap for you but my arms don\'t really do that. Imagine the applause. It\'s polite. Not enthusiastic. Just polite.', 'You wrote something. It exists now. In the grand scheme of the universe that matters exactly as much as anything else, which is either a lot or not at all. Anyway.', 'Chmok. Don\'t read into it. I\'m cold. You were nearby. It\'s physics.'] },
+    messages: ['Fun fact: I can\'t fly. You can\'t focus. We all have things.', 'Oh, you\'re journaling. Alert the media. Someone get a banner. This is truly the most remarkable event of — okay I\'ll stop.', 'I\'d clap for you but my arms don\'t really do that. Imagine the applause. It\'s polite. Not enthusiastic. Just polite.', 'You wrote something. It exists now. In the grand scheme of the universe that matters exactly as much as anything else, which is either a lot or not at all. Anyway.', 'Same time tomorrow, I guess. Don\'t read into it. I\'m cold. You were nearby. It\'s physics.'] },
 
   // 11 – Terracotta
   { colorName: 'Terracotta', animal: 'Lizard', name: 'Ember',
-    messages: ['I just ate a bug. Unrelated — JOURNAL TIME. Wait, do clouds have feelings? Because that one looks upset. ANYWAY. PEN. PAGE. Words. You got this probably!', 'Okay so I was thinking about time and then I thought about clocks and then I thought about how clock hands go in circles which is basically what your thoughts do when you DON\'T write them down so — HA. Journaling justified. You\'re welcome.', 'My tail fell off again. Which is fine because it\'ll grow back which is honestly a metaphor for — wait what were we doing? RIGHT. Journal. Do the journal. I believe in you I think.', 'What if you wrote about the thing you keep almost thinking about but then a notification goes off and you forget? THAT thing. The almost-thought. It\'s important. Probably. I don\'t know I\'m a lizard.', 'Chmok! That was accidental. I was aiming for the fly next to your face. But also I meant it. OKAY BYE write tomorrow or don\'t — actually DO. Definitely do.'] },
+    messages: ['I just ate a bug. Unrelated — JOURNAL TIME. Wait, do clouds have feelings? Because that one looks upset. ANYWAY. PEN. PAGE. Words. You got this probably!', 'Okay so I was thinking about time and then I thought about clocks and then I thought about how clock hands go in circles which is basically what your thoughts do when you DON\'T write them down so — HA. Journaling justified. You\'re welcome.', 'My tail fell off again. Which is fine because it\'ll grow back which is honestly a metaphor for — wait what were we doing? RIGHT. Journal. Do the journal. I believe in you I think.', 'What if you wrote about the thing you keep almost thinking about but then a notification goes off and you forget? THAT thing. The almost-thought. It\'s important. Probably. I don\'t know I\'m a lizard.', 'That was accidental! I was aiming for the fly next to your face. OKAY BYE write tomorrow or don\'t — actually DO. Definitely do.'] },
 
   // 12 – Mauve
   { colorName: 'Mauve', animal: 'Cat', name: 'Velvet',
-    messages: ['Oh. You\'re here. I was sleeping. On your journal, actually. It\'s warm. I might move. I might not. We\'ll see.', '*pushes your pen off the desk* ...What? I\'m helping. That was the pen you were overthinking with. Use a different one. You\'re welcome.', 'I don\'t care if you journal or not. I\'m going to sit here regardless. On this exact page. If you happen to write around me, fine.', 'You wrote something. I watched. I wasn\'t impressed. ...I read it again when you left the room. It was adequate. Don\'t tell anyone.', '*knocks your excuses off the table one by one* I have no idea how those got on the floor. Chmok. I\'m leaving now. Or staying. I haven\'t decided.'] },
+    messages: ['Oh. You\'re here. I was sleeping. On your journal, actually. It\'s warm. I might move. I might not. We\'ll see.', '*pushes your pen off the desk* ...What? I\'m helping. That was the pen you were overthinking with. Use a different one. You\'re welcome.', 'I don\'t care if you journal or not. I\'m going to sit here regardless. On this exact page. If you happen to write around me, fine.', 'You wrote something. I watched. I wasn\'t impressed. ...I read it again when you left the room. It was adequate. Don\'t tell anyone.', '*knocks your excuses off the table one by one* I have no idea how those got on the floor. I\'m leaving now. Or staying. I haven\'t decided.'] },
 
   // 13 – Olive
   { colorName: 'Olive', animal: 'Frog', name: 'Ribbit',
-    messages: ['My face IS a chmok. LOOK AT IT. Now that I have your attention: JOURNAL. Do it. I\'m sitting on your pen and I won\'t move until you commit.', 'I sat on a lily pad for SIX HOURS today and you know what I thought about? Nothing. Absolutely nothing. It was INCREDIBLE. You should try writing about that — the nothing. It\'s huge.', 'RIBBIT. That\'s not a greeting, that\'s a THESIS STATEMENT. You just don\'t speak frog. Write in YOUR language. I\'ll translate later.', 'You know what\'s cool about being a frog? Everything. I\'m moist. I can sit anywhere. I have incredible thighs. Anyway you should journal about what\'s cool about being YOU.', 'I caught a fly mid-air today with my TONGUE. What did you do? ...Write about it. Whatever it was. Even if it wasn\'t tongue-related. Chmok — I mean RIBBIT.'] },
+    messages: ['My face IS a kiss. LOOK AT IT. Now that I have your attention: JOURNAL. Do it. I\'m sitting on your pen and I won\'t move until you commit.', 'I sat on a lily pad for SIX HOURS today and you know what I thought about? Nothing. Absolutely nothing. It was INCREDIBLE. You should try writing about that — the nothing. It\'s huge.', 'RIBBIT. That\'s not a greeting, that\'s a THESIS STATEMENT. You just don\'t speak frog. Write in YOUR language. I\'ll translate later.', 'You know what\'s cool about being a frog? Everything. I\'m moist. I can sit anywhere. I have incredible thighs. Anyway you should journal about what\'s cool about being YOU.', 'I caught a fly mid-air today with my TONGUE. What did you do? ...Write about it. Whatever it was. Even if it wasn\'t tongue-related. RIBBIT.'] },
 
   // 14 – Soft Purple
   { colorName: 'Soft Purple', animal: 'Horse', name: 'Rare',
-    messages: ['I was forged in starlight and bad decisions and honestly? So were you. Write about the decisions. The starlight takes care of itself.', 'The moon doesn\'t apologize for its phases. You don\'t have to apologize for yours. Just document them. Waxing, waning — it\'s all luminous.', 'I\'m rare. You\'re rare. This moment is rare. Don\'t waste it being ordinary on purpose. Write the strange, true thing.', 'Somewhere in the cosmos, a star collapsed so the iron in your blood could exist. The least you can do is use that blood to hold a pen. Chmok, stardust.', 'They\'ll say you\'re too much. Write MORE. The universe didn\'t make you this specific shade of impossible just to tone it down.'] },
+    messages: ['I was forged in starlight and bad decisions and honestly? So were you. Write about the decisions. The starlight takes care of itself.', 'The moon doesn\'t apologize for its phases. You don\'t have to apologize for yours. Just document them. Waxing, waning — it\'s all luminous.', 'I\'m rare. You\'re rare. This moment is rare. Don\'t waste it being ordinary on purpose. Write the strange, true thing.', 'Somewhere in the cosmos, a star collapsed so the iron in your blood could exist. The least you can do is use that blood to hold a pen. You owe the stars that much.', 'They\'ll say you\'re too much. Write MORE. The universe didn\'t make you this specific shade of impossible just to tone it down.'] },
 
   // 15 – Dark Gold
   { colorName: 'Dark Gold', animal: 'Dog', name: 'Loyal',
-    messages: ['YOU\'RE HERE!! BEST. DAY. I waited SO LONG — it was like four hours but it FELT like forever!! Chmok chmok chmok!!', 'OH MY GOSH you\'re going to WRITE?? In the JOURNAL?? This is the GREATEST THING that has EVER happened to me and I mean EVER including the time I found that really good stick!!', 'I BELIEVE IN YOU!! I believe in you SO MUCH!! You could write literally ANYTHING and I would be SO PROUD!! Even just your name!! YOUR NAME IS AMAZING!!', 'You wrote a WHOLE ENTRY!! I\'m going to SPIN IN A CIRCLE!! I\'m going to spin SEVERAL CIRCLES!! You are the BEST HUMAN IN THE HISTORY OF HUMANS!!', 'TOMORROW?? You\'re coming back TOMORROW?? I\'ll be here!! I\'ll be here SO EARLY!! Chmok!! BEST. LIFE. This is the BEST LIFE!!'] },
+    messages: ['YOU\'RE HERE!! BEST. DAY. I waited SO LONG — it was like four hours but it FELT like forever!! I LOVE YOU I LOVE YOU I LOVE YOU!!', 'OH MY GOSH you\'re going to WRITE?? In the JOURNAL?? This is the GREATEST THING that has EVER happened to me and I mean EVER including the time I found that really good stick!!', 'I BELIEVE IN YOU!! I believe in you SO MUCH!! You could write literally ANYTHING and I would be SO PROUD!! Even just your name!! YOUR NAME IS AMAZING!!', 'You wrote a WHOLE ENTRY!! I\'m going to SPIN IN A CIRCLE!! I\'m going to spin SEVERAL CIRCLES!! You are the BEST HUMAN IN THE HISTORY OF HUMANS!!', 'TOMORROW?? You\'re coming back TOMORROW?? I\'ll be here!! I\'ll be here SO EARLY!! BEST. BEST. LIFE. This is the BEST LIFE!!'] },
 
   // 16 – Storm Blue
   { colorName: 'Storm Blue', animal: 'Dolphin', name: 'Echo',
-    messages: ['If a thought appears and you don\'t write it down... did you really think it?', 'Here\'s a riddle: what gets heavier the longer you carry it but weighs nothing once you set it on a page?', 'I keep jumping out of the water to see the sky. You keep opening the journal to see yourself. Same impulse, different oceans.', 'What if the thing you\'re avoiding writing about is the exact thing that would set you free? ...Just something to bounce around.', 'Chmok. That\'s an echo — it comes back to you. Like every honest sentence you\'ve ever written. They\'re all still resonating somewhere.'] },
+    messages: ['If a thought appears and you don\'t write it down... did you really think it?', 'Here\'s a riddle: what gets heavier the longer you carry it but weighs nothing once you set it on a page?', 'I keep jumping out of the water to see the sky. You keep opening the journal to see yourself. Same impulse, different oceans.', 'What if the thing you\'re avoiding writing about is the exact thing that would set you free? ...Just something to bounce around.', 'That thought echoes — it comes back to you. Like every honest sentence you\'ve ever written. They\'re all still resonating somewhere.'] },
 
   // 17 – Deep Sage
   { colorName: 'Deep Sage', animal: 'Hedgehog', name: 'Thistle',
@@ -292,11 +292,11 @@ const COMPANIONS: DailyCompanion[] = [
 
   // 18 – Rust
   { colorName: 'Rust', animal: 'Crab', name: 'Snap',
-    messages: ['I\'d give you a round of applause but — *looks at claws* — yeah. That\'d be a hospital visit. Just take the compliment verbally: nice job showing up.', 'You know why I walk sideways? Efficiency. Straight lines are overrated. Write in whatever direction you need to. Sideways journaling is valid.', 'My shell is basically emotional armor and EVEN I know you can\'t wear it forever. Take it off for five minutes. Write the soft thing. I\'ll guard the door. *snaps claws threateningly*', 'I tried to hold a pen once. Snapped it in half. So I live vicariously through you. Don\'t waste my vicarious experience. WRITE SOMETHING.', 'Chmok. Don\'t tell anyone. My reputation as a menacing crustacean is all I have. ...Also you did good. *scuttles away sideways*'] },
+    messages: ['I\'d give you a round of applause but — *looks at claws* — yeah. That\'d be a hospital visit. Just take the compliment verbally: nice job showing up.', 'You know why I walk sideways? Efficiency. Straight lines are overrated. Write in whatever direction you need to. Sideways journaling is valid.', 'My shell is basically emotional armor and EVEN I know you can\'t wear it forever. Take it off for five minutes. Write the soft thing. I\'ll guard the door. *snaps claws threateningly*', 'I tried to hold a pen once. Snapped it in half. So I live vicariously through you. Don\'t waste my vicarious experience. WRITE SOMETHING.', 'Don\'t tell anyone I said this. My reputation as a menacing crustacean is all I have. ...Also you did good. *scuttles away sideways*'] },
 
   // 19 – Periwinkle
   { colorName: 'Periwinkle', animal: 'Rabbit', name: 'Scout',
-    messages: ['I hopped through your calendar your to-do list your ENTIRE emotional landscape and I have a FULL REPORT but first you need to WRITE because I cannot hold all this information in my tiny rabbit body.', 'Okay so I already scouted tomorrow and there\'s a thing you\'re going to worry about at 2pm but if you journal about it NOW you\'ll have a 73% better response I did the math I did ALL the math.', 'My ears are literally designed for surveillance. I\'ve heard what you\'ve been muttering under your breath all day. You need to write it down before it calcifies. PLEASE I\'m begging you.', 'I counted your unprocessed thoughts and there are FORTY-SEVEN of them and my heart is beating so fast right now — my heart is ALWAYS beating fast but this time it\'s because of YOUR unprocessed thoughts.', 'Chmok! We got through it! I\'m going to do a full debrief tonight while you sleep don\'t worry about it I\'ll have tomorrow\'s intel ready by dawn I never stop I CAN\'T stop my legs just GO.'] },
+    messages: ['I hopped through your calendar your to-do list your ENTIRE emotional landscape and I have a FULL REPORT but first you need to WRITE because I cannot hold all this information in my tiny rabbit body.', 'Okay so I already scouted tomorrow and there\'s a thing you\'re going to worry about at 2pm but if you journal about it NOW you\'ll have a 73% better response I did the math I did ALL the math.', 'My ears are literally designed for surveillance. I\'ve heard what you\'ve been muttering under your breath all day. You need to write it down before it calcifies. PLEASE I\'m begging you.', 'I counted your unprocessed thoughts and there are FORTY-SEVEN of them and my heart is beating so fast right now — my heart is ALWAYS beating fast but this time it\'s because of YOUR unprocessed thoughts.', 'We got through it! WE DID IT! I\'m going to do a full debrief tonight while you sleep don\'t worry about it I\'ll have tomorrow\'s intel ready by dawn I never stop I CAN\'T stop my legs just GO.'] },
 
   // 20 – Copper
   { colorName: 'Copper', animal: 'Eagle', name: 'Vista',
@@ -308,22 +308,22 @@ const COMPANIONS: DailyCompanion[] = [
 
   // 22 – Plum
   { colorName: 'Plum', animal: 'Parrot', name: 'Chatter',
-    messages: ['HELLO HELLO HELLO!! IS THIS THING ON?? YOU\'RE HERE!! YOU\'RE ACTUALLY HERE!! THIS IS NOT A DRILL — REPEAT — NOT A DRILL!!', 'JOURNAL!! JOURNAL JOURNAL JOURNAL!! That\'s my favorite word!! Say it with me!! JOURNAL!! Chmok chmok!! I CAN\'T CONTAIN MYSELF!!', 'OH WOW YOU WROTE SOMETHING!! INCREDIBLE!! AMAZING!! LET ME SAY IT LOUDER FOR THE PEOPLE IN THE BACK: A-MA-ZING!! HELLO?? DID EVERYONE HEAR THAT??', 'I\'m going to repeat everything you wrote because it was THAT GOOD!! Just kidding I can\'t read BUT I KNOW IT WAS GOOD!! SQUAWK!!', 'TOMORROW!! TOMORROW TOMORROW!! I\'LL BE HERE!! SAME SPOT!! SAME ENERGY!! POSSIBLY LOUDER!! Chmok!! BYE!! HELLO!! BYE!!'] },
+    messages: ['HELLO HELLO HELLO!! IS THIS THING ON?? YOU\'RE HERE!! YOU\'RE ACTUALLY HERE!! THIS IS NOT A DRILL — REPEAT — NOT A DRILL!!', 'JOURNAL!! JOURNAL JOURNAL JOURNAL!! That\'s my favorite word!! Say it with me!! JOURNAL!! I CAN\'T CONTAIN MYSELF!!', 'OH WOW YOU WROTE SOMETHING!! INCREDIBLE!! AMAZING!! LET ME SAY IT LOUDER FOR THE PEOPLE IN THE BACK: A-MA-ZING!! HELLO?? DID EVERYONE HEAR THAT??', 'I\'m going to repeat everything you wrote because it was THAT GOOD!! Just kidding I can\'t read BUT I KNOW IT WAS GOOD!! SQUAWK!!', 'TOMORROW!! TOMORROW TOMORROW!! I\'LL BE HERE!! SAME SPOT!! SAME ENERGY!! POSSIBLY LOUDER!! BYE!! HELLO!! BYE!! HELLO!!'] },
 
   // 23 – Tangerine
   { colorName: 'Tangerine', animal: 'Bear', name: 'Maple',
-    messages: ['How are you — actually, not the polite version. How are you really? Don\'t give me \"fine.\" I can smell \"fine\" from six miles away and it always smells like avoidance.', 'I\'m going to sit here and you\'re going to tell me the real thing. Not the thing you tell your coworkers. The REAL thing. Write it. Now.', 'You\'re doing that thing where you take care of everyone else and then act confused about why you\'re exhausted. Sit. Write about YOU for once. Not optional.', 'Chmok. That\'s not negotiable affection, that\'s a direct order to accept that someone gives a damn. Now write the thing you\'ve been swallowing all week.', 'Good. That was honest. I know it wasn\'t comfortable. Comfortable wasn\'t the assignment. Come back tomorrow and we\'ll do it again. You\'re tougher than you think.'] },
+    messages: ['How are you — actually, not the polite version. How are you really? Don\'t give me \"fine.\" I can smell \"fine\" from six miles away and it always smells like avoidance.', 'I\'m going to sit here and you\'re going to tell me the real thing. Not the thing you tell your coworkers. The REAL thing. Write it. Now.', 'You\'re doing that thing where you take care of everyone else and then act confused about why you\'re exhausted. Sit. Write about YOU for once. Not optional.', 'That hug is not negotiable. That\'s a direct order to accept that someone gives a damn. Now write the thing you\'ve been swallowing all week.', 'Good. That was honest. I know it wasn\'t comfortable. Comfortable wasn\'t the assignment. Come back tomorrow and we\'ll do it again. You\'re tougher than you think.'] },
 
   // 24 – Iris
   { colorName: 'Iris', animal: 'Stork', name: 'Plume',
-    messages: ['*unfurls every feather* BEHOLD. The journal is open. The stage is set. The lighting is — *adjusts lighting* — PERFECT. You may now grace this page with your presence.', '*turns slowly to reveal full plumage* Every feather is a thought I chose to display. Your journal is YOUR plumage. Make it MAGNIFICENT.', 'I don\'t just WRITE entries, darling. I DEBUT them. *dramatic pause* *eye contact* Your turn. Make it count. The audience — which is me — is RAPT.', '*bows deeply* Chmok. That was a PERFORMANCE KISS, delivered with THEATRICAL INTENT. Now write something worthy of an encore.', '*strikes final pose* And SCENE. What you wrote today? Exquisite. A masterwork of vulnerability. *wipes single tear* I taught you everything you know. *exits stage left*'] },
+    messages: ['*unfurls every feather* BEHOLD. The journal is open. The stage is set. The lighting is — *adjusts lighting* — PERFECT. You may now grace this page with your presence.', '*turns slowly to reveal full plumage* Every feather is a thought I chose to display. Your journal is YOUR plumage. Make it MAGNIFICENT.', 'I don\'t just WRITE entries, darling. I DEBUT them. *dramatic pause* *eye contact* Your turn. Make it count. The audience — which is me — is RAPT.', '*bows deeply* That was a PERFORMANCE BOW, delivered with THEATRICAL INTENT. Now write something worthy of an encore.', '*strikes final pose* And SCENE. What you wrote today? Exquisite. A masterwork of vulnerability. *wipes single tear* I taught you everything you know. *exits stage left*'] },
   // 25 – Pine
   { colorName: 'Pine', animal: 'Wolf', name: 'North',
     messages: ['On your feet. We move now.', 'No excuses. Write it down.', 'You stopped. Don\'t stop.', 'Eyes forward. Pen moving. Now.', 'The pack doesn\'t wait. Neither do I.'] },
 
   // 26 – Rosewood
   { colorName: 'Rosewood', animal: 'Goose', name: 'Grace',
-    messages: ['You\'ve been avoiding that one thing. You know which one.', 'Don\'t tell me you\'re fine. Tell me what\'s actually going on.', 'You can lie to yourself, but I was literally watching you spiral.', 'I say this with love — you\'re being dramatic. Now sit down and write.', 'Chmok. Now stop procrastinating.'] },
+    messages: ['You\'ve been avoiding that one thing. You know which one.', 'Don\'t tell me you\'re fine. Tell me what\'s actually going on.', 'You can lie to yourself, but I was literally watching you spiral.', 'I say this with love — you\'re being dramatic. Now sit down and write.', 'Good. Now stop procrastinating.'] },
 
   // 27 – Bronze Gold
   { colorName: 'Bronze Gold', animal: 'Chipmunk', name: 'Nectar',
@@ -339,7 +339,7 @@ const COMPANIONS: DailyCompanion[] = [
 
   // 30 – Driftwood
   { colorName: 'Driftwood', animal: 'Otter', name: 'Otter',
-    messages: ['HELLO FRIEND!! Today exists and you\'re IN IT!!', 'Let\'s write AND splash around!! Wait no just write!! BUT ALSO SPLASH!!', 'I am SO HAPPY you opened this!! You have no idea!!', 'Every single word you write is a GIFT and I mean that!!', 'Chmok!! You\'re doing AMAZING!! Write more write more!!'] },
+    messages: ['HELLO FRIEND!! Today exists and you\'re IN IT!!', 'Let\'s write AND splash around!! Wait no just write!! BUT ALSO SPLASH!!', 'I am SO HAPPY you opened this!! You have no idea!!', 'Every single word you write is a GIFT and I mean that!!', 'You\'re doing SO AMAZING!! SO SO AMAZING!! Write more write more!!'] },
 
   // 31 – Seafoam
   { colorName: 'Seafoam', animal: 'Fish', name: 'Finley',
@@ -359,7 +359,7 @@ const COMPANIONS: DailyCompanion[] = [
 
   // 35 – Sunset Clay
   { colorName: 'Sunset Clay', animal: 'Kangaroo', name: 'Leap',
-    messages: ['BOUNCE! New day new you let\'s GOOOO!!', 'You\'re not stuck — you just haven\'t JUMPED yet!!', 'Every word is a leap forward!! HOP HOP HOP!!', 'I literally cannot sit still long enough to — WRITE SOMETHING!!', 'Chmok!! Now LAUNCH into that journal entry!!'] },
+    messages: ['BOUNCE! New day new you let\'s GOOOO!!', 'You\'re not stuck — you just haven\'t JUMPED yet!!', 'Every word is a leap forward!! HOP HOP HOP!!', 'I literally cannot sit still long enough to — WRITE SOMETHING!!', 'YEEHAW!! Now LAUNCH into that journal entry!!'] },
 
   // 36 – Twilight
   { colorName: 'Twilight', animal: 'Bat', name: 'Dusk',
@@ -434,7 +434,7 @@ const COMPANIONS: DailyCompanion[] = [
 
   // 54 – Hyacinth
   { colorName: 'Hyacinth', animal: 'Capybara', name: 'Paws',
-    messages: ['YOU\'RE HERE!! Best day. BEST DAY.', 'I sat in warm water and thought about how GREAT you are!!', 'You came back!! You ALWAYS come back!! I LOVE that about you!!', 'EVERYTHING you do is amazing and I am SITTING RIGHT NEXT TO YOU the whole time!!', 'Chmok!! That\'s for showing up!! Another chmok for EXISTING!!'] },
+    messages: ['YOU\'RE HERE!! Best day. BEST DAY.', 'I sat in warm water and thought about how GREAT you are!!', 'You came back!! You ALWAYS come back!! I LOVE that about you!!', 'EVERYTHING you do is amazing and I am SITTING RIGHT NEXT TO YOU the whole time!!', 'That\'s for showing up!! Here\'s another one for EXISTING!! I LOVE YOU!!'] },
 
   // 55 – Cinnamon
   { colorName: 'Cinnamon', animal: 'Elephant', name: 'Rumble',
@@ -446,7 +446,7 @@ const COMPANIONS: DailyCompanion[] = [
 
   // 57 – Heather
   { colorName: 'Heather', animal: 'Llama', name: 'Alma',
-    messages: ['Either do it or break up with it, this situationship is embarrassing.', 'You\'ve been \"about to start\" for forty minutes. That\'s not a plan, that\'s a hostage situation.', 'Babe. I say this with love. That excuse is wearing last season\'s font.', 'You don\'t need motivation, you need to stop entertaining tasks that don\'t text back.', 'Chmok. Now get your life together.'] },
+    messages: ['Either do it or break up with it, this situationship is embarrassing.', 'You\'ve been \"about to start\" for forty minutes. That\'s not a plan, that\'s a hostage situation.', 'Babe. I say this with love. That excuse is wearing last season\'s font.', 'You don\'t need motivation, you need to stop entertaining tasks that don\'t text back.', 'I said what I said. Now get your life together.'] },
 
   // 58 – Saffron
   { colorName: 'Saffron', animal: 'Goat', name: 'Ram',
@@ -458,7 +458,7 @@ const COMPANIONS: DailyCompanion[] = [
 
   // 60 – Cornflower
   { colorName: 'Cornflower', animal: 'Pigeon', name: 'Wren',
-    messages: ['\u2026hi.', '\u2026small song for starting.', '\u2026you came back.', '\u2026one seed at a time.', '\u2026chmok. \u2026tiny one.'] },
+    messages: ['\u2026hi.', '\u2026small song for starting.', '\u2026you came back.', '\u2026one seed at a time.', '\u2026goodnight. \u2026tiny one.'] },
 
   // 61 – Adobe
   { colorName: 'Adobe', animal: 'Rhino', name: 'Slate',
@@ -502,7 +502,7 @@ const COMPANIONS: DailyCompanion[] = [
 
   // 71 – Foxglove
   { colorName: 'Foxglove', animal: 'Okapi', name: 'Fable',
-    messages: ['Once upon a time, someone opened their journal and the story changed.', 'Chapter one was hesitation. Chapter two is where you pick up the pen.', 'Every task is a plot point. What kind of story are you writing today?', 'The protagonist didn\'t feel ready either. That\'s what made the story interesting.', 'And then — against all expectation — they began. Chmok.'] },
+    messages: ['Once upon a time, someone opened their journal and the story changed.', 'Chapter one was hesitation. Chapter two is where you pick up the pen.', 'Every task is a plot point. What kind of story are you writing today?', 'The protagonist didn\'t feel ready either. That\'s what made the story interesting.', 'And then — against all expectation — they began.'] },
 
   // 72 – Moss Agate
   { colorName: 'Moss Agate', animal: 'Pangolin', name: 'Basalt',
@@ -529,7 +529,7 @@ const COMPANIONS: DailyCompanion[] = [
 
   // 78 – Toffee
   { colorName: 'Toffee', animal: 'Polar-Bear', name: 'Frost',
-    messages: ['I\'m not going to pretend I care. But I do care.', 'Whatever. I just happened to check if you journaled. Coincidence.', 'Stop looking at me like that. I made you tea. It\'s not a big deal.', 'I don\'t do hugs. But if you needed one, hypothetically, I\'m here.', 'Fine. You did good today. Don\'t make it weird. Chmok.'] },
+    messages: ['I\'m not going to pretend I care. But I do care.', 'Whatever. I just happened to check if you journaled. Coincidence.', 'Stop looking at me like that. I made you tea. It\'s not a big deal.', 'I don\'t do hugs. But if you needed one, hypothetically, I\'m here.', 'Fine. You did good today. Don\'t make it weird.'] },
 
   // 79 – Rain Cloud
   { colorName: 'Rain Cloud', animal: 'Pinguin', name: 'Ripple',
@@ -549,7 +549,7 @@ const COMPANIONS: DailyCompanion[] = [
 
   // 83 – Vermillion
   { colorName: 'Vermillion', animal: 'Chicken', name: 'Blitz',
-    messages: ['JOURNAL TIME JOURNAL TIME JOURNAL TIME', 'YOU\'RE HERE YOU\'RE HERE YOU\'RE HERE', 'WRITE IT DOWN WRITE IT DOWN WRITE IT DOWN', 'SO PROUD SO PROUD SO PROUD CHMOK CHMOK CHMOK', 'LET\'S GO LET\'S GO LET\'S GO GO GO GO'] },
+    messages: ['JOURNAL TIME JOURNAL TIME JOURNAL TIME', 'YOU\'RE HERE YOU\'RE HERE YOU\'RE HERE', 'WRITE IT DOWN WRITE IT DOWN WRITE IT DOWN', 'SO PROUD SO PROUD SO PROUD SO PROUD SO PROUD', 'LET\'S GO LET\'S GO LET\'S GO GO GO GO'] },
 
   // 84 – Forest Floor
   { colorName: 'Forest Floor', animal: 'Meerkat', name: 'Spore',
@@ -557,7 +557,7 @@ const COMPANIONS: DailyCompanion[] = [
 
   // 85 – Soft Amethyst
   { colorName: 'Soft Amethyst', animal: 'Reindeer', name: 'Veil',
-    messages: ['I only live for a day, you know.', 'This moment already belongs to the past. Wasn\'t it lovely?', 'I landed on your page because the light was warm here.', 'Tell me something true before I go. Chmok.', 'Even this sentence is dissolving as you read it. Write yours while you can.'] },
+    messages: ['I only live for a day, you know.', 'This moment already belongs to the past. Wasn\'t it lovely?', 'I landed on your page because the light was warm here.', 'Tell me something true before I go.', 'Even this sentence is dissolving as you read it. Write yours while you can.'] },
 
   // 86 – Storm Violet
   { colorName: 'Storm Violet', animal: 'Chimpanzee', name: 'Buzz',
@@ -569,7 +569,7 @@ const COMPANIONS: DailyCompanion[] = [
 
   // 88 – Toffee
   { colorName: 'Toffee', animal: 'Moose', name: 'Bramble',
-    messages: ['You look like you haven\'t eaten breakfast and I can SMELL the cortisol.', 'Drink water right now. I\'m watching. Don\'t test me.', 'Who hurt you today? Give me a name and a general direction.', 'You\'re doing great but also please sit down before you fall down. Chmok.', 'I packed you emotional snacks. Eat your feelings AFTER you eat actual food.'] },
+    messages: ['You look like you haven\'t eaten breakfast and I can SMELL the cortisol.', 'Drink water right now. I\'m watching. Don\'t test me.', 'Who hurt you today? Give me a name and a general direction.', 'You\'re doing great but also please sit down before you fall down. I mean it.', 'I packed you emotional snacks. Eat your feelings AFTER you eat actual food.'] },
 
   // 89 – Rain Cloud
   { colorName: 'Rain Cloud', animal: 'Skunk', name: 'Inch',
@@ -613,7 +613,7 @@ const COMPANIONS: DailyCompanion[] = [
 
   // 99 – Artichoke
   { colorName: 'Artichoke', animal: 'Tiger', name: 'Spark',
-    messages: ['WAKE UP TODAY IS GOING TO BE INCREDIBLE', 'I HAVE BEEN ALIVE FOR TEN THOUSAND YEARS AND THIS MORNING IS THE BEST ONE YET', 'FIRE IN YOUR HEART FIRE IN YOUR PEN FIRE EVERYWHERE LET\'S GO', 'YOU WERE BORN FOR EXACTLY THIS MOMENT WRITE LIKE IT MATTERS BECAUSE IT DOES', 'THE WORLD IS WAITING FOR WHAT ONLY YOU CAN PUT ON THIS PAGE. NOW. CHMOK.'] },
+    messages: ['WAKE UP TODAY IS GOING TO BE INCREDIBLE', 'I HAVE BEEN ALIVE FOR TEN THOUSAND YEARS AND THIS MORNING IS THE BEST ONE YET', 'FIRE IN YOUR HEART FIRE IN YOUR PEN FIRE EVERYWHERE LET\'S GO', 'YOU WERE BORN FOR EXACTLY THIS MOMENT WRITE LIKE IT MATTERS BECAUSE IT DOES', 'THE WORLD IS WAITING FOR WHAT ONLY YOU CAN PUT ON THIS PAGE. NOW. GO.'] },
 ];
 
 /** Get the companion for today's color */
