@@ -1158,9 +1158,9 @@ export default function DailyLeaf() {
                       <span className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em]">From last night&rsquo;s debrief</span>
                     </div>
                     {yesterdayDebrief.reflection && (
-                      <p className="font-body text-sm text-ink/60 italic mb-2">&ldquo;{yesterdayDebrief.reflection}&rdquo;</p>
+                      <p className="font-body text-base text-ink/75 italic mb-2">&ldquo;{yesterdayDebrief.reflection}&rdquo;</p>
                     )}
-                    <p className="font-body text-sm text-ink/70">
+                    <p className="font-body text-base text-ink/80">
                       You planned <span className="font-semibold">{tomorrowTasksFromYesterday.length}</span> task{tomorrowTasksFromYesterday.length !== 1 ? 's' : ''} for today.
                       {yesterdayDebrief.planRealism >= 4 && ' Yesterday felt ambitious \u2014 maybe start with your top 3.'}
                       {yesterdayDebrief.planRealism <= 2 && ' Yesterday was light \u2014 you might have room for more.'}
