@@ -984,17 +984,17 @@ export default function DailyLeaf() {
                     </div>
                   )}
 
-                  {/* Companion emoji — small, clickable */}
+                  {/* Companion — animal + quote */}
                   <button
                     onClick={() => triggerCompanionAnim('bounce')}
-                    className="text-3xl cursor-pointer hover:scale-110 transition-transform"
-                    title={companion.message}
+                    className="flex items-center gap-2.5 pl-3 pr-4 py-2 rounded-xl border-l-[3px] cursor-pointer hover:bg-surface-light/60 transition-all"
                     style={{
-                      filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.12))',
+                      borderLeftColor: 'var(--color-primary)',
                       animation: companionAnim === 'bounce' ? 'companionTap 0.6s ease-out' : companionAnim === 'celebrate' ? 'companionCelebrate 1.2s ease-out' : 'none',
                     }}
                   >
-                    {companion.animal}
+                    <span className="text-2xl shrink-0">{companion.animal}</span>
+                    <span className="font-body italic text-sm text-pencil/70 text-left leading-snug max-w-[180px]">{companion.message}</span>
                   </button>
 
                   {/* Action buttons */}
