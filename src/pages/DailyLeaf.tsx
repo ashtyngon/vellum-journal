@@ -192,6 +192,9 @@ export default function DailyLeaf() {
   const [companionAnim, setCompanionAnim] = useState<string>('idle');
   const [bubbleFlash, setBubbleFlash] = useState(false);
   const [companionQuoteIdx, setCompanionQuoteIdx] = useState(0);
+  const [companionOverride, setCompanionOverride] = useState<string | null>(null);
+  const companionClickCount = useRef(0);
+  const companionClickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [particles, setParticles] = useState<{ id: number; emoji: string; x: number; }[]>([]);
   const companionAnimTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const particleCounter = useRef(0);
@@ -959,7 +962,7 @@ export default function DailyLeaf() {
                     >
                       <span className="material-symbols-outlined text-xl sm:text-2xl">chevron_left</span>
                     </button>
-                    <h1 className="font-display italic text-ink leading-tight text-xl sm:text-2xl md:text-3xl">
+                    <h1 className="font-display italic text-ink leading-tight text-lg sm:text-xl md:text-2xl whitespace-nowrap">
                       {todayDisplay}
                     </h1>
                     <button
@@ -1007,54 +1010,78 @@ export default function DailyLeaf() {
                     </div>
                   )}
 
-                  {/* Companion — animal with speech bubble below */}
-                  <div
-                    className="flex flex-col items-center cursor-pointer relative"
-                    onClick={() => {
-                      triggerCompanionAnim('bounce');
-                      // Shuffle to a different quote
-                      if (companion.messages.length > 1) {
-                        setCompanionQuoteIdx(prev => {
-                          let next = Math.floor(Math.random() * companion.messages.length);
-                          while (next === prev && companion.messages.length > 1) next = Math.floor(Math.random() * companion.messages.length);
-                          return next;
-                        });
-                      }
-                    }}
-                  >
-                    {/* Floating particles */}
-                    {particles.map(p => (
-                      <span
-                        key={p.id}
-                        className="absolute top-0 pointer-events-none text-sm"
-                        style={{
-                          left: `calc(50% + ${p.x}px)`,
-                          animation: 'companionParticle 0.8s ease-out forwards',
-                        }}
-                      >
-                        {p.emoji}
-                      </span>
-                    ))}
-                    <span
-                      className="text-2xl sm:text-3xl mb-1"
-                      style={{
-                        animation: companionAnim !== 'idle' ? `${companionAnim} 0.7s ease-out` : 'none',
+                  {/* Companion — animal with speech bubble (only today) */}
+                  {isViewingToday ? (
+                    <div
+                      className="flex flex-col items-center cursor-pointer relative"
+                      onClick={() => {
+                        triggerCompanionAnim('bounce');
+                        // Track rapid clicks
+                        companionClickCount.current += 1;
+                        if (companionClickTimer.current) clearTimeout(companionClickTimer.current);
+                        companionClickTimer.current = setTimeout(() => { companionClickCount.current = 0; }, 3000);
+                        const clicks = companionClickCount.current;
+
+                        // After 6+ rapid clicks → "that's enough, I love you" override
+                        if (clicks >= 6) {
+                          const enoughLines = [
+                            'Okay okay, I love you too. Now go do something.',
+                            'You\'re adorable but your tasks won\'t do themselves.',
+                            'I\'m blushing. Stop it. Go be productive.',
+                            `— ${companion.name} has left the chat.`,
+                            'That tickles. Please. I have a reputation.',
+                          ];
+                          setCompanionOverride(enoughLines[Math.floor(Math.random() * enoughLines.length)]);
+                          companionClickCount.current = 0;
+                          setTimeout(() => setCompanionOverride(null), 4000);
+                          return;
+                        }
+
+                        // Only change quote every 3rd click (roughly)
+                        if (clicks % 3 === 0 && companion.messages.length > 1) {
+                          setCompanionOverride(null);
+                          setCompanionQuoteIdx(prev => {
+                            let next = Math.floor(Math.random() * companion.messages.length);
+                            while (next === prev && companion.messages.length > 1) next = Math.floor(Math.random() * companion.messages.length);
+                            return next;
+                          });
+                        }
                       }}
                     >
-                      {companion.animal}
-                    </span>
-                    <div className="relative">
-                      <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rotate-45 bg-surface-light border-l border-t border-wood-light/25" />
-                      <div
-                        className="relative rounded-lg bg-surface-light border border-wood-light/25 px-3 py-2 max-w-[160px] sm:max-w-[240px]"
+                      {/* Floating particles */}
+                      {particles.map(p => (
+                        <span
+                          key={p.id}
+                          className="absolute top-0 pointer-events-none text-sm"
+                          style={{
+                            left: `calc(50% + ${p.x}px)`,
+                            animation: 'companionParticle 0.8s ease-out forwards',
+                          }}
+                        >
+                          {p.emoji}
+                        </span>
+                      ))}
+                      <span
+                        className="text-2xl sm:text-3xl mb-1"
                         style={{
-                          animation: bubbleFlash ? 'bubbleFlash 0.6s ease-out' : 'none',
+                          animation: companionAnim !== 'idle' ? `${companionAnim} 0.7s ease-out` : 'none',
                         }}
                       >
-                        <p className="font-body italic text-sm sm:text-base text-pencil/70 text-center leading-snug">{companion.messages[companionQuoteIdx % companion.messages.length]}</p>
+                        {companion.animal}
+                      </span>
+                      <div className="relative">
+                        <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rotate-45 bg-surface-light border-l border-t border-wood-light/25" />
+                        <div
+                          className="relative rounded-lg bg-surface-light border border-wood-light/25 px-3 py-2 max-w-[160px] sm:max-w-[240px]"
+                          style={{
+                            animation: bubbleFlash ? 'bubbleFlash 0.6s ease-out' : 'none',
+                          }}
+                        >
+                          <p className="font-body italic text-sm sm:text-base text-pencil/70 text-center leading-snug">{companionOverride ?? companion.messages[companionQuoteIdx % companion.messages.length]}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ) : null}
 
                   {/* Action buttons */}
                   <div className="flex flex-col gap-1">

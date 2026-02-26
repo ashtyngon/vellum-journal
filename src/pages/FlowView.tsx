@@ -329,19 +329,30 @@ function TaskCard({
   );
 }
 
-/* -- Event Card (pinned info, no checkbox, no drag) ---------------------- */
+/* -- Event Card (pinned info, clickable to expand) ----------------------- */
 
-function EventCard({ entry }: { entry: RapidLogEntry }) {
+function EventCard({ entry, onOpenDetail }: { entry: RapidLogEntry; onOpenDetail?: () => void }) {
   return (
-    <div className="bg-background-light/80 border border-sage/20 p-3 rounded shadow-soft flex items-start gap-2.5">
+    <div
+      className="bg-background-light/80 border border-sage/20 p-3 rounded shadow-soft flex items-start gap-2.5 cursor-pointer hover:-translate-y-0.5 hover:shadow-lifted transition-all group"
+      onClick={() => onOpenDetail?.()}
+    >
       <span className="material-symbols-outlined text-[18px] text-sage mt-0.5 shrink-0">circle</span>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-body text-ink leading-snug">{entry.title}</p>
-        {entry.time && (
-          <span className="inline-block mt-1 text-[10px] font-mono text-sage bg-sage/10 px-1.5 py-0.5 rounded">
-            {formatTime12(entry.time)}
-          </span>
-        )}
+        <p className="text-sm font-body text-ink leading-snug group-hover:text-primary/80 transition-colors">{entry.title}</p>
+        <div className="flex items-center gap-1.5 mt-1">
+          {entry.time && (
+            <span className="text-[10px] font-mono text-sage bg-sage/10 px-1.5 py-0.5 rounded">
+              {formatTime12(entry.time)}
+            </span>
+          )}
+          {entry.duration && (
+            <span className="text-[10px] font-mono text-pencil">{entry.duration}</span>
+          )}
+          {entry.description && (
+            <span className="text-pencil/40"><span className="material-symbols-outlined text-[12px]">description</span></span>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -675,6 +686,7 @@ function ZoomedSection({
   onDragStartEntry: (e: React.DragEvent, entryId: string) => void;
 }) {
   const [dragOverSlot, setDragOverSlot] = useState<string | null>(null);
+  const [detailEntry, setDetailEntry] = useState<RapidLogEntry | null>(null);
 
   const sectionStartMin = section.startHour * 60;
   const sectionEndMin = section.endHour * 60;
@@ -824,7 +836,7 @@ function ZoomedSection({
                 className="absolute right-0"
                 style={{ top: `${topPx}px`, left: '60px', height: `${SLOT_HEIGHT}px` }}
               >
-                <EventCard entry={ev} />
+                <EventCard entry={ev} onOpenDetail={() => setDetailEntry(ev)} />
               </div>
             ));
           })}
@@ -844,10 +856,21 @@ function ZoomedSection({
                 onDelete={onDelete}
                 onDragStart={onDragStartEntry}
                 isDragging={draggingId === t.id}
+                onOpenDetail={() => setDetailEntry(t)}
               />
             ))}
           </div>
         </div>
+      )}
+
+      {/* Detail modal for tasks/events in zoomed view */}
+      {detailEntry && (
+        <TaskDetailModal
+          entry={detailEntry}
+          onUpdate={onUpdate}
+          onDelete={onDelete}
+          onClose={() => setDetailEntry(null)}
+        />
       )}
     </div>
   );
@@ -1093,7 +1116,8 @@ function TaskDetailModal({
   };
 
   const isDone = entry.status === 'done';
-  const borderClass = 'border-l-wood-light';
+  const isEvent = entry.type === 'event';
+  const borderClass = isEvent ? 'border-l-sage' : 'border-l-wood-light';
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/30 backdrop-blur-[2px]">
@@ -1103,18 +1127,22 @@ function TaskDetailModal({
       >
         {/* Header */}
         <div className="flex items-start gap-3 p-5 pb-3">
-          <button
-            onClick={() => {
-              onUpdate(entry.id, { status: isDone ? 'todo' : 'done' });
-            }}
-            className="shrink-0 mt-1"
-          >
-            <span className={`material-symbols-outlined text-[22px] transition-colors ${
-              isDone ? 'text-sage' : 'text-primary hover:text-primary/70'
-            }`}>
-              {isDone ? 'check_circle' : 'radio_button_unchecked'}
-            </span>
-          </button>
+          {isEvent ? (
+            <span className="material-symbols-outlined text-[22px] text-sage shrink-0 mt-1">event</span>
+          ) : (
+            <button
+              onClick={() => {
+                onUpdate(entry.id, { status: isDone ? 'todo' : 'done' });
+              }}
+              className="shrink-0 mt-1"
+            >
+              <span className={`material-symbols-outlined text-[22px] transition-colors ${
+                isDone ? 'text-sage' : 'text-primary hover:text-primary/70'
+              }`}>
+                {isDone ? 'check_circle' : 'radio_button_unchecked'}
+              </span>
+            </button>
+          )}
 
           <input
             value={title}
@@ -1122,7 +1150,7 @@ function TaskDetailModal({
             className={`flex-1 bg-transparent font-body text-base text-ink outline-none border-b border-transparent focus:border-primary/30 transition-colors ${
               isDone ? 'line-through decoration-sage/50 text-ink/60' : ''
             }`}
-            placeholder="Task title"
+            placeholder={isEvent ? "Event title" : "Task title"}
           />
 
           <button onClick={commitAndClose} className="text-pencil hover:text-ink transition-colors shrink-0">
@@ -1228,7 +1256,7 @@ function TaskDetailModal({
               className="text-xs font-body text-pencil/40 hover:text-rose transition-colors flex items-center gap-1"
             >
               <span className="material-symbols-outlined text-[14px]">delete</span>
-              Delete task
+              Delete {entry.type === 'event' ? 'event' : 'task'}
             </button>
           </div>
         </div>
@@ -1237,7 +1265,7 @@ function TaskDetailModal({
   );
 }
 
-/* -- Section Body (collapsed/expanded, with drop zone) ------------------- */
+/* -- Section Body (collapsed/expanded, with drop zone + reorder) --------- */
 
 function SectionBody({
   section,
@@ -1247,8 +1275,7 @@ function SectionBody({
   onUpdate,
   onDelete,
   onAdd,
-  onDrop,
-  onBatchDrop,
+  onBatchUpdate,
   draggingId,
   onDragStartEntry,
   selectedIds,
@@ -1262,8 +1289,7 @@ function SectionBody({
   onUpdate: (id: string, updates: Partial<RapidLogEntry>) => void;
   onDelete: (id: string) => void;
   onAdd: (entry: RapidLogEntry) => void;
-  onDrop: (entryId: string, targetSectionId: string) => void;
-  onBatchDrop: (entryIds: string[], targetSectionId: string) => void;
+  onBatchUpdate: (updates: Array<{ id: string; updates: Partial<RapidLogEntry> }>) => void;
   draggingId: string | null;
   onDragStartEntry: (e: React.DragEvent, entryId: string) => void;
   selectedIds?: Set<string>;
@@ -1272,26 +1298,56 @@ function SectionBody({
 }) {
   const [dragOver, setDragOver] = useState(false);
   const [detailEntry, setDetailEntry] = useState<RapidLogEntry | null>(null);
+  // Track which index the dragged item is hovering over for insertion indicator
+  const [dropInsertIdx, setDropInsertIdx] = useState<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Combine events + tasks into a single visual list for ordering
+  const allItems = useMemo(() => {
+    const evts = events.map(ev => ({ ...ev, _isEvent: true as const }));
+    const tsks = tasks.map(t => ({ ...t, _isEvent: false as const }));
+    return [...evts, ...tsks];
+  }, [events, tasks]);
+
+  // Calculate drop index from mouse Y position relative to card positions
+  const calcDropIndex = useCallback((clientY: number) => {
+    if (!containerRef.current) return allItems.length;
+    const cards = containerRef.current.querySelectorAll('[data-drop-item]');
+    for (let i = 0; i < cards.length; i++) {
+      const rect = cards[i].getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      if (clientY < midY) return i;
+    }
+    return cards.length;
+  }, [allItems.length]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     setDragOver(true);
+    setDropInsertIdx(calcDropIndex(e.clientY));
   };
 
-  const handleDragLeave = () => setDragOver(false);
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only clear if actually leaving the container (not entering a child)
+    if (!containerRef.current?.contains(e.relatedTarget as Node)) {
+      setDragOver(false);
+      setDropInsertIdx(null);
+    }
+  };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation(); // prevent column-level fallback
+    const insertAt = dropInsertIdx ?? allItems.length;
     setDragOver(false);
+    setDropInsertIdx(null);
 
     // Check if this is a habit drag (text/plain contains habit info)
     const habitData = e.dataTransfer.getData('text/plain');
     if (habitData && habitData.startsWith('habit:')) {
       const parts = habitData.split(':');
       const habitName = parts.slice(2).join(':');
-      // Create a new task from the habit — mark it with sourceHabit for visual differentiation
       onAdd({
         id: uid(),
         type: 'task',
@@ -1301,50 +1357,89 @@ function SectionBody({
         section: section.id,
         movedCount: 0,
         sourceHabit: habitName,
+        order: insertAt,
       });
       return;
     }
 
     const payload = decodeDrag(e.dataTransfer.getData('application/json'));
-    if (payload) {
-      if (payload.entryIds.length > 1) {
-        // Atomic batch drop for multiple entries
-        onBatchDrop(payload.entryIds, section.id);
-      } else {
-        onDrop(payload.entryIds[0], section.id);
-      }
-    }
+    if (!payload) return;
+
+    const draggedIds = new Set(payload.entryIds);
+
+    // Build the new ordered list: remove dragged items, insert at drop position
+    const remaining = allItems.filter(item => !draggedIds.has(item.id));
+    // Clamp insert position
+    const clampedIdx = Math.min(insertAt, remaining.length);
+
+    const draggedEntries = payload.entryIds;
+
+    // Build the final ordered list
+    const finalOrder = [
+      ...remaining.slice(0, clampedIdx).map(item => item.id),
+      ...draggedEntries,
+      ...remaining.slice(clampedIdx).map(item => item.id),
+    ];
+
+    // Batch update all items with new order + section assignment for dragged items
+    const updates = finalOrder.map((id, idx) => ({
+      id,
+      updates: {
+        order: idx,
+        ...(draggedIds.has(id) ? { date, section: section.id, timeBlock: undefined } : {}),
+      } as Partial<RapidLogEntry>,
+    }));
+    onBatchUpdate(updates);
   };
 
   return (
     <div
+      ref={containerRef}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`px-3 py-2 space-y-2 transition-colors ${
+      className={`px-3 py-2 space-y-1.5 transition-colors min-h-[48px] ${
         dragOver ? 'bg-primary/5 ring-2 ring-primary/20 ring-inset rounded-b' : ''
       }`}
     >
       {/* Events pinned first */}
-      {events.map(ev => (
-        <EventCard key={ev.id} entry={ev} />
+      {events.map((ev, i) => (
+        <div key={ev.id} data-drop-item>
+          {/* Drop insertion indicator */}
+          {dropInsertIdx === i && (
+            <div className="h-0.5 bg-primary rounded-full mx-2 my-1 transition-all" />
+          )}
+          <EventCard entry={ev} onOpenDetail={() => setDetailEntry(ev)} />
+        </div>
       ))}
 
       {/* Task cards */}
-      {tasks.map(t => (
-        <TaskCard
-          key={t.id}
-          entry={t}
-          onUpdate={onUpdate}
-          onDelete={onDelete}
-          onDragStart={onDragStartEntry}
-          isDragging={draggingId === t.id}
-          isSelected={selectedIds?.has(t.id)}
-          onToggleSelect={onToggleSelect}
-          bulkMode={bulkMode}
-          onOpenDetail={() => setDetailEntry(t)}
-        />
-      ))}
+      {tasks.map((t, i) => {
+        const globalIdx = events.length + i;
+        return (
+          <div key={t.id} data-drop-item>
+            {dropInsertIdx === globalIdx && (
+              <div className="h-0.5 bg-primary rounded-full mx-2 my-1 transition-all" />
+            )}
+            <TaskCard
+              entry={t}
+              onUpdate={onUpdate}
+              onDelete={onDelete}
+              onDragStart={onDragStartEntry}
+              isDragging={draggingId === t.id}
+              isSelected={selectedIds?.has(t.id)}
+              onToggleSelect={onToggleSelect}
+              bulkMode={bulkMode}
+              onOpenDetail={() => setDetailEntry(t)}
+            />
+          </div>
+        );
+      })}
+
+      {/* End-of-list insertion indicator */}
+      {dropInsertIdx !== null && dropInsertIdx >= allItems.length && (
+        <div className="h-0.5 bg-primary rounded-full mx-2 my-1 transition-all" />
+      )}
 
       {/* Empty state */}
       {tasks.length === 0 && events.length === 0 && (
@@ -1457,13 +1552,16 @@ function DayColumn({
       }
     }
 
-    // Sort: timed tasks first (by time), then unscheduled
+    // Sort: timed tasks first (by time), then by order field, then fallback
     for (const key of Object.keys(map)) {
       map[key].sort((a, b) => {
         if (a.timeBlock && b.timeBlock) return a.timeBlock.localeCompare(b.timeBlock);
         if (a.timeBlock) return -1;
         if (b.timeBlock) return 1;
-        return 0;
+        // Within unscheduled: sort by order field
+        const orderA = a.order ?? Infinity;
+        const orderB = b.order ?? Infinity;
+        return orderA - orderB;
       });
     }
 
@@ -1498,17 +1596,6 @@ function DayColumn({
       try { localStorage.setItem('flowview-section-collapsed', JSON.stringify(next)); } catch { /* ignore */ }
       return next;
     });
-  };
-
-  const handleDrop = (entryId: string, targetSectionId: string) => {
-    onDrop(entryId, targetSectionId, info.iso);
-  };
-
-  const handleBatchDrop = (entryIds: string[], targetSectionId: string) => {
-    onBatchUpdate(entryIds.map(id => ({
-      id,
-      updates: { date: info.iso, section: targetSectionId, timeBlock: undefined },
-    })));
   };
 
   const handleDropZoomed = (entryId: string, targetSectionId: string, timeBlock?: string) => {
@@ -1659,8 +1746,7 @@ function DayColumn({
                   onUpdate={onUpdate}
                   onDelete={onDelete}
                   onAdd={onAdd}
-                  onDrop={handleDrop}
-                  onBatchDrop={handleBatchDrop}
+                  onBatchUpdate={onBatchUpdate}
                   draggingId={draggingId}
                   onDragStartEntry={handleDragStart}
                   selectedIds={selectedIds}
