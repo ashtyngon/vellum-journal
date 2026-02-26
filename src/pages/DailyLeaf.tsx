@@ -1089,14 +1089,14 @@ export default function DailyLeaf() {
                           {p.emoji}
                         </span>
                       ))}
-                      <span
-                        className="text-2xl sm:text-3xl mb-1"
+                      <img
+                        src={`/animals/${companion.animal}.png`}
+                        alt={companion.name}
+                        className="w-8 h-8 sm:w-10 sm:h-10 mb-1 object-contain"
                         style={{
                           animation: companionAnim !== 'idle' ? `${companionAnim} 0.7s ease-out` : 'none',
                         }}
-                      >
-                        {companion.animal}
-                      </span>
+                      />
                       <div className="relative">
                         <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rotate-45 bg-surface-light border-l border-t border-wood-light/25" />
                         <div
