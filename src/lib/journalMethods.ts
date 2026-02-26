@@ -30,7 +30,7 @@ export const JOURNAL_METHODS: JournalMethod[] = [
     id: 'morning-pages',
     name: 'Morning Pages',
     description:
-      'Guided brain dump. Four prompts to help you get everything out of your head and onto the page.',
+      'Dump your brain. Four prompts, no rules.',
     icon: 'wb_twilight',
     category: 'daily',
     steps: [
@@ -66,7 +66,7 @@ export const JOURNAL_METHODS: JournalMethod[] = [
     id: 'thought-record',
     name: 'Thought Record',
     description:
-      'Examine an automatic thought by weighing evidence for and against it, then form a more balanced perspective.',
+      'Challenge a thought. Find what\'s really true.',
     icon: 'psychology',
     category: 'cbt',
     steps: [
@@ -127,7 +127,7 @@ export const JOURNAL_METHODS: JournalMethod[] = [
     id: 'five-whys',
     name: 'Five Whys',
     description:
-      'Drill down through layers of a feeling or frustration to uncover the root belief underneath.',
+      'Keep asking why until you hit the root.',
     icon: 'search_insights',
     category: 'cbt',
     steps: [
@@ -170,7 +170,7 @@ export const JOURNAL_METHODS: JournalMethod[] = [
     id: 'positive-data-log',
     name: 'Positive Data Log',
     description:
-      'Actively collect evidence that contradicts a harsh belief you hold about yourself.',
+      'Collect proof your inner critic is wrong.',
     icon: 'trending_up',
     category: 'cbt',
     steps: [
@@ -211,7 +211,7 @@ export const JOURNAL_METHODS: JournalMethod[] = [
     id: 'pattern-breaker',
     name: 'Pattern Breaker',
     description:
-      'Reframe a negative story by examining it through different narrative lenses until a more realistic version emerges.',
+      'Rewrite the story you\'re telling yourself.',
     icon: 'auto_fix_high',
     category: 'cbt',
     steps: [
@@ -258,7 +258,7 @@ export const JOURNAL_METHODS: JournalMethod[] = [
     id: 'integration',
     name: 'Session Integration',
     description:
-      'Process what came up in a therapy or coaching session so the insights don\'t fade by tomorrow.',
+      'Lock in insights from therapy before they fade.',
     icon: 'self_improvement',
     category: 'integration',
     steps: [
@@ -304,7 +304,7 @@ export const JOURNAL_METHODS: JournalMethod[] = [
     id: 'body-scan',
     name: 'Body Scan',
     description:
-      'Tune into a specific area of your body and listen to what it might be holding or communicating.',
+      'Notice what your body is holding right now.',
     icon: 'accessibility_new',
     category: 'integration',
     steps: [
@@ -364,7 +364,7 @@ export const JOURNAL_METHODS: JournalMethod[] = [
     id: 'three-good-things',
     name: 'Three Good Things',
     description:
-      'End the day by naming three things that went well and exploring why. Simple, but surprisingly powerful over time.',
+      'Name three wins. Tiny counts.',
     icon: 'stars',
     category: 'daily',
     steps: [
@@ -419,7 +419,7 @@ export const JOURNAL_METHODS: JournalMethod[] = [
     id: 'anxiety-reality-check',
     name: 'Anxiety Reality Check',
     description:
-      'Catch your anxiety in the act. Name what it\'s telling you, then compare the prediction to what\'s actually happening.',
+      'Catch anxiety lying. Compare fear vs. reality.',
     icon: 'fact_check',
     category: 'cbt',
     steps: [

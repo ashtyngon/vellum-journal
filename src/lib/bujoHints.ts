@@ -105,7 +105,7 @@ export const SIGNIFIER_TOOLTIPS: Array<{ symbol: string; meaning: string }> = [
   { symbol: '\u25cf', meaning: 'Task \u2014 something to do' },
   { symbol: '\u2713', meaning: 'Done \u2014 completed' },
   { symbol: '\u2717', meaning: 'Not doing \u2014 cancelled' },
-  { symbol: '\u2192', meaning: 'Migrated \u2014 moved forward' },
+  { symbol: '\u2192', meaning: 'Moved \u2014 rescheduled' },
   { symbol: '\u25cb', meaning: 'Event \u2014 scheduled' },
   { symbol: '\u2014', meaning: 'Note \u2014 thought or observation' },
 ];

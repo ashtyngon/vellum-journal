@@ -821,7 +821,7 @@ export default function DailyLeaf() {
                     type="text"
                     value={planTarget === 'today' ? intention : tomorrowIntention}
                     onChange={e => planTarget === 'today' ? setIntention(e.target.value) : setTomorrowIntention(e.target.value)}
-                    placeholder={planTarget === 'today' ? 'Redefine the day...' : 'Intention for tomorrow'}
+                    placeholder={planTarget === 'today' ? 'Today\'s priority...' : 'Tomorrow\'s priority...'}
                     className="w-full bg-transparent border-none p-0 text-xl font-display text-ink placeholder:text-pencil/30 focus:ring-0 focus:outline-none italic"
                   />
                   <div className="mt-1 h-[1.5px] bg-wood-light/20" />
@@ -947,7 +947,7 @@ export default function DailyLeaf() {
                 onClick={dismissDebriefToday}
                 className="text-pencil/60 hover:text-ink transition-colors"
               >
-                Not tonight
+                Skip tonight
               </button>
             </div>
           </div>
@@ -1000,7 +1000,7 @@ export default function DailyLeaf() {
                     )}
                   </div>
                   <span className="font-body text-xs sm:text-sm text-pencil/50 mt-0.5 block ml-1">
-                    {isViewingPast ? 'Past day' : isViewingFuture ? 'Upcoming' : `Good ${getGreeting()}`}
+                    {isViewingPast ? 'Looking back' : isViewingFuture ? 'Looking ahead' : `Good ${getGreeting()}`}
                   </span>
                 </div>
 
@@ -1042,7 +1042,7 @@ export default function DailyLeaf() {
                         if (clicks >= 6) {
                           const enoughLines = [
                             'Okay okay, I love you too. Now go do something.',
-                            'You\'re adorable but your tasks won\'t do themselves.',
+                            'You\'re adorable but I\'m running out of things to say.',
                             'I\'m blushing. Stop it. Go be productive.',
                             `— ${companion.name} has left the chat.`,
                             'That tickles. Please. I have a reputation.',
@@ -1134,7 +1134,7 @@ export default function DailyLeaf() {
                 <div className="relative group/input">
                   <input
                     className="w-full bg-transparent border-none p-0 text-lg sm:text-xl font-display text-ink placeholder:text-pencil/25 focus:ring-0 focus:outline-none italic"
-                    placeholder="What matters today?"
+                    placeholder="What's on your plate?"
                     type="text"
                     value={intention}
                     onChange={(e) => setIntention(e.target.value)}
@@ -1227,8 +1227,8 @@ export default function DailyLeaf() {
           {/* Capacity Warning */}
           {!focusMode && capacityWarning && (
             <div className="mb-5 bg-bronze/8 border border-bronze/15 rounded-xl px-5 py-4 text-base font-body text-ink/80">
-              You have <span className="font-semibold">{capacityWarning.count} tasks</span>{' '}
-              (~{capacityWarning.hours}hrs). Could you pick your top 3?
+              <span className="font-semibold">{capacityWarning.count} tasks</span>{' '}
+              (~{capacityWarning.hours}hrs) today. Focus tip: start with just 1.
             </div>
           )}
 
@@ -1242,7 +1242,7 @@ export default function DailyLeaf() {
                 <div className="flex items-center gap-2.5">
                   <span className="material-symbols-outlined text-pencil text-xl">history</span>
                   <span className="font-body text-lg text-ink">
-                    <span className="font-semibold">{overdueTasks.length}</span> from before
+                    <span className="font-semibold">{overdueTasks.length}</span> overdue
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1256,7 +1256,7 @@ export default function DailyLeaf() {
                     onClick={(e) => { e.stopPropagation(); parkAll(); }}
                     className="text-xs font-mono text-pencil hover:text-ink bg-wood-light/20 hover:bg-wood-light/30 px-3 py-1.5 rounded-full transition-colors uppercase tracking-wider"
                   >
-                    &rarr; Park
+                    &rarr; Later
                   </button>
                   <span className={`material-symbols-outlined text-pencil text-lg transition-transform ${overdueExpanded ? '' : '-rotate-90'}`}>
                     expand_more
@@ -1268,7 +1268,7 @@ export default function DailyLeaf() {
                   {overdueTasks.map(task => (
                     <div key={task.id} className="group/ot flex items-center gap-3 py-2 px-3 -mx-1 rounded-lg hover:bg-surface-light transition-colors">
                       <span className="inline-block size-2.5 rounded-full bg-pencil/30 flex-shrink-0" />
-                      <span className="flex-1 font-body text-lg text-ink truncate">{task.title}</span>
+                      <span className="flex-1 font-body text-base text-ink truncate">{task.title}</span>
                       <span className="font-mono text-[11px] text-pencil/50 flex-shrink-0">
                         {new Date(task.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </span>
@@ -1328,11 +1328,11 @@ export default function DailyLeaf() {
               </div>
             )}
 
-            <div className="flex items-center gap-3 sm:gap-4 py-3.5 sm:py-5 px-4 sm:px-6 rounded-2xl bg-surface-light border border-wood-light/20 shadow-sm transition-all focus-within:border-primary/30 focus-within:shadow-md">
-              <span className="material-symbols-outlined text-xl sm:text-2xl text-primary/60">add</span>
+            <div className="flex items-center gap-2.5 sm:gap-3 py-2.5 sm:py-3.5 px-3 sm:px-4 rounded-xl bg-surface-light border border-wood-light/20 shadow-sm transition-all focus-within:border-primary/30 focus-within:shadow-md">
+              <span className="material-symbols-outlined text-lg sm:text-xl text-primary/60">add</span>
               <input
                 ref={newInputRef}
-                className="flex-1 min-w-0 bg-transparent border-none p-0 text-lg sm:text-2xl font-body text-ink placeholder:text-pencil/35 focus:ring-0 focus:outline-none"
+                className="flex-1 min-w-0 bg-transparent border-none p-0 text-base sm:text-lg font-body text-ink placeholder:text-pencil/35 focus:ring-0 focus:outline-none"
                 placeholder={placeholder}
                 type="text"
                 value={newTitle}
@@ -1354,12 +1354,12 @@ export default function DailyLeaf() {
 
           {/* ── Task list \u2014 big cards ──────────────────────── */}
           {todayEntries.length === 0 && (
-            <p className="text-pencil/40 font-body text-lg italic py-12 text-center">
+            <p className="text-pencil/40 font-body text-base italic py-10 text-center">
               No entries yet. Start typing above.
             </p>
           )}
 
-          <div className="space-y-2.5">
+          <div className="space-y-1.5">
             {todayEntries.map((entry, entryIdx) => {
               const isEditing = editingEntryId === entry.id;
               const isDone = entry.type === 'task' && entry.status === 'done';
@@ -1370,18 +1370,18 @@ export default function DailyLeaf() {
               const isEvent = entry.type === 'event';
 
               return (
-                <div key={entry.id} className={`group/entry rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3.5 sm:py-5 transition-all ${
+                <div key={entry.id} className={`group/entry rounded-lg sm:rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 transition-all ${
                   isInactive ? 'opacity-50 bg-transparent' : 'bg-surface-light/40 hover:bg-surface-light/80'
                 } ${isNote ? 'border-l-3 border-pencil/15' : ''}`}>
-                  <div className="flex items-center gap-3 sm:gap-5">
-                    {/* Checkbox / bullet \u2014 BIG */}
+                  <div className="flex items-center gap-2.5 sm:gap-3.5">
+                    {/* Checkbox / bullet */}
                     {isTask ? (
                       <button
                         onClick={(e) => isCancelled
                           ? updateEntry(entry.id, { status: 'todo' })
                           : handleToggleTask(entry.id, e.currentTarget as HTMLElement)
                         }
-                        className={`flex-shrink-0 focus:outline-none rounded-lg sm:rounded-xl transition-all flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 border-2 sm:border-[2.5px] ${
+                        className={`flex-shrink-0 focus:outline-none rounded-md sm:rounded-lg transition-all flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 border-[1.5px] sm:border-2 ${
                           isDone
                             ? 'bg-primary border-primary text-white'
                             : isCancelled
@@ -1390,25 +1390,25 @@ export default function DailyLeaf() {
                         }`}
                         title={isDone ? 'Mark as todo' : isCancelled ? 'Restore task' : 'Mark as done'}
                       >
-                        {isDone && <span className="material-symbols-outlined text-lg sm:text-2xl">check</span>}
-                        {isCancelled && <span className="material-symbols-outlined text-lg sm:text-2xl">close</span>}
+                        {isDone && <span className="material-symbols-outlined text-sm sm:text-lg">check</span>}
+                        {isCancelled && <span className="material-symbols-outlined text-sm sm:text-lg">close</span>}
                       </button>
                     ) : (
-                      <div className="flex-shrink-0 flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12">
+                      <div className="flex-shrink-0 flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8">
                         {isEvent ? (
-                          <span className="inline-flex items-center justify-center size-5 sm:size-7 rounded-full border-2 sm:border-[3px] border-primary/50" />
+                          <span className="inline-flex items-center justify-center size-4 sm:size-5 rounded-full border-[1.5px] sm:border-2 border-primary/50" />
                         ) : (
-                          <span className="inline-block w-5 sm:w-6 h-[2.5px] sm:h-[3px] bg-ink/25 rounded-full" />
+                          <span className="inline-block w-4 sm:w-5 h-[2px] sm:h-[2.5px] bg-ink/25 rounded-full" />
                         )}
                       </div>
                     )}
 
-                    {/* Content \u2014 BIG text */}
+                    {/* Content */}
                     <div className="flex-1 min-w-0">
                       {isEditing ? (
                         <input
                           ref={editInputRef}
-                          className="w-full bg-transparent border-none p-0 text-lg sm:text-2xl font-body text-ink focus:ring-0 focus:outline-none"
+                          className="w-full bg-transparent border-none p-0 text-base sm:text-lg font-body text-ink focus:ring-0 focus:outline-none"
                           value={editingValue}
                           onChange={(e) => setEditingValue(e.target.value)}
                           onKeyDown={handleEditKeyDown}
@@ -1416,7 +1416,7 @@ export default function DailyLeaf() {
                         />
                       ) : (
                         <button
-                          className={`text-left text-lg sm:text-2xl leading-snug font-body transition-colors w-full ${
+                          className={`text-left text-base sm:text-lg leading-snug font-body transition-colors w-full ${
                             isCancelled ? 'line-through decoration-tension/40 text-ink/35'
                               : isDone ? 'line-through decoration-pencil/20 text-ink/45'
                               : isNote ? 'text-ink/65 italic'
@@ -1446,10 +1446,8 @@ export default function DailyLeaf() {
                           </button>
                         )}
                         {!isEditing && isTask && (entry.movedCount ?? 0) > 0 && (
-                          <span className="flex gap-0.5" title={`Moved ${entry.movedCount}x`}>
-                            {Array.from({ length: entry.movedCount ?? 0 }).map((_, i) => (
-                              <span key={i} className="inline-block size-1.5 rounded-full bg-tension/40" />
-                            ))}
+                          <span className="text-[10px] font-mono text-tension/60" title={`Rescheduled ${entry.movedCount} time(s)`}>
+                            ↻{entry.movedCount}
                           </span>
                         )}
                         {!isEditing && entry.tags && entry.tags.length > 0 && (
@@ -1482,7 +1480,7 @@ export default function DailyLeaf() {
                         </div>
                         {isTask && !isInactive && (
                           <button onClick={() => setStuckTask(entry)} className="font-mono text-[10px] text-pencil hover:text-primary bg-surface-light hover:bg-primary/10 px-2 py-1 rounded-lg transition-colors uppercase tracking-wider">
-                            Stuck?
+                            Unblock
                           </button>
                         )}
                         {isTask && !isInactive && (
@@ -1503,10 +1501,10 @@ export default function DailyLeaf() {
                   </div>
                   {/* Cancel note */}
                   {isCancelled && (
-                    <div className="ml-12 mt-1">
+                    <div className="ml-9 mt-1">
                       <input
                         className="w-full bg-transparent border-none p-0 text-sm font-mono text-pencil/50 placeholder:text-pencil/25 focus:ring-0 focus:outline-none italic"
-                        placeholder="why? (optional)"
+                        placeholder="note (optional)"
                         value={entry.notes ?? ''}
                         onChange={(e) => updateEntry(entry.id, { notes: e.target.value })}
                       />
