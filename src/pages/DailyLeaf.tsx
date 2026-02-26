@@ -910,7 +910,7 @@ export default function DailyLeaf() {
 
       {/* ── Debrief Overlay — focused, full-screen, distraction-free ── */}
       {debriefOverlayOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => { setDebriefOverlayOpen(false); setDebriefDismissed(true); }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => { setDebriefOverlayOpen(false); }}>
           <div className="bg-paper rounded-2xl shadow-lifted w-full max-w-xl mx-4 p-8 sm:p-10" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
@@ -1204,7 +1204,7 @@ export default function DailyLeaf() {
                 className="absolute right-0 top-1/2 -translate-y-1/2 text-pencil/30 hover:text-pencil/60 transition-colors"
                 title="Exit focus mode"
               >
-                <span className="material-symbols-outlined text-[16px]">visibility</span>
+                <span className="material-symbols-outlined text-[16px]">close_fullscreen</span>
               </button>
             </header>
           )}
@@ -1377,15 +1377,18 @@ export default function DailyLeaf() {
                     {/* Checkbox / bullet \u2014 BIG */}
                     {isTask ? (
                       <button
-                        onClick={(e) => handleToggleTask(entry.id, e.currentTarget as HTMLElement)}
+                        onClick={(e) => isCancelled
+                          ? updateEntry(entry.id, { status: 'todo' })
+                          : handleToggleTask(entry.id, e.currentTarget as HTMLElement)
+                        }
                         className={`flex-shrink-0 focus:outline-none rounded-lg sm:rounded-xl transition-all flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 border-2 sm:border-[2.5px] ${
                           isDone
                             ? 'bg-primary border-primary text-white'
                             : isCancelled
-                              ? 'border-pencil/20 text-tension/60'
+                              ? 'border-pencil/20 text-tension/60 hover:border-primary/40 hover:text-primary/60'
                               : 'border-pencil/25 hover:border-primary/50 hover:bg-primary/5'
                         }`}
-                        title={isDone ? 'Mark as todo' : 'Mark as done'}
+                        title={isDone ? 'Mark as todo' : isCancelled ? 'Restore task' : 'Mark as done'}
                       >
                         {isDone && <span className="material-symbols-outlined text-lg sm:text-2xl">check</span>}
                         {isCancelled && <span className="material-symbols-outlined text-lg sm:text-2xl">close</span>}
@@ -1520,7 +1523,7 @@ export default function DailyLeaf() {
 
               {/* Upcoming Events */}
               {upcomingEvents.length > 0 && (
-                <details className="group/section rounded-xl bg-surface-light/40 border border-wood-light/15 overflow-hidden">
+                <details open className="group/section rounded-xl bg-surface-light/40 border border-wood-light/15 overflow-hidden">
                   <summary className="flex items-center justify-between px-5 py-3.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
                     <div className="flex items-center gap-2.5">
                       <span className="material-symbols-outlined text-primary/60 text-xl">event</span>
@@ -1566,9 +1569,9 @@ export default function DailyLeaf() {
                         {/* Action buttons — visible on hover */}
                         <div className="flex items-center gap-0.5 opacity-0 group-hover/ev:opacity-100 transition-opacity">
                           <button
-                            onClick={() => { updateEntry(ev.id, { date: realToday, type: 'task', status: 'todo', section: undefined }); }}
+                            onClick={() => { updateEntry(ev.id, { date: realToday, type: 'task', status: 'todo', section: undefined, timeBlock: undefined, duration: undefined }); }}
                             className="p-1 rounded text-pencil/40 hover:text-primary hover:bg-primary/5 transition-colors"
-                            title="Move to today's parking lot"
+                            title="Move to today"
                           >
                             <span className="material-symbols-outlined text-sm">move_item</span>
                           </button>

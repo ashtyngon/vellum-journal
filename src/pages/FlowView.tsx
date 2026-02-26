@@ -62,16 +62,16 @@ interface DaySection {
 }
 
 const INITIAL_SECTIONS: DaySection[] = [
-  { id: 'morning', name: 'Morning Focus', startHour: 6, endHour: 12, color: 'bg-sage/10', accentColor: 'border-sage/40' },
-  { id: 'afternoon', name: 'Afternoon', startHour: 12, endHour: 17, color: 'bg-primary/5', accentColor: 'border-primary/30' },
-  { id: 'evening', name: 'Evening', startHour: 17, endHour: 22, color: 'bg-bronze/10', accentColor: 'border-bronze/30' },
+  { id: 'morning', name: 'Morning Focus', startHour: 6, endHour: 12, color: 'bg-sage/15', accentColor: 'border-sage/50' },
+  { id: 'afternoon', name: 'Afternoon', startHour: 12, endHour: 17, color: 'bg-primary/10', accentColor: 'border-primary/40' },
+  { id: 'evening', name: 'Evening', startHour: 17, endHour: 22, color: 'bg-bronze/15', accentColor: 'border-bronze/40' },
 ];
 
 const SECTION_COLORS: { color: string; accent: string; label: string }[] = [
-  { color: 'bg-sage/10', accent: 'border-sage/40', label: 'Sage' },
-  { color: 'bg-primary/5', accent: 'border-primary/30', label: 'Blue' },
-  { color: 'bg-bronze/10', accent: 'border-bronze/30', label: 'Bronze' },
-  { color: 'bg-accent/10', accent: 'border-accent/30', label: 'Gold' },
+  { color: 'bg-sage/15', accent: 'border-sage/50', label: 'Sage' },
+  { color: 'bg-primary/10', accent: 'border-primary/40', label: 'Blue' },
+  { color: 'bg-bronze/15', accent: 'border-bronze/40', label: 'Bronze' },
+  { color: 'bg-accent/15', accent: 'border-accent/40', label: 'Gold' },
   { color: 'bg-tension/5', accent: 'border-tension/30', label: 'Rose' },
   { color: 'bg-ink/5', accent: 'border-ink/20', label: 'Charcoal' },
 ];
@@ -307,7 +307,7 @@ function TaskCard({
             )}
             {(entry.movedCount ?? 0) > 0 && (
               <span className="text-[10px] font-mono text-rose" title={`Moved ${entry.movedCount} time(s)`}>
-                {'>'}{entry.movedCount}
+                ↻{entry.movedCount}
               </span>
             )}
           </div>
@@ -315,6 +315,14 @@ function TaskCard({
 
         {/* Actions on hover */}
         <div className="flex flex-col items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          {/* Send to parking lot */}
+          <button
+            onClick={e => { e.stopPropagation(); onUpdate(entry.id, { section: undefined, timeBlock: undefined, time: undefined }); }}
+            className="text-pencil/50 hover:text-primary transition-colors"
+            title="Send to parking lot"
+          >
+            <span className="material-symbols-outlined text-[15px]">inventory_2</span>
+          </button>
           {/* Delete */}
           <button
             onClick={() => onDelete(entry.id)}
@@ -1386,7 +1394,7 @@ function SectionBody({
       id,
       updates: {
         order: idx,
-        ...(draggedIds.has(id) ? { date, section: section.id, timeBlock: undefined } : {}),
+        ...(draggedIds.has(id) ? { date, section: section.id, timeBlock: undefined, time: undefined } : {}),
       } as Partial<RapidLogEntry>,
     }));
     onBatchUpdate(updates);
@@ -1536,12 +1544,13 @@ function DayColumn({
 
     const tasks = entries.filter(e => e.type === 'task');
     for (const t of tasks) {
-      // 1. If task has a timeBlock, assign by time range
-      const sectionByTime = t.timeBlock ? getSectionForTime(t.timeBlock, visibleSections) : null;
+      // 1. If task has a time (start or end), assign by time range
+      const timeStr = t.timeBlock || t.time;
+      const sectionByTime = timeStr ? getSectionForTime(timeStr, visibleSections) : null;
       if (sectionByTime && map[sectionByTime]) {
         map[sectionByTime].push(t);
       } else if (t.section && map[t.section]) {
-        // 2. If task has a section assignment (no timeBlock), use that
+        // 2. If task has a section assignment, use that
         map[t.section].push(t);
       } else {
         // 3. Fallback: first visible section
@@ -1552,12 +1561,14 @@ function DayColumn({
       }
     }
 
-    // Sort: timed tasks first (by time), then by order field, then fallback
+    // Sort: timed tasks first (by time), then by order field
     for (const key of Object.keys(map)) {
       map[key].sort((a, b) => {
-        if (a.timeBlock && b.timeBlock) return a.timeBlock.localeCompare(b.timeBlock);
-        if (a.timeBlock) return -1;
-        if (b.timeBlock) return 1;
+        const aTime = a.timeBlock || a.time;
+        const bTime = b.timeBlock || b.time;
+        if (aTime && bTime) return aTime.localeCompare(bTime);
+        if (aTime) return -1;
+        if (bTime) return 1;
         // Within unscheduled: sort by order field
         const orderA = a.order ?? Infinity;
         const orderB = b.order ?? Infinity;
@@ -1688,7 +1699,7 @@ function DayColumn({
         {visibleSections.map(section => {
           const sectionTasks = tasksBySection[section.id] ?? [];
           const sectionEvents = eventsBySection[section.id] ?? [];
-          const isCollapsed = collapsed[section.id] ?? true;
+          const isCollapsed = collapsed[section.id] ?? false;
           const isZoomed = zoomedSection === section.id;
           const name = sectionNames[section.id] ?? section.name;
 
@@ -1715,7 +1726,7 @@ function DayColumn({
           }
 
           return (
-            <div key={section.id} className={`${sectionWidthClass} rounded border ${section.accentColor} overflow-hidden`}>
+            <div key={section.id} className={`${sectionWidthClass} rounded border ${section.accentColor} ${section.color} overflow-hidden`}>
               <SectionHeader
                 section={section}
                 customName={name}
@@ -2061,7 +2072,15 @@ export default function FlowView() {
   };
 
   const scheduleToToday = (entryId: string) => {
-    updateEntry(entryId, { date: dateStr(0), timeBlock: undefined });
+    // Auto-assign to current time-of-day section
+    const now = new Date();
+    const nowTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const autoSection = getSectionForTime(nowTime, sections);
+    updateEntry(entryId, {
+      date: dateStr(0),
+      timeBlock: undefined,
+      section: autoSection ?? sections[0]?.id,
+    });
   };
 
   /* ── Parking lot drop zone ─────────────────────────────────────────── */
@@ -2079,10 +2098,10 @@ export default function FlowView() {
     setParkingDragOver(false);
     const payload = decodeDrag(e.dataTransfer.getData('application/json'));
     if (payload) {
-      // Unschedule: remove timeBlock and section assignment (atomic batch)
+      // Unschedule: clear time, timeBlock, and section → goes to parking lot
       batchUpdateEntries(payload.entryIds.map(id => ({
         id,
-        updates: { timeBlock: undefined, section: undefined },
+        updates: { timeBlock: undefined, section: undefined, time: undefined },
       })));
       clearSelection();
     }
