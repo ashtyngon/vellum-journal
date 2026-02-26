@@ -101,20 +101,6 @@ function getSectionForTime(time: string, sections: DaySection[]): string | null 
   return null;
 }
 
-/* ── Priority styling ─────────────────────────────────────────────────────── */
-
-const PRIORITY_BORDER: Record<string, string> = {
-  high: 'border-l-primary',
-  medium: 'border-l-bronze',
-  low: 'border-l-wood-light',
-};
-
-const PRIORITY_BADGE: Record<string, string> = {
-  high: 'text-primary bg-primary/10',
-  medium: 'text-bronze bg-bronze/10',
-  low: 'text-pencil bg-background-light',
-};
-
 /* ── URL detection helper ─────────────────────────────────────────────────── */
 
 const URL_REGEX = /https?:\/\/[^\s<>)"]+/g;
@@ -219,7 +205,7 @@ function TaskCard({
   const isHabitTask = !!entry.sourceHabit;
   const borderClass = isHabitTask
     ? 'border-l-sage'
-    : (PRIORITY_BORDER[entry.priority ?? 'medium'] ?? 'border-l-wood-light');
+    : 'border-l-wood-light';
   const hasDetails = !!(entry.description || (entry.links && entry.links.length > 0));
 
   return (
@@ -309,11 +295,6 @@ function TaskCard({
             )}
             {entry.duration && (
               <span className="text-[10px] font-mono text-pencil">{entry.duration}</span>
-            )}
-            {entry.priority && entry.priority !== 'medium' && (
-              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${PRIORITY_BADGE[entry.priority]}`}>
-                {entry.priority.toUpperCase()}
-              </span>
             )}
             {entry.tags?.map(tag => (
               <span key={tag} className="text-[10px] font-mono text-pencil bg-background-light px-1.5 rounded">{tag}</span>
@@ -535,7 +516,7 @@ function ResizableTimelineCard({
   const durationMin = previewDuration ?? parseDurationToMinutes(entry.duration);
   const spanSlots = Math.max(1, Math.round(durationMin / 15));
 
-  const borderClass = PRIORITY_BORDER[entry.priority ?? 'medium'] ?? 'border-l-wood-light';
+  const borderClass = 'border-l-wood-light';
   const isDone = entry.status === 'done';
 
   const commitEdit = () => {
@@ -909,7 +890,6 @@ function AddTaskInline({
           title: parsed.title,
           status: 'todo',
           date: parsed.date || date,
-          priority: 'medium',
           movedCount: 0,
           // Only pin to a time slot if the user explicitly typed a time.
           // Otherwise just assign to the section (no timeBlock).
@@ -1028,16 +1008,13 @@ function ParkingLotItem({
               {entry.title}
             </p>
           )}
-          <div className="mt-1 flex items-center gap-1.5">
-            {entry.priority && (
-              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${PRIORITY_BADGE[entry.priority] ?? ''}`}>
-                {entry.priority}
-              </span>
-            )}
-            {entry.tags?.map(tag => (
-              <span key={tag} className="text-[10px] font-mono text-pencil bg-background-light px-1.5 rounded">{tag}</span>
-            ))}
-          </div>
+          {entry.tags && entry.tags.length > 0 && (
+            <div className="mt-1 flex items-center gap-1.5">
+              {entry.tags.map(tag => (
+                <span key={tag} className="text-[10px] font-mono text-pencil bg-background-light px-1.5 rounded">{tag}</span>
+              ))}
+            </div>
+          )}
         </div>
 
         <button
@@ -1068,7 +1045,6 @@ function TaskDetailModal({
   const [title, setTitle] = useState(entry.title);
   const [desc, setDesc] = useState(entry.description ?? '');
   const [linkInput, setLinkInput] = useState('');
-  const [priority, setPriority] = useState(entry.priority ?? 'medium');
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Close on click outside
@@ -1081,7 +1057,7 @@ function TaskDetailModal({
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, desc, priority]);
+  }, [title, desc]);
 
   // Close on Escape
   useEffect(() => {
@@ -1089,7 +1065,7 @@ function TaskDetailModal({
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, desc, priority]);
+  }, [title, desc]);
 
   const commitAndClose = () => {
     const updates: Partial<RapidLogEntry> = {};
@@ -1097,7 +1073,6 @@ function TaskDetailModal({
     if (trimTitle && trimTitle !== entry.title) updates.title = trimTitle;
     const trimDesc = desc.trim();
     if (trimDesc !== (entry.description ?? '')) updates.description = trimDesc || undefined;
-    if (priority !== (entry.priority ?? 'medium')) updates.priority = priority;
     if (Object.keys(updates).length > 0) onUpdate(entry.id, updates);
     onClose();
   };
@@ -1118,7 +1093,7 @@ function TaskDetailModal({
   };
 
   const isDone = entry.status === 'done';
-  const borderClass = PRIORITY_BORDER[entry.priority ?? 'medium'] ?? 'border-l-wood-light';
+  const borderClass = 'border-l-wood-light';
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/30 backdrop-blur-[2px]">
@@ -1224,26 +1199,6 @@ function TaskDetailModal({
             </div>
           </div>
 
-          {/* Priority */}
-          <div>
-            <label className="text-[10px] font-mono text-pencil uppercase tracking-widest mb-1.5 block">Priority</label>
-            <div className="flex gap-2">
-              {(['low', 'medium', 'high'] as const).map(p => (
-                <button
-                  key={p}
-                  onClick={() => { setPriority(p); onUpdate(entry.id, { priority: p }); }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all ${
-                    priority === p
-                      ? `${PRIORITY_BADGE[p]} ring-1 ring-current/20`
-                      : 'text-pencil/50 bg-surface-light/50 hover:bg-surface-light'
-                  }`}
-                >
-                  {p.charAt(0).toUpperCase() + p.slice(1)}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Metadata row */}
           <div className="flex items-center gap-3 flex-wrap text-[10px] font-mono text-pencil/60 pt-2 border-t border-wood-light/15">
             {entry.timeBlock && (
@@ -1343,7 +1298,6 @@ function SectionBody({
         title: habitName,
         date,
         status: 'todo',
-        priority: 'medium',
         section: section.id,
         movedCount: 0,
         sourceHabit: habitName,
@@ -2011,7 +1965,6 @@ export default function FlowView() {
         title: parsed.title,
         status: 'todo',
         date: parsed.date || dateStr(0),
-        priority: 'medium',
         movedCount: 0,
         timeBlock: parsed.time, // if time detected, schedule it
       });

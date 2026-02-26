@@ -114,7 +114,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
             </div>
             {/* The message — the real content */}
             <p className="font-body text-xl text-white/95 leading-relaxed mb-5" style={{ textShadow: '0 1px 8px rgba(0,0,0,0.15)' }}>
-              {companion.message}
+              {companion.messages[0]}
             </p>
             {/* Color badge + companion name */}
             <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/15 backdrop-blur-sm">
@@ -208,7 +208,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
                     </div>
                   </div>
                   <p className="font-body text-sm text-ink/70 leading-relaxed mb-3 italic">
-                    &ldquo;{companion.message}&rdquo;
+                    &ldquo;{companion.messages[0]}&rdquo;
                   </p>
                   <div className="flex gap-2">
                     <button

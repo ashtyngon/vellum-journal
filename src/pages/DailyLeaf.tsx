@@ -10,7 +10,7 @@ import DayRecovery from '../components/DayRecovery';
 import DayDebriefComponent from '../components/DayDebrief';
 import { useTaskCelebration } from '../components/TaskCelebration';
 import Walkthrough from '../components/Walkthrough';
-import { parseNaturalEntry } from '../lib/nlParser';
+import { parseNaturalEntry, parseTime } from '../lib/nlParser';
 import { todayStr, dayAfter, dayBefore, formatLocalDate } from '../lib/dateUtils';
 import { getColorOfTheDay, getDailyCompanion } from '../lib/colorOfTheDay';
 import type { RapidLogEntry, JournalStep, JournalEntry } from '../context/AppContext';
@@ -19,15 +19,6 @@ import type { JournalMethod } from '../lib/journalMethods';
 /* ── Constants ────────────────────────────────────────────────────── */
 
 type EntryType = 'task' | 'event' | 'note';
-type Priority = 'low' | 'medium' | 'high';
-
-const PRIORITY_STYLES: Record<Priority, { dot: string; label: string }> = {
-  low: { dot: 'bg-sage', label: 'Low' },
-  medium: { dot: 'bg-bronze', label: 'Med' },
-  high: { dot: 'bg-tension', label: 'High' },
-};
-
-const PRIORITY_ORDER: Priority[] = ['low', 'medium', 'high'];
 
 const TYPE_PILLS: { type: EntryType; symbol: string; label: string }[] = [
   { type: 'task', symbol: '\u2022', label: 'Task' },
@@ -42,11 +33,11 @@ const ESTIMATED_TASK_HOURS = 0.75; // ~45 min per task average
 function formatEventDate(dateStr: string, todayDate: string, tomorrowDate: string): string {
   if (dateStr === todayDate) return 'Today';
   if (dateStr === tomorrowDate) return 'Tomorrow';
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  });
+  const d = new Date(dateStr + 'T12:00:00');
+  const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
+  const month = d.toLocaleDateString('en-US', { month: 'short' });
+  const day = d.getDate();
+  return `${weekday} ${month} ${day}`;
 }
 
 function getGreeting(): string {
@@ -175,7 +166,6 @@ export default function DailyLeaf() {
   const [entryType, setEntryType] = useState<EntryType>('task');
   const [newTitle, setNewTitle] = useState('');
   const [newEventTime, setNewEventTime] = useState('');
-  const [newPriority, setNewPriority] = useState<Priority>('medium');
   const [placeholder, setPlaceholder] = useState(() => getPlaceholder('task'));
   const newInputRef = useRef<HTMLInputElement>(null);
 
@@ -201,6 +191,7 @@ export default function DailyLeaf() {
   const CLICK_PARTICLES: string[] = ['\u2728', '\u2b50', '\u2764\ufe0f', '\ud83d\udd25', '\ud83c\udf1f', '\ud83d\udcab', '\ud83e\udee7', '\ud83c\udf89'];
   const [companionAnim, setCompanionAnim] = useState<string>('idle');
   const [bubbleFlash, setBubbleFlash] = useState(false);
+  const [companionQuoteIdx, setCompanionQuoteIdx] = useState(0);
   const [particles, setParticles] = useState<{ id: number; emoji: string; x: number; }[]>([]);
   const companionAnimTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const particleCounter = useRef(0);
@@ -315,7 +306,9 @@ export default function DailyLeaf() {
   /* ── Derived data ────────────────────────────────────────────── */
 
   const todayEntries = useMemo(
-    () => entries.filter((e) => e.date === today),
+    () => entries
+      .filter((e) => e.date === today)
+      .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity)),
     [entries, today],
   );
 
@@ -348,9 +341,9 @@ export default function DailyLeaf() {
   }, [planTarget, todayEntries, tomorrowEntries, entries, today, weekEnd]);
 
   const upcomingEvents = useMemo(() => {
-    const cutoff = formatLocalDate((() => { const d = new Date(dateKey + 'T12:00:00'); d.setDate(d.getDate() + 7); return d; })());
+    const cutoff = formatLocalDate((() => { const d = new Date(dateKey + 'T12:00:00'); d.setDate(d.getDate() + 60); return d; })());
     return entries
-      .filter((e) => e.type === 'event' && e.date >= today && e.date <= cutoff)
+      .filter((e) => e.type === 'event' && e.date > today && e.date <= cutoff)
       .sort((a, b) => {
         const dateCmp = a.date.localeCompare(b.date);
         if (dateCmp !== 0) return dateCmp;
@@ -452,13 +445,15 @@ export default function DailyLeaf() {
 
       if (resolvedType === 'task') {
         base.status = 'todo';
-        base.priority = newPriority;
         base.movedCount = 0;
       }
 
       if (resolvedType === 'event') {
         if (parsed.time) base.time = parsed.time;
-        else if (newEventTime) base.time = newEventTime;
+        else if (newEventTime) {
+          const parsedTime = parseTime(newEventTime.trim());
+          if (parsedTime) base.time = parsedTime;
+        }
         if (parsed.duration) base.duration = parsed.duration;
         if (parsed.endTime) base.timeBlock = parsed.endTime;
       }
@@ -466,10 +461,9 @@ export default function DailyLeaf() {
       addEntry(base);
       setNewTitle('');
       setNewEventTime('');
-      setNewPriority('medium');
       setPlaceholder(getPlaceholder(entryType));
     },
-    [newTitle, entryType, newPriority, newEventTime, today, addEntry],
+    [newTitle, entryType, newEventTime, today, addEntry],
   );
 
   /* ── Handler: Add entry via Plan overlay ──────────────────────── */
@@ -490,7 +484,6 @@ export default function DailyLeaf() {
 
       if (resolvedType === 'task') {
         base.status = 'todo';
-        base.priority = 'medium';
         base.movedCount = 0;
       }
 
@@ -557,14 +550,21 @@ export default function DailyLeaf() {
     [commitEdit, cancelEdit],
   );
 
-  /* ── Handlers: Priority cycle ────────────────────────────────── */
+  /* ── Handlers: Reorder entries ──────────────────────────────── */
 
-  const cyclePriority = useCallback(() => {
-    setNewPriority((prev) => {
-      const idx = PRIORITY_ORDER.indexOf(prev);
-      return PRIORITY_ORDER[(idx + 1) % PRIORITY_ORDER.length];
-    });
-  }, []);
+  const moveEntry = useCallback((entryId: string, direction: 'up' | 'down') => {
+    const idx = todayEntries.findIndex(e => e.id === entryId);
+    if (idx === -1) return;
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= todayEntries.length) return;
+
+    // Assign order values to all today's entries, then swap the two
+    const newOrder = todayEntries.map((e, i) => ({
+      id: e.id,
+      updates: { order: i === idx ? swapIdx : i === swapIdx ? idx : i },
+    }));
+    batchUpdateEntries(newOrder);
+  }, [todayEntries, batchUpdateEntries]);
 
   /* ── Handlers: Journal walkthrough complete ──────────────────── */
 
@@ -649,7 +649,9 @@ export default function DailyLeaf() {
   };
 
   // Debrief is available when: past day (always) OR evening OR manually triggered — AND not dismissed/completed
-  const debriefAvailable = !debriefHidden && (isViewingPast || isEveningTime || showDebriefEarly);
+  // ALSO requires at least 1 entry for the day — a new user with 0 tasks shouldn't be asked "how was your plan"
+  const hasDayActivity = todayEntries.length > 0;
+  const debriefAvailable = !debriefHidden && hasDayActivity && (isViewingPast || isEveningTime || showDebriefEarly);
 
   // Reset debrief UI state when the date rolls over
   useEffect(() => {
@@ -830,9 +832,6 @@ export default function DailyLeaf() {
                         {entry.type === 'event' && entry.time && (
                           <span className="font-mono text-[10px] text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded flex-shrink-0">{entry.time}</span>
                         )}
-                        {entry.type === 'task' && entry.priority && (
-                          <span className={`flex-shrink-0 inline-block size-1.5 rounded-full ${PRIORITY_STYLES[entry.priority].dot} opacity-50`} />
-                        )}
                         <button onClick={() => deleteEntry(entry.id)} className="opacity-0 group-hover/item:opacity-100 text-ink-light/40 hover:text-tension transition-all shrink-0">
                           <span className="material-symbols-outlined text-[16px]">close</span>
                         </button>
@@ -1011,7 +1010,17 @@ export default function DailyLeaf() {
                   {/* Companion — animal with speech bubble below */}
                   <div
                     className="flex flex-col items-center cursor-pointer relative"
-                    onClick={() => triggerCompanionAnim('bounce')}
+                    onClick={() => {
+                      triggerCompanionAnim('bounce');
+                      // Shuffle to a different quote
+                      if (companion.messages.length > 1) {
+                        setCompanionQuoteIdx(prev => {
+                          let next = Math.floor(Math.random() * companion.messages.length);
+                          while (next === prev && companion.messages.length > 1) next = Math.floor(Math.random() * companion.messages.length);
+                          return next;
+                        });
+                      }
+                    }}
                   >
                     {/* Floating particles */}
                     {particles.map(p => (
@@ -1042,7 +1051,7 @@ export default function DailyLeaf() {
                           animation: bubbleFlash ? 'bubbleFlash 0.6s ease-out' : 'none',
                         }}
                       >
-                        <p className="font-body italic text-sm sm:text-base text-pencil/70 text-center leading-snug">{companion.message}</p>
+                        <p className="font-body italic text-sm sm:text-base text-pencil/70 text-center leading-snug">{companion.messages[companionQuoteIdx % companion.messages.length]}</p>
                       </div>
                     </div>
                   </div>
@@ -1279,20 +1288,13 @@ export default function DailyLeaf() {
               />
               {entryType === 'event' && (
                 <input
-                  type="time"
+                  type="text"
                   value={newEventTime}
                   onChange={(e) => setNewEventTime(e.target.value)}
-                  className="font-mono text-sm text-ink bg-paper border border-wood-light/20 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-primary/30 flex-shrink-0"
+                  placeholder="7pm"
+                  className="font-mono text-sm text-ink bg-paper border border-wood-light/20 rounded-lg px-2.5 py-1.5 w-20 focus:outline-none focus:border-primary/30 flex-shrink-0 text-center"
+                  onKeyDown={handleAddEntry}
                 />
-              )}
-              {entryType === 'task' && (
-                <button
-                  onClick={cyclePriority}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-wood-light/20 hover:border-primary/30 transition-colors flex-shrink-0"
-                >
-                  <span className={`inline-block size-2.5 rounded-full ${PRIORITY_STYLES[newPriority].dot}`} />
-                  <span className="font-mono text-[11px] text-pencil uppercase">{PRIORITY_STYLES[newPriority].label}</span>
-                </button>
               )}
             </div>
           </div>
@@ -1305,7 +1307,7 @@ export default function DailyLeaf() {
           )}
 
           <div className="space-y-2.5">
-            {todayEntries.map((entry) => {
+            {todayEntries.map((entry, entryIdx) => {
               const isEditing = editingEntryId === entry.id;
               const isDone = entry.type === 'task' && entry.status === 'done';
               const isCancelled = entry.type === 'task' && entry.status === 'cancelled';
@@ -1313,7 +1315,6 @@ export default function DailyLeaf() {
               const isTask = entry.type === 'task';
               const isNote = entry.type === 'note';
               const isEvent = entry.type === 'event';
-              const priorityStyle = entry.priority ? PRIORITY_STYLES[entry.priority] : null;
 
               return (
                 <div key={entry.id} className={`group/entry rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3.5 sm:py-5 transition-all ${
@@ -1376,14 +1377,6 @@ export default function DailyLeaf() {
                         {isNote && !isEditing && (
                           <span className="font-mono text-[10px] text-pencil/40 uppercase tracking-widest">note</span>
                         )}
-                        {!isEditing && isTask && priorityStyle && !isInactive && (
-                          <span className={`inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider ${
-                            entry.priority === 'high' ? 'text-tension/70' : entry.priority === 'medium' ? 'text-bronze/70' : 'text-sage/70'
-                          }`}>
-                            <span className={`inline-block size-2 rounded-full ${priorityStyle.dot}`} />
-                            {priorityStyle.label}
-                          </span>
-                        )}
                         {!isEditing && isEvent && entry.time && (
                           <span className="font-mono text-xs text-primary/70 bg-primary/8 px-2 py-0.5 rounded-md">{entry.time}</span>
                         )}
@@ -1413,7 +1406,24 @@ export default function DailyLeaf() {
 
                     {/* Actions \u2014 visible on hover */}
                     {!isEditing && (
-                      <div className="flex items-center gap-1.5 opacity-0 group-hover/entry:opacity-100 transition-opacity flex-shrink-0">
+                      <div className="flex items-center gap-1 opacity-0 group-hover/entry:opacity-100 transition-opacity flex-shrink-0">
+                        {/* Reorder arrows */}
+                        <div className="flex flex-col -my-1 mr-1">
+                          <button
+                            onClick={() => moveEntry(entry.id, 'up')}
+                            disabled={entryIdx === 0}
+                            className="text-pencil/40 hover:text-primary disabled:opacity-20 disabled:cursor-default transition-colors p-0.5 leading-none"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">keyboard_arrow_up</span>
+                          </button>
+                          <button
+                            onClick={() => moveEntry(entry.id, 'down')}
+                            disabled={entryIdx === todayEntries.length - 1}
+                            className="text-pencil/40 hover:text-primary disabled:opacity-20 disabled:cursor-default transition-colors p-0.5 leading-none"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">keyboard_arrow_down</span>
+                          </button>
+                        </div>
                         {isTask && !isInactive && (
                           <button onClick={() => setStuckTask(entry)} className="font-mono text-[10px] text-pencil hover:text-primary bg-surface-light hover:bg-primary/10 px-2 py-1 rounded-lg transition-colors uppercase tracking-wider">
                             Stuck?
@@ -1467,13 +1477,56 @@ export default function DailyLeaf() {
                     <span className="material-symbols-outlined text-pencil text-lg transition-transform group-open/section:rotate-180">expand_more</span>
                   </summary>
                   <div className="px-5 pb-4 space-y-2">
-                    {upcomingEvents.slice(0, 8).map((ev) => (
-                      <div key={ev.id} className="flex items-baseline gap-3">
+                    {upcomingEvents.slice(0, 12).map((ev) => (
+                      <div key={ev.id} className="group/ev flex items-center gap-3">
                         <span className="font-mono text-xs text-primary/60 whitespace-nowrap min-w-[80px]">
                           {formatEventDate(ev.date, today, tomorrow)}
                           {ev.time && ` ${ev.time}`}
                         </span>
-                        <span className="font-body text-base text-ink/80">{ev.title}</span>
+                        {editingEntryId === ev.id ? (
+                          <input
+                            ref={editInputRef}
+                            className="flex-1 font-body text-base text-ink bg-transparent border-b border-primary/30 outline-none py-0.5"
+                            value={editingValue}
+                            onChange={(e) => setEditingValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && editingValue.trim()) {
+                                updateEntry(ev.id, { title: editingValue.trim() });
+                                setEditingEntryId(null);
+                              }
+                              if (e.key === 'Escape') setEditingEntryId(null);
+                            }}
+                            onBlur={() => {
+                              if (editingValue.trim()) updateEntry(ev.id, { title: editingValue.trim() });
+                              setEditingEntryId(null);
+                            }}
+                            autoFocus
+                          />
+                        ) : (
+                          <span
+                            className="flex-1 font-body text-base text-ink/80 cursor-text"
+                            onClick={() => { setEditingEntryId(ev.id); setEditingValue(ev.title); }}
+                          >
+                            {ev.title}
+                          </span>
+                        )}
+                        {/* Action buttons — visible on hover */}
+                        <div className="flex items-center gap-0.5 opacity-0 group-hover/ev:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => { updateEntry(ev.id, { date: today, type: 'task', status: 'todo' }); }}
+                            className="p-1 rounded text-pencil/40 hover:text-primary hover:bg-primary/5 transition-colors"
+                            title="Move to today as task"
+                          >
+                            <span className="material-symbols-outlined text-sm">move_item</span>
+                          </button>
+                          <button
+                            onClick={() => deleteEntry(ev.id)}
+                            className="p-1 rounded text-pencil/40 hover:text-red-400 hover:bg-red-50 transition-colors"
+                            title="Delete"
+                          >
+                            <span className="material-symbols-outlined text-sm">close</span>
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>

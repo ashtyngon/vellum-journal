@@ -44,6 +44,23 @@ function getContextualMessage(
   mood: string,
   completedCount: number,
 ): string {
+  // No-plan path — planRealism === 0
+  if (planRealism === 0) {
+    if (mood === 'great' || mood === 'good') {
+      return 'No plan, and it still went well. Sometimes winging it works.';
+    }
+    if (mood === 'okay') {
+      return 'No plan today. That happens. Tomorrow you could try writing down just 3 things.';
+    }
+    if (mood === 'tough') {
+      return "Unplanned days can feel chaotic. Even a rough list helps. But you're here reflecting — that counts.";
+    }
+    if (mood === 'struggling') {
+      return "Rough day without a plan. That's a hard combo. Tomorrow, write down one small thing before the day starts.";
+    }
+    return 'No plan is fine sometimes. Noticing it is the first step.';
+  }
+
   // High accomplishment (4-5) messages
   if (accomplishment >= 4 && planRealism >= 3) {
     return `You finished ${completedCount} task${completedCount !== 1 ? 's' : ''}. That's real momentum.`;
@@ -155,6 +172,11 @@ const DayDebrief = ({ todayEntries, date, onSave, onSkip }: DayDebriefProps) => 
     setTimeout(() => goToStep(1), 300);
   };
 
+  const handleNoPlan = () => {
+    setPlanRealism(0); // 0 = no plan
+    setTimeout(() => goToStep(2), 300); // skip accomplishment, go straight to mood
+  };
+
   const handleAccomplishmentSelect = (value: number) => {
     setAccomplishment(value);
     setTimeout(() => goToStep(2), 300);
@@ -210,6 +232,14 @@ const DayDebrief = ({ todayEntries, date, onSave, onSkip }: DayDebriefProps) => 
             {option.label}
           </button>
         ))}
+      </div>
+      <div className="flex justify-center pt-2">
+        <button
+          onClick={handleNoPlan}
+          className="font-body text-sm text-pencil/60 hover:text-ink transition-colors underline underline-offset-4 decoration-pencil/20 hover:decoration-pencil/40"
+        >
+          I didn&rsquo;t have a plan today
+        </button>
       </div>
     </div>
   );
@@ -352,15 +382,23 @@ const DayDebrief = ({ todayEntries, date, onSave, onSkip }: DayDebriefProps) => 
     <div className="bg-surface-light border border-wood-light/30 rounded-2xl p-6 sm:p-8 shadow-soft">
       {/* Header: stats bar */}
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-wood-light/30">
-        <p className="font-body text-ink text-base">
-          You planned{' '}
-          <span className="font-semibold">{totalCount}</span> task
-          {totalCount !== 1 ? 's' : ''} today. You completed{' '}
-          <span className="font-semibold text-primary">{completedCount}</span>.
-        </p>
-        <span className="font-mono text-sm text-pencil tabular-nums ml-3 flex-shrink-0">
-          {completedCount}/{totalCount}
-        </span>
+        {planRealism === 0 ? (
+          <p className="font-body text-ink text-base">
+            No plan today &mdash; that&rsquo;s okay. Let&rsquo;s check in on how you&rsquo;re feeling.
+          </p>
+        ) : (
+          <p className="font-body text-ink text-base">
+            You planned{' '}
+            <span className="font-semibold">{totalCount}</span> task
+            {totalCount !== 1 ? 's' : ''} today. You completed{' '}
+            <span className="font-semibold text-primary">{completedCount}</span>.
+          </p>
+        )}
+        {planRealism !== 0 && (
+          <span className="font-mono text-sm text-pencil tabular-nums ml-3 flex-shrink-0">
+            {completedCount}/{totalCount}
+          </span>
+        )}
       </div>
 
       {/* Step content with fade transition */}

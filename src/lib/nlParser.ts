@@ -27,6 +27,12 @@ const DAY_ABBREVS: Record<string, string> = {
   wed: 'wednesday', thu: 'thursday', thur: 'thursday', thurs: 'thursday',
   fri: 'friday', sat: 'saturday',
 };
+const MONTHS: Record<string, number> = {
+  january: 0, february: 1, march: 2, april: 3, may: 4, june: 5,
+  july: 6, august: 7, september: 8, october: 9, november: 10, december: 11,
+  jan: 0, feb: 1, mar: 2, apr: 3, jun: 5,
+  jul: 6, aug: 7, sep: 8, sept: 8, oct: 9, nov: 10, dec: 11,
+};
 
 /**
  * Resolve a day name to an ISO date string (next occurrence).
@@ -57,9 +63,28 @@ function resolveDayToDate(dayRef: string): string {
 }
 
 /**
+ * Resolve "Month Day" to an ISO date string.
+ * "February 10" → next occurrence of Feb 10 (this year or next).
+ * "March 10th" → next March 10.
+ */
+function resolveMonthDayToDate(month: number, day: number): string | null {
+  const now = new Date();
+  const year = now.getFullYear();
+  // Try this year first
+  const candidate = new Date(year, month, day, 12, 0, 0);
+  // If month/day overflowed (e.g., Feb 31 → March), it's invalid
+  if (candidate.getMonth() !== month || candidate.getDate() !== day) return null;
+  // If in the past, try next year
+  if (candidate < now) {
+    candidate.setFullYear(year + 1);
+  }
+  return formatLocalDate(candidate);
+}
+
+/**
  * Parse a 12h time string like "7pm", "7:30pm", "10am", "3" into HH:MM 24h.
  */
-function parseTime(raw: string): string | null {
+export function parseTime(raw: string): string | null {
   const m = raw.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i);
   if (!m) return null;
 
@@ -126,6 +151,27 @@ export function parseNaturalEntry(raw: string): ParsedEntry {
     }
   }
 
+  // ── 1b. Detect "Month Day" date at start (e.g., "February 10th", "Mar 3", "March 10th") ──
+  // Only if no day-of-week was already detected
+  if (!date) {
+    const monthNames = Object.keys(MONTHS).sort((a, b) => b.length - a.length).join('|');
+    const monthDayPattern = new RegExp(`^(${monthNames})\\s+(\\d{1,2})(?:st|nd|rd|th)?\\b\\s*`, 'i');
+    const monthDayMatch = text.match(monthDayPattern);
+    if (monthDayMatch) {
+      const monthNum = MONTHS[monthDayMatch[1].toLowerCase()];
+      const dayNum = parseInt(monthDayMatch[2], 10);
+      if (monthNum !== undefined && dayNum >= 1 && dayNum <= 31) {
+        const resolved = resolveMonthDayToDate(monthNum, dayNum);
+        if (resolved) {
+          date = resolved;
+          day = monthDayMatch[0].trim();
+          type = 'event';
+          text = text.slice(monthDayMatch[0].length);
+        }
+      }
+    }
+  }
+
   // ── 2. Detect time / time range ───────────────────────────────────
   // Patterns: "7-10pm", "7pm-10pm", "3:30pm", "7pm", "at 3pm"
   // Time range: "7-10pm", "7pm-10pm", "7:30-9:30pm"
@@ -168,8 +214,8 @@ export function parseNaturalEntry(raw: string): ParsedEntry {
   }
 
   // ── 3. Clean up title ─────────────────────────────────────────────
-  // Remove leading colon, dash, or "—" separator
-  text = text.replace(/^[\s:–—-]+/, '').trim();
+  // Remove leading colon, comma, dash, or "—" separator
+  text = text.replace(/^[\s,:–—-]+/, '').trim();
 
   // If a day or time was detected, default to event type
   if (day || time) {
