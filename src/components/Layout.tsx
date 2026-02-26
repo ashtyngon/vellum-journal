@@ -127,10 +127,10 @@ const Layout = ({ children }: { children: ReactNode }) => {
                 <div className="absolute right-16 top-14 w-72 p-5 bg-paper rounded-xl shadow-lifted border border-wood-light/30 z-50">
                   <div className="flex items-center gap-3 mb-3">
                     <div
-                      className="size-10 rounded-xl shadow-md flex items-center justify-center overflow-hidden"
+                      className="size-[120px] rounded-xl shadow-md flex items-center justify-center overflow-hidden"
                       style={{ background: `var(--color-gradient)` }}
                     >
-                      <img src={`/animals/${companion.animal}.png`} alt={companion.name} className="w-7 h-7 object-contain" />
+                      <img src={`/animals/${companion.animal}.png`} alt={companion.name} className="w-[84px] h-[84px] object-contain" />
                     </div>
                     <div>
                       <p className="font-header italic text-lg text-ink">{colorName}</p>

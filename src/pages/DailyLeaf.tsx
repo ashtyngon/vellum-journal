@@ -1092,7 +1092,7 @@ export default function DailyLeaf() {
                       <img
                         src={`/animals/${companion.animal}.png`}
                         alt={companion.name}
-                        className="w-8 h-8 sm:w-10 sm:h-10 mb-1 object-contain"
+                        className="w-24 h-24 sm:w-[120px] sm:h-[120px] mb-1 object-contain"
                         style={{
                           animation: companionAnim !== 'idle' ? `${companionAnim} 0.7s ease-out` : 'none',
                         }}

@@ -64,7 +64,7 @@ const Walkthrough = ({ onComplete }: WalkthroughProps) => {
             className="mb-6 inline-block"
             style={{ filter: 'drop-shadow(0 6px 16px rgba(0,0,0,0.25))' }}
           >
-            <img src={`/animals/${companion.animal}.png`} alt={companion.name} className="w-24 h-24 object-contain" />
+            <img src={`/animals/${companion.animal}.png`} alt={companion.name} className="w-72 h-72 object-contain" />
           </div>
           <h1 className="font-display italic text-3xl text-white mb-3" style={{ textShadow: '0 2px 12px rgba(0,0,0,0.2)' }}>
             Welcome to Soft Vellum
@@ -210,7 +210,7 @@ const Walkthrough = ({ onComplete }: WalkthroughProps) => {
             className="mb-6 inline-block"
             style={{ filter: 'drop-shadow(0 6px 16px rgba(0,0,0,0.25))' }}
           >
-            <img src={`/animals/${companion.animal}.png`} alt={companion.name} className="w-24 h-24 object-contain" />
+            <img src={`/animals/${companion.animal}.png`} alt={companion.name} className="w-72 h-72 object-contain" />
           </div>
           <p className="font-body text-xl text-white/90 leading-relaxed mb-2" style={{ textShadow: '0 1px 8px rgba(0,0,0,0.15)' }}>
             That&rsquo;s it. No rules, no pressure.
