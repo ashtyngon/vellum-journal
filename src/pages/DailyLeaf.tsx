@@ -196,9 +196,14 @@ export default function DailyLeaf() {
   const [showDebriefEarly, setShowDebriefEarly] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
 
-  // Companion animation state
-  const [companionAnim, setCompanionAnim] = useState<'idle' | 'bounce' | 'celebrate'>('idle');
+  // Companion animation state — multiple reaction types
+  const CLICK_REACTIONS = ['companionTap', 'companionSpin', 'companionFlip', 'companionWiggle', 'companionFloat', 'companionGrow'] as const;
+  const CLICK_PARTICLES: string[] = ['\u2728', '\u2b50', '\u2764\ufe0f', '\ud83d\udd25', '\ud83c\udf1f', '\ud83d\udcab', '\ud83e\udee7', '\ud83c\udf89'];
+  const [companionAnim, setCompanionAnim] = useState<string>('idle');
+  const [bubbleFlash, setBubbleFlash] = useState(false);
+  const [particles, setParticles] = useState<{ id: number; emoji: string; x: number; }[]>([]);
   const companionAnimTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const particleCounter = useRef(0);
 
   // Task completion celebration phrases
   const [celebrationPhrase, setCelebrationPhrase] = useState<string | null>(null);
@@ -229,8 +234,31 @@ export default function DailyLeaf() {
 
   const triggerCompanionAnim = useCallback((type: 'bounce' | 'celebrate') => {
     if (companionAnimTimeout.current) clearTimeout(companionAnimTimeout.current);
-    setCompanionAnim(type);
-    companionAnimTimeout.current = setTimeout(() => setCompanionAnim('idle'), type === 'celebrate' ? 1200 : 600);
+    if (type === 'celebrate') {
+      setCompanionAnim('companionCelebrate');
+      companionAnimTimeout.current = setTimeout(() => setCompanionAnim('idle'), 1200);
+    } else {
+      // Random click reaction
+      const reaction = CLICK_REACTIONS[Math.floor(Math.random() * CLICK_REACTIONS.length)];
+      setCompanionAnim(reaction);
+      companionAnimTimeout.current = setTimeout(() => setCompanionAnim('idle'), 700);
+      // Flash the bubble border
+      setBubbleFlash(true);
+      setTimeout(() => setBubbleFlash(false), 600);
+      // Spawn 2-4 particles
+      const count = 2 + Math.floor(Math.random() * 3);
+      const newParticles = Array.from({ length: count }, () => ({
+        id: ++particleCounter.current,
+        emoji: CLICK_PARTICLES[Math.floor(Math.random() * CLICK_PARTICLES.length)],
+        x: -15 + Math.random() * 30,
+      }));
+      setParticles(prev => [...prev, ...newParticles]);
+      const ids = new Set(newParticles.map(p => p.id));
+      setTimeout(() => {
+        setParticles(prev => prev.filter(p => !ids.has(p.id)));
+      }, 900);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const showCelebrationPhrase = useCallback(() => {
@@ -982,16 +1010,38 @@ export default function DailyLeaf() {
 
                   {/* Companion — animal with speech bubble below */}
                   <div
-                    className="flex flex-col items-center cursor-pointer"
+                    className="flex flex-col items-center cursor-pointer relative"
                     onClick={() => triggerCompanionAnim('bounce')}
-                    style={{
-                      animation: companionAnim === 'bounce' ? 'companionTap 0.6s ease-out' : companionAnim === 'celebrate' ? 'companionCelebrate 1.2s ease-out' : 'none',
-                    }}
                   >
-                    <span className="text-2xl sm:text-3xl mb-1">{companion.animal}</span>
+                    {/* Floating particles */}
+                    {particles.map(p => (
+                      <span
+                        key={p.id}
+                        className="absolute top-0 pointer-events-none text-sm"
+                        style={{
+                          left: `calc(50% + ${p.x}px)`,
+                          animation: 'companionParticle 0.8s ease-out forwards',
+                        }}
+                      >
+                        {p.emoji}
+                      </span>
+                    ))}
+                    <span
+                      className="text-2xl sm:text-3xl mb-1"
+                      style={{
+                        animation: companionAnim !== 'idle' ? `${companionAnim} 0.7s ease-out` : 'none',
+                      }}
+                    >
+                      {companion.animal}
+                    </span>
                     <div className="relative">
                       <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rotate-45 bg-surface-light border-l border-t border-wood-light/25" />
-                      <div className="relative rounded-lg bg-surface-light border border-wood-light/25 px-3 py-2 max-w-[160px] sm:max-w-[240px]">
+                      <div
+                        className="relative rounded-lg bg-surface-light border border-wood-light/25 px-3 py-2 max-w-[160px] sm:max-w-[240px]"
+                        style={{
+                          animation: bubbleFlash ? 'bubbleFlash 0.6s ease-out' : 'none',
+                        }}
+                      >
                         <p className="font-body italic text-sm sm:text-base text-pencil/70 text-center leading-snug">{companion.message}</p>
                       </div>
                     </div>
