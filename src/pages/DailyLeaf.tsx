@@ -921,55 +921,56 @@ export default function DailyLeaf() {
           {/* ── Header: date + companion + progress ring ────────── */}
           {!focusMode ? (
             <header className="mb-6">
-              {/* Row 1: date nav + actions — always horizontal */}
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1 min-w-0">
-                  <button
-                    onClick={goToPrevDay}
-                    className="flex-shrink-0 p-1 rounded-lg text-pencil/40 hover:text-ink hover:bg-surface-light transition-all"
-                  >
-                    <span className="material-symbols-outlined text-xl">chevron_left</span>
-                  </button>
-                  <div className="min-w-0">
-                    <h1 className="font-display italic text-ink leading-tight text-xl sm:text-2xl md:text-3xl truncate">
+              {/* Main header row */}
+              <div className="flex items-start justify-between gap-4">
+                {/* Left: date nav + greeting */}
+                <div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={goToPrevDay}
+                      className="flex-shrink-0 p-1 -ml-1 rounded-lg text-pencil/40 hover:text-ink hover:bg-surface-light transition-all"
+                    >
+                      <span className="material-symbols-outlined text-xl sm:text-2xl">chevron_left</span>
+                    </button>
+                    <h1 className="font-display italic text-ink leading-tight text-xl sm:text-2xl md:text-3xl">
                       {todayDisplay}
                     </h1>
-                    <span className="font-body text-xs sm:text-sm text-pencil/50 block">
-                      {isViewingPast ? 'Past day' : `Good ${getGreeting()}`}
-                    </span>
-                  </div>
-                  <button
-                    onClick={goToNextDay}
-                    disabled={isViewingToday}
-                    className={`flex-shrink-0 p-1 rounded-lg transition-all ${
-                      isViewingToday ? 'text-pencil/15 cursor-default' : 'text-pencil/40 hover:text-ink hover:bg-surface-light'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-xl">chevron_right</span>
-                  </button>
-                  {isViewingPast && (
                     <button
-                      onClick={goToToday}
-                      className="flex-shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider bg-primary/10 text-primary transition-all"
+                      onClick={goToNextDay}
+                      disabled={isViewingToday}
+                      className={`flex-shrink-0 p-1 rounded-lg transition-all ${
+                        isViewingToday ? 'text-pencil/15 cursor-default' : 'text-pencil/40 hover:text-ink hover:bg-surface-light'
+                      }`}
                     >
-                      Today
+                      <span className="material-symbols-outlined text-xl sm:text-2xl">chevron_right</span>
                     </button>
-                  )}
+                    {isViewingPast && (
+                      <button
+                        onClick={goToToday}
+                        className="flex-shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider bg-primary/10 text-primary transition-all"
+                      >
+                        Today
+                      </button>
+                    )}
+                  </div>
+                  <span className="font-body text-xs sm:text-sm text-pencil/50 mt-0.5 block ml-1">
+                    {isViewingPast ? 'Past day' : `Good ${getGreeting()}`}
+                  </span>
                 </div>
 
-                {/* Right: progress ring + action buttons */}
-                <div className="flex items-center gap-2 shrink-0">
+                {/* Right: progress ring + companion + actions */}
+                <div className="flex items-center gap-3 shrink-0">
                   {totalTaskCount > 0 && (
                     <div className="relative flex items-center justify-center">
-                      <svg width="44" height="44" viewBox="0 0 44 44" className="-rotate-90">
-                        <circle cx="22" cy="22" r="18" fill="none" stroke="currentColor" className="text-wood-light/20" strokeWidth="2.5" />
+                      <svg width="48" height="48" viewBox="0 0 48 48" className="-rotate-90">
+                        <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" className="text-wood-light/20" strokeWidth="2.5" />
                         <circle
-                          cx="22" cy="22" r="18" fill="none"
+                          cx="24" cy="24" r="20" fill="none"
                           stroke="var(--color-primary)"
                           strokeWidth="3"
                           strokeLinecap="round"
-                          strokeDasharray={`${2 * Math.PI * 18}`}
-                          strokeDashoffset={`${2 * Math.PI * 18 * (1 - completedCount / totalTaskCount)}`}
+                          strokeDasharray={`${2 * Math.PI * 20}`}
+                          strokeDashoffset={`${2 * Math.PI * 20 * (1 - completedCount / totalTaskCount)}`}
                           className="transition-all duration-700 ease-out"
                         />
                       </svg>
@@ -978,37 +979,40 @@ export default function DailyLeaf() {
                       </span>
                     </div>
                   )}
-                  <button
-                    onClick={() => setFocusMode(true)}
-                    className="p-1.5 rounded-lg text-pencil hover:text-primary hover:bg-primary/5 transition-all"
-                    title="Focus mode"
-                  >
-                    <span className="material-symbols-outlined text-lg">center_focus_strong</span>
-                  </button>
-                  <button
-                    onClick={() => setPlanOverlayOpen(true)}
-                    className="p-1.5 rounded-lg text-pencil hover:text-primary hover:bg-primary/5 transition-all"
-                    title="Plan"
-                  >
-                    <span className="material-symbols-outlined text-lg">event_note</span>
-                  </button>
-                </div>
-              </div>
 
-              {/* Row 2: companion speech bubble — full width */}
-              <div
-                className="mt-3 flex items-start gap-2 cursor-pointer"
-                onClick={() => triggerCompanionAnim('bounce')}
-                style={{
-                  animation: companionAnim === 'bounce' ? 'companionTap 0.6s ease-out' : companionAnim === 'celebrate' ? 'companionCelebrate 1.2s ease-out' : 'none',
-                }}
-              >
-                <span className="text-2xl shrink-0 mt-0.5">{companion.animal}</span>
-                <div className="relative flex-1 min-w-0">
-                  {/* Triangle pointer */}
-                  <div className="absolute top-2.5 -left-1.5 w-2.5 h-2.5 rotate-45 bg-surface-light border-l border-b border-wood-light/25" />
-                  <div className="relative rounded-lg bg-surface-light border border-wood-light/25 px-3 py-2">
-                    <p className="font-body italic text-sm text-pencil/70 leading-snug">{companion.message}</p>
+                  {/* Companion — animal with speech bubble below */}
+                  <div
+                    className="flex flex-col items-center cursor-pointer"
+                    onClick={() => triggerCompanionAnim('bounce')}
+                    style={{
+                      animation: companionAnim === 'bounce' ? 'companionTap 0.6s ease-out' : companionAnim === 'celebrate' ? 'companionCelebrate 1.2s ease-out' : 'none',
+                    }}
+                  >
+                    <span className="text-2xl sm:text-3xl mb-1">{companion.animal}</span>
+                    <div className="relative">
+                      <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rotate-45 bg-surface-light border-l border-t border-wood-light/25" />
+                      <div className="relative rounded-lg bg-surface-light border border-wood-light/25 px-2.5 py-1.5 max-w-[140px] sm:max-w-[200px]">
+                        <p className="font-body italic text-[11px] sm:text-sm text-pencil/70 text-center leading-snug">{companion.message}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="flex flex-col gap-1">
+                    <button
+                      onClick={() => setFocusMode(true)}
+                      className="p-1.5 rounded-lg text-pencil hover:text-primary hover:bg-primary/5 transition-all"
+                      title="Focus mode"
+                    >
+                      <span className="material-symbols-outlined text-lg">center_focus_strong</span>
+                    </button>
+                    <button
+                      onClick={() => setPlanOverlayOpen(true)}
+                      className="p-1.5 rounded-lg text-pencil hover:text-primary hover:bg-primary/5 transition-all"
+                      title="Plan"
+                    >
+                      <span className="material-symbols-outlined text-lg">event_note</span>
+                    </button>
                   </div>
                 </div>
               </div>
