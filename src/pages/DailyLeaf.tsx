@@ -195,6 +195,16 @@ export default function DailyLeaf() {
   const [companionOverride, setCompanionOverride] = useState<string | null>(null);
   const companionClickCount = useRef(0);
   const companionClickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Track which quote indices have been shown — never repeat until all seen
+  const companionSeenIndices = useRef<Set<number>>(new Set([0]));
+  // Reset seen indices when companion changes (day navigation)
+  const prevCompanionName = useRef(companion.name);
+  if (companion.name !== prevCompanionName.current) {
+    prevCompanionName.current = companion.name;
+    companionSeenIndices.current = new Set([0]);
+    setCompanionQuoteIdx(0);
+    setCompanionOverride(null);
+  }
   const [particles, setParticles] = useState<{ id: number; emoji: string; x: number; }[]>([]);
   const companionAnimTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const particleCounter = useRef(0);
@@ -1041,8 +1051,18 @@ export default function DailyLeaf() {
                         if (clicks % 3 === 0 && companion.messages.length > 1) {
                           setCompanionOverride(null);
                           setCompanionQuoteIdx(prev => {
-                            let next = Math.floor(Math.random() * companion.messages.length);
-                            while (next === prev && companion.messages.length > 1) next = Math.floor(Math.random() * companion.messages.length);
+                            const seen = companionSeenIndices.current;
+                            // Build pool of unseen indices (excluding current)
+                            const allIndices = Array.from({ length: companion.messages.length }, (_, i) => i);
+                            let unseen = allIndices.filter(i => !seen.has(i) && i !== prev);
+                            // If everything's been seen, reset the deck (but still skip current)
+                            if (unseen.length === 0) {
+                              seen.clear();
+                              seen.add(prev); // don't immediately repeat the one showing
+                              unseen = allIndices.filter(i => i !== prev);
+                            }
+                            const next = unseen[Math.floor(Math.random() * unseen.length)];
+                            seen.add(next);
                             return next;
                           });
                         }

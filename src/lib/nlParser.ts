@@ -172,6 +172,44 @@ export function parseNaturalEntry(raw: string): ParsedEntry {
     }
   }
 
+  // ── 1c. Detect "on Month Day" or "Month Day" ANYWHERE in text ──────
+  // Catches: "Dinner with Zac on March 10th", "meeting Feb 3rd with team"
+  if (!date) {
+    const monthNames = Object.keys(MONTHS).sort((a, b) => b.length - a.length).join('|');
+    const inlineMonthDayPattern = new RegExp(`(?:^|\\s)(?:on\\s+)?(${monthNames})\\s+(\\d{1,2})(?:st|nd|rd|th)?(?:\\s|,|$)`, 'i');
+    const inlineMatch = text.match(inlineMonthDayPattern);
+    if (inlineMatch) {
+      const monthNum = MONTHS[inlineMatch[1].toLowerCase()];
+      const dayNum = parseInt(inlineMatch[2], 10);
+      if (monthNum !== undefined && dayNum >= 1 && dayNum <= 31) {
+        const resolved = resolveMonthDayToDate(monthNum, dayNum);
+        if (resolved) {
+          date = resolved;
+          day = inlineMatch[0].trim();
+          type = 'event';
+          // Strip the matched date phrase (and "on" if present) from the text
+          text = text.replace(inlineMonthDayPattern, ' ').trim();
+        }
+      }
+    }
+  }
+
+  // ── 1d. Detect day-of-week ANYWHERE in text (e.g., "dinner on Thursday") ──
+  if (!date) {
+    const inlineDayPattern = /(?:^|\s)(?:on\s+)?(today|tomorrow|(?:next\s+)?(?:sun(?:day)?|mon(?:day)?|tue(?:s(?:day)?)?|wed(?:nesday)?|thu(?:r(?:s(?:day)?)?)?|fri(?:day)?|sat(?:urday)?))(?:\s|,|$)/i;
+    const inlineDayMatch = text.match(inlineDayPattern);
+    if (inlineDayMatch) {
+      let dayStr = inlineDayMatch[1].toLowerCase().replace(/^next\s+/, '');
+      if (DAY_ABBREVS[dayStr]) dayStr = DAY_ABBREVS[dayStr];
+      if (DAYS.includes(dayStr) || dayStr === 'today' || dayStr === 'tomorrow') {
+        day = dayStr;
+        date = resolveDayToDate(dayStr);
+        type = 'event';
+        text = text.replace(inlineDayPattern, ' ').trim();
+      }
+    }
+  }
+
   // ── 2. Detect time / time range ───────────────────────────────────
   // Patterns: "7-10pm", "7pm-10pm", "3:30pm", "7pm", "at 3pm"
   // Time range: "7-10pm", "7pm-10pm", "7:30-9:30pm"
@@ -209,6 +247,38 @@ export function parseNaturalEntry(raw: string): ParsedEntry {
       if (parsed) {
         time = parsed;
         text = text.slice(singleMatch[0].length);
+      }
+    }
+  }
+
+  // ── 2b. Detect time ANYWHERE in remaining text (e.g., "dinner at 7pm") ──
+  if (!time) {
+    // Time range inline: "dinner 7-10pm"
+    const inlineRangePattern = /(?:^|\s)(?:at\s+)?(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\s*[-–]\s*(\d{1,2}(?::\d{2})?\s*(?:am|pm))(?:\s|,|$)/i;
+    const inlineRange = text.match(inlineRangePattern);
+    if (inlineRange) {
+      let startStr = inlineRange[1].trim();
+      const endStr = inlineRange[2].trim();
+      const endMer = endStr.match(/(am|pm)$/i);
+      if (endMer && !startStr.match(/(am|pm)$/i)) startStr = startStr + endMer[1];
+      const parsedStart = parseTime(startStr);
+      const parsedEnd = parseTime(endStr);
+      if (parsedStart) {
+        time = parsedStart;
+        if (parsedEnd) { endTime = parsedEnd; duration = computeDuration(parsedStart, parsedEnd); }
+        text = text.replace(inlineRangePattern, ' ').trim();
+      }
+    }
+  }
+  if (!time) {
+    // Single time inline: "dinner at 7pm", "meeting 3pm"
+    const inlineTimePattern = /(?:^|\s)(?:at\s+)?(\d{1,2}(?::\d{2})?\s*(?:am|pm))(?:\s|,|$)/i;
+    const inlineTime = text.match(inlineTimePattern);
+    if (inlineTime) {
+      const parsed = parseTime(inlineTime[1].trim());
+      if (parsed) {
+        time = parsed;
+        text = text.replace(inlineTimePattern, ' ').trim();
       }
     }
   }
