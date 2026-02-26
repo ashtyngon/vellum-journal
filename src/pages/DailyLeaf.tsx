@@ -1557,15 +1557,8 @@ export default function DailyLeaf() {
                             {ev.title}
                           </span>
                         )}
-                        {/* Action buttons — visible on hover */}
+                        {/* Action button — visible on hover */}
                         <div className="flex items-center gap-0.5 opacity-0 group-hover/ev:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => { updateEntry(ev.id, { date: today, type: 'task', status: 'todo' }); }}
-                            className="p-1 rounded text-pencil/40 hover:text-primary hover:bg-primary/5 transition-colors"
-                            title="Move to today as task"
-                          >
-                            <span className="material-symbols-outlined text-sm">move_item</span>
-                          </button>
                           <button
                             onClick={() => deleteEntry(ev.id)}
                             className="p-1 rounded text-pencil/40 hover:text-red-400 hover:bg-red-50 transition-colors"
