@@ -935,7 +935,7 @@ export default function DailyLeaf() {
                     >
                       <span className="material-symbols-outlined text-2xl">chevron_left</span>
                     </button>
-                    <h1 className="font-display italic text-ink leading-tight text-3xl sm:text-4xl">
+                    <h1 className="font-display italic text-ink leading-tight text-2xl sm:text-3xl">
                       {todayDisplay}
                     </h1>
                     <button
@@ -984,18 +984,24 @@ export default function DailyLeaf() {
                     </div>
                   )}
 
-                  {/* Companion — animal + quote */}
-                  <button
+                  {/* Companion — animal with speech bubble */}
+                  <div
+                    className="flex flex-col items-center cursor-pointer"
                     onClick={() => triggerCompanionAnim('bounce')}
-                    className="flex items-center gap-2.5 pl-3 pr-4 py-2 rounded-xl border-l-[3px] cursor-pointer hover:bg-surface-light/60 transition-all"
                     style={{
-                      borderLeftColor: 'var(--color-primary)',
                       animation: companionAnim === 'bounce' ? 'companionTap 0.6s ease-out' : companionAnim === 'celebrate' ? 'companionCelebrate 1.2s ease-out' : 'none',
                     }}
                   >
-                    <span className="text-2xl shrink-0">{companion.animal}</span>
-                    <span className="font-body italic text-sm text-pencil/70 text-left leading-snug max-w-[180px]">{companion.message}</span>
-                  </button>
+                    <span className="text-3xl mb-1">{companion.animal}</span>
+                    {/* Speech bubble */}
+                    <div className="relative">
+                      {/* Triangle pointer */}
+                      <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 bg-surface-light border-l border-t border-wood-light/25" />
+                      <div className="relative rounded-lg bg-surface-light border border-wood-light/25 px-3 py-1.5 max-w-[160px]">
+                        <p className="font-body italic text-xs text-pencil/70 text-center leading-snug">{companion.message}</p>
+                      </div>
+                    </div>
+                  </div>
 
                   {/* Action buttons */}
                   <div className="flex items-center gap-1.5">
