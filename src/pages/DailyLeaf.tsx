@@ -1174,11 +1174,11 @@ export default function DailyLeaf() {
               </div>
             )}
 
-            <div className="flex items-center gap-3 py-3.5 px-5 rounded-xl bg-surface-light border border-wood-light/20 shadow-sm transition-all focus-within:border-primary/30 focus-within:shadow-md">
-              <span className="material-symbols-outlined text-xl text-primary/60">add</span>
+            <div className="flex items-center gap-4 py-5 px-6 rounded-2xl bg-surface-light border border-wood-light/20 shadow-sm transition-all focus-within:border-primary/30 focus-within:shadow-md">
+              <span className="material-symbols-outlined text-2xl text-primary/60">add</span>
               <input
                 ref={newInputRef}
-                className="flex-1 min-w-0 bg-transparent border-none p-0 text-xl font-body text-ink placeholder:text-pencil/35 focus:ring-0 focus:outline-none"
+                className="flex-1 min-w-0 bg-transparent border-none p-0 text-2xl font-body text-ink placeholder:text-pencil/35 focus:ring-0 focus:outline-none"
                 placeholder={placeholder}
                 type="text"
                 value={newTitle}
@@ -1212,7 +1212,7 @@ export default function DailyLeaf() {
             </p>
           )}
 
-          <div className="space-y-1.5">
+          <div className="space-y-2.5">
             {todayEntries.map((entry) => {
               const isEditing = editingEntryId === entry.id;
               const isDone = entry.type === 'task' && entry.status === 'done';
@@ -1224,15 +1224,15 @@ export default function DailyLeaf() {
               const priorityStyle = entry.priority ? PRIORITY_STYLES[entry.priority] : null;
 
               return (
-                <div key={entry.id} className={`group/entry rounded-xl px-5 py-3.5 transition-all ${
+                <div key={entry.id} className={`group/entry rounded-2xl px-6 py-5 transition-all ${
                   isInactive ? 'opacity-50 bg-transparent' : 'bg-surface-light/40 hover:bg-surface-light/80'
-                } ${isNote ? 'border-l-2 border-pencil/15' : ''}`}>
-                  <div className="flex items-center gap-4">
+                } ${isNote ? 'border-l-3 border-pencil/15' : ''}`}>
+                  <div className="flex items-center gap-5">
                     {/* Checkbox / bullet \u2014 BIG */}
                     {isTask ? (
                       <button
                         onClick={(e) => handleToggleTask(entry.id, e.currentTarget as HTMLElement)}
-                        className={`flex-shrink-0 focus:outline-none rounded-lg transition-all flex items-center justify-center w-8 h-8 border-2 ${
+                        className={`flex-shrink-0 focus:outline-none rounded-xl transition-all flex items-center justify-center w-12 h-12 border-[2.5px] ${
                           isDone
                             ? 'bg-primary border-primary text-white'
                             : isCancelled
@@ -1241,15 +1241,15 @@ export default function DailyLeaf() {
                         }`}
                         title={isDone ? 'Mark as todo' : 'Mark as done'}
                       >
-                        {isDone && <span className="material-symbols-outlined text-lg">check</span>}
-                        {isCancelled && <span className="material-symbols-outlined text-lg">close</span>}
+                        {isDone && <span className="material-symbols-outlined text-2xl">check</span>}
+                        {isCancelled && <span className="material-symbols-outlined text-2xl">close</span>}
                       </button>
                     ) : (
-                      <div className="flex-shrink-0 flex items-center justify-center w-8 h-8">
+                      <div className="flex-shrink-0 flex items-center justify-center w-12 h-12">
                         {isEvent ? (
-                          <span className="inline-flex items-center justify-center size-5 rounded-full border-[2.5px] border-primary/50" />
+                          <span className="inline-flex items-center justify-center size-7 rounded-full border-[3px] border-primary/50" />
                         ) : (
-                          <span className="inline-block w-5 h-[2.5px] bg-ink/25 rounded-full" />
+                          <span className="inline-block w-6 h-[3px] bg-ink/25 rounded-full" />
                         )}
                       </div>
                     )}
@@ -1259,7 +1259,7 @@ export default function DailyLeaf() {
                       {isEditing ? (
                         <input
                           ref={editInputRef}
-                          className="w-full bg-transparent border-none p-0 text-xl font-body text-ink focus:ring-0 focus:outline-none"
+                          className="w-full bg-transparent border-none p-0 text-2xl font-body text-ink focus:ring-0 focus:outline-none"
                           value={editingValue}
                           onChange={(e) => setEditingValue(e.target.value)}
                           onKeyDown={handleEditKeyDown}
@@ -1267,7 +1267,7 @@ export default function DailyLeaf() {
                         />
                       ) : (
                         <button
-                          className={`text-left text-xl leading-snug font-body transition-colors w-full ${
+                          className={`text-left text-2xl leading-snug font-body transition-colors w-full ${
                             isCancelled ? 'line-through decoration-tension/40 text-ink/35'
                               : isDone ? 'line-through decoration-pencil/20 text-ink/45'
                               : isNote ? 'text-ink/65 italic'
