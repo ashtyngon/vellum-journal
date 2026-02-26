@@ -154,9 +154,9 @@ export const DEFAULT_PRIMARY = {
   index: 0,
 };
 
-/** Apply color everywhere — primary, accent, ambient glow, tinted surfaces.
- *  The daily color should be IMPOSSIBLE TO MISS. Every surface should whisper the color.
- *  ADHD brains need novelty — this is the novelty engine. */
+/** Accent-only: daily color for interactive elements, not surface wash.
+ *  The daily color appears on buttons, progress bars, focus rings, and small highlights.
+ *  ADHD brains need novelty — this is the novelty engine, applied with restraint. */
 export function applyAccentColor(color: DailyColor, isDark: boolean): void {
   const root = document.documentElement;
   const hsl = isDark ? color.cssDark : color.css;
@@ -174,20 +174,20 @@ export function applyAccentColor(color: DailyColor, isDark: boolean): void {
   // Light-mode tints use a boosted lightness so the wash is visible but not muddy
   const tintL = isDark ? l : Math.min(l + 20, 85);
 
-  // Ambient tints — IMPOSSIBLE TO MISS. Every panel, every surface drenched in the daily color.
-  root.style.setProperty('--color-tint-soft', `hsla(${h}, ${s}%, ${tintL}%, ${isDark ? 0.20 : 0.18})`);
-  root.style.setProperty('--color-tint-medium', `hsla(${h}, ${s}%, ${tintL}%, ${isDark ? 0.32 : 0.28})`);
-  root.style.setProperty('--color-tint-strong', `hsla(${h}, ${s}%, ${tintL}%, ${isDark ? 0.45 : 0.40})`);
+  // Ambient tints — subtle accent for hover, active, and selected states only.
+  root.style.setProperty('--color-tint-soft', `hsla(${h}, ${s}%, ${tintL}%, ${isDark ? 0.06 : 0.04})`);
+  root.style.setProperty('--color-tint-medium', `hsla(${h}, ${s}%, ${tintL}%, ${isDark ? 0.12 : 0.08})`);
+  root.style.setProperty('--color-tint-strong', `hsla(${h}, ${s}%, ${tintL}%, ${isDark ? 0.20 : 0.15})`);
   root.style.setProperty('--color-glow', `hsla(${h}, ${s}%, ${l}%, 0.50)`);
 
-  // Header-level bold wash — the DailyLeaf header strip should POP
-  root.style.setProperty('--color-tint-header', `hsla(${h}, ${s}%, ${tintL}%, ${isDark ? 0.28 : 0.24})`);
+  // Header tint — barely tinted, not a bold wash
+  root.style.setProperty('--color-tint-header', `hsla(${h}, ${s}%, ${tintL}%, ${isDark ? 0.08 : 0.05})`);
 
-  // Sidebar panel tint — visible color wash, not invisible whisper
-  root.style.setProperty('--color-tint-panel', `hsla(${h}, ${s}%, ${tintL}%, ${isDark ? 0.16 : 0.14})`);
+  // Sidebar panel tint — almost invisible, just enough to hint at the daily color
+  root.style.setProperty('--color-tint-panel', `hsla(${h}, ${s}%, ${tintL}%, ${isDark ? 0.05 : 0.03})`);
 
-  // Border tint — thick colored borders for sections and cards
-  root.style.setProperty('--color-border-accent', `hsla(${h}, ${s}%, ${l}%, ${isDark ? 0.45 : 0.40})`);
+  // Border tint — subtle accent borders
+  root.style.setProperty('--color-border-accent', `hsla(${h}, ${s}%, ${l}%, ${isDark ? 0.25 : 0.20})`);
 
   // Focus ring
   root.style.setProperty('--color-focus-ring', `hsla(${h}, ${s}%, ${l}%, 0.55)`);

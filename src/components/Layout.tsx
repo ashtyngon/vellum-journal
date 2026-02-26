@@ -143,8 +143,8 @@ const Layout = ({ children }: { children: ReactNode }) => {
       <header
         className={`sticky top-0 z-40 backdrop-blur-sm border-b px-4 md:px-6 py-3 shadow-sm transition-all duration-300 ${focusMode ? 'h-0 overflow-hidden border-none py-0 opacity-0' : ''}`}
         style={{
-          backgroundColor: useDefaultColor ? 'var(--color-paper)' : 'var(--color-tint-medium)',
-          borderColor: useDefaultColor ? 'var(--color-border)' : 'var(--color-border-accent)',
+          backgroundColor: 'var(--color-paper)',
+          borderColor: 'var(--color-border)',
         }}
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between">
