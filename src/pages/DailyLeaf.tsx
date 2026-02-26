@@ -991,8 +991,8 @@ export default function DailyLeaf() {
                     <span className="text-2xl sm:text-3xl mb-1">{companion.animal}</span>
                     <div className="relative">
                       <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rotate-45 bg-surface-light border-l border-t border-wood-light/25" />
-                      <div className="relative rounded-lg bg-surface-light border border-wood-light/25 px-2.5 py-1.5 max-w-[140px] sm:max-w-[200px]">
-                        <p className="font-body italic text-[11px] sm:text-sm text-pencil/70 text-center leading-snug">{companion.message}</p>
+                      <div className="relative rounded-lg bg-surface-light border border-wood-light/25 px-3 py-2 max-w-[160px] sm:max-w-[240px]">
+                        <p className="font-body italic text-sm sm:text-base text-pencil/70 text-center leading-snug">{companion.message}</p>
                       </div>
                     </div>
                   </div>
