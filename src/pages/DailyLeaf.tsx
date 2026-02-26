@@ -595,7 +595,32 @@ export default function DailyLeaf() {
   const todayDebriefExists = debriefs.some(d => d.date === dateKey);
   const [debriefDismissed, setDebriefDismissed] = useState(false);
   const [redoDebrief, setRedoDebrief] = useState(false);
-  const debriefHidden = (debriefDismissed || todayDebriefExists) && !redoDebrief;
+
+  // Persistent snooze: check localStorage for "don't show today" or "remind later"
+  const debriefSnoozed = (() => {
+    try {
+      const raw = localStorage.getItem('debrief-snooze');
+      if (!raw) return false;
+      const { until } = JSON.parse(raw);
+      return Date.now() < until;
+    } catch { return false; }
+  })();
+  const debriefHidden = (debriefDismissed || debriefSnoozed || todayDebriefExists) && !redoDebrief;
+
+  const snoozeDebrief = (hours: number) => {
+    localStorage.setItem('debrief-snooze', JSON.stringify({ until: Date.now() + hours * 3600_000 }));
+    setDebriefDismissed(true);
+    setDebriefOverlayOpen(false);
+  };
+  const dismissDebriefToday = () => {
+    // Dismiss until 5am tomorrow (covers the rest of the day)
+    const tomorrow5am = new Date();
+    tomorrow5am.setDate(tomorrow5am.getDate() + 1);
+    tomorrow5am.setHours(5, 0, 0, 0);
+    localStorage.setItem('debrief-snooze', JSON.stringify({ until: tomorrow5am.getTime() }));
+    setDebriefDismissed(true);
+    setDebriefOverlayOpen(false);
+  };
 
   // Debrief is available when: past day (always) OR evening OR manually triggered — AND not dismissed/completed
   const debriefAvailable = !debriefHidden && (isViewingPast || isEveningTime || showDebriefEarly);
@@ -864,6 +889,23 @@ export default function DailyLeaf() {
               onSave={(debrief) => { saveDebrief(debrief); setDebriefOverlayOpen(false); setDebriefDismissed(true); setRedoDebrief(false); }}
               onSkip={() => { setDebriefOverlayOpen(false); setDebriefDismissed(true); }}
             />
+
+            {/* Snooze / dismiss options */}
+            <div className="mt-6 pt-4 border-t border-wood-light/15 flex items-center justify-center gap-4 text-sm font-body">
+              <button
+                onClick={() => snoozeDebrief(2)}
+                className="text-pencil/60 hover:text-ink transition-colors"
+              >
+                Remind me in 2 hours
+              </button>
+              <span className="text-pencil/20">|</span>
+              <button
+                onClick={dismissDebriefToday}
+                className="text-pencil/60 hover:text-ink transition-colors"
+              >
+                Not tonight
+              </button>
+            </div>
           </div>
         </div>
       )}
