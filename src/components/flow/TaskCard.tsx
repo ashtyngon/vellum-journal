@@ -53,6 +53,7 @@ export default function TaskCard({
 
   return (
     <div
+      data-entry-id={entry.id}
       draggable={!editing}
       onDragStart={e => { if (!editing) onDragStart(e, entry.id); }}
       className={`group ${isHabitTask ? 'bg-sage/5' : 'bg-surface-light'} p-3 rounded shadow-soft border-l-4 ${borderClass} transition-all ${

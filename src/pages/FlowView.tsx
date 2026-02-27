@@ -23,7 +23,8 @@ import {
   decodeDrag,
 } from '../components/flow';
 import { parseNaturalEntry } from '../lib/nlParser';
-import { celebrateTask } from '../components/TaskCelebration';
+import { celebrateTask, celebrateSection } from '../components/TaskCelebration';
+import AchievementToast from '../components/AchievementToast';
 import type { RapidLogEntry } from '../context/AppContext';
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -645,6 +646,9 @@ export default function FlowView() {
             if (sectionTasks.length > 0 && sectionTasks.every(t => t.status === 'done')) {
               flashExpression('excited', 1000);
               setReactiveState('section_done');
+              // Celebrate on the section element
+              const sectionEl = document.querySelector(`[data-section-id="${s.id}"]`) as HTMLElement | null;
+              if (sectionEl) celebrateSection(sectionEl);
               runAchievementCheck({ sectionJustCompleted: true });
               break;
             }
@@ -729,6 +733,7 @@ export default function FlowView() {
             return (
               <div
                 key={section.id}
+                data-section-id={section.id}
                 className={`rounded-lg border ${section.accentColor} ${section.color} overflow-hidden`}
               >
                 <SectionHeader
@@ -960,19 +965,13 @@ export default function FlowView() {
 
       {/* ── Achievement toast ──────────────────────────────────────────── */}
       {currentAchievementToast && !showCleanLeaf && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] animate-bounce">
-          <div className="flex items-center gap-3 bg-surface-light shadow-lifted rounded-xl border border-wood-light/30 px-5 py-3">
-            <span className="text-2xl">{currentAchievementToast.icon}</span>
-            <div>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-pencil/50">
-                Achievement Unlocked
-              </p>
-              <p className="font-display text-sm text-ink font-semibold">
-                {currentAchievementToast.name}
-              </p>
-            </div>
-          </div>
-        </div>
+        <AchievementToast
+          achievement={currentAchievementToast}
+          onDismiss={() => {
+            setAchievementQueue(prev => prev.slice(1));
+            if (achievementQueue[0]) markAchievementSeen(achievementQueue[0]);
+          }}
+        />
       )}
     </div>
   );
