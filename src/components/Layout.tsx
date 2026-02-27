@@ -91,7 +91,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
                   pathname === link.to
                     ? 'bg-primary/10 text-primary'
-                    : 'text-ink-light hover:text-ink hover:bg-surface-light'
+                    : 'text-ink/60 hover:text-ink hover:bg-surface-light'
                 }`}
               >
                 <span className="material-symbols-outlined text-lg">{link.icon}</span>
@@ -114,7 +114,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
                 className="inline-block size-3.5 rounded-full flex-shrink-0"
                 style={{ backgroundColor: dailyColor.css }}
               />
-              <span className="font-mono text-[10px] uppercase tracking-wider"
+              <span className="font-mono text-[11px] uppercase tracking-wider"
                 style={{ color: useDefaultColor ? 'var(--color-pencil)' : 'var(--color-primary)' }}
               >
                 {colorName}
@@ -124,7 +124,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
             {colorInfoOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setColorInfoOpen(false)} />
-                <div className="absolute right-16 top-14 w-72 p-5 bg-paper rounded-xl shadow-lifted border border-wood-light/30 z-50">
+                <div className="absolute right-4 sm:right-16 top-14 w-72 max-w-[calc(100vw-2rem)] p-5 bg-paper rounded-xl shadow-lifted border border-wood-light/30 z-50" role="dialog" aria-label="Color of the Day settings">
                   <div className="flex items-center gap-3 mb-3">
                     <div
                       className="size-[120px] rounded-xl shadow-md flex items-center justify-center overflow-hidden"
@@ -134,7 +134,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
                     </div>
                     <div>
                       <p className="font-header italic text-lg text-ink">{colorName}</p>
-                      <p className="font-mono text-[9px] text-pencil uppercase tracking-widest">{companion.name} · today&rsquo;s companion</p>
+                      <p className="font-mono text-[11px] text-pencil uppercase tracking-widest">{companion.name} · today&rsquo;s companion</p>
                     </div>
                   </div>
                   <p className="font-body text-sm text-ink/70 leading-relaxed mb-4 italic">
@@ -143,7 +143,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
                   {/* Color toggle — clear on/off */}
                   <button
                     onClick={() => { useDefaultColor ? restoreDailyColor() : revertColor(); setColorInfoOpen(false); }}
-                    className="w-full text-center py-2.5 rounded-lg font-mono text-[11px] uppercase tracking-wider transition-all"
+                    className="w-full text-center py-3 rounded-lg font-mono text-xs uppercase tracking-wider transition-all"
                     style={{
                       backgroundColor: useDefaultColor ? 'var(--color-tint-medium)' : 'transparent',
                       border: useDefaultColor ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
@@ -159,8 +159,10 @@ const Layout = ({ children }: { children: ReactNode }) => {
             {/* Dark mode toggle */}
             <button
               onClick={() => setDarkMode(d => !d)}
-              className="text-pencil/50 hover:text-ink transition-colors p-1"
+              className="text-pencil hover:text-ink transition-colors p-2 rounded-lg"
               title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-pressed={darkMode}
             >
               <span className="material-symbols-outlined text-xl">{darkMode ? 'light_mode' : 'dark_mode'}</span>
             </button>
@@ -168,7 +170,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
             <div className="relative">
               <button
                 onClick={() => setShowProfile(!showProfile)}
-                className="size-9 rounded-full bg-cover bg-center border-2 border-white shadow-sm cursor-pointer hover:scale-105 transition-transform overflow-hidden"
+                className="size-10 rounded-full bg-cover bg-center border-2 border-white shadow-sm cursor-pointer hover:scale-105 transition-transform overflow-hidden"
               >
                 {user?.photoURL ? (
                   <img src={user.photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -198,8 +200,10 @@ const Layout = ({ children }: { children: ReactNode }) => {
             </div>
 
             <button
-              className="lg:hidden text-ink hover:text-primary p-1"
+              className="lg:hidden text-ink hover:text-primary p-2"
               onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileOpen}
             >
               <span className="material-symbols-outlined text-2xl">{mobileOpen ? 'close' : 'menu'}</span>
             </button>
@@ -213,10 +217,10 @@ const Layout = ({ children }: { children: ReactNode }) => {
                 key={link.to}
                 to={link.to}
                 onClick={() => setMobileOpen(false)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
+                className={`px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
                   pathname === link.to
                     ? 'bg-primary/10 text-primary'
-                    : 'text-ink-light hover:text-ink hover:bg-surface-light'
+                    : 'text-ink/60 hover:text-ink hover:bg-surface-light'
                 }`}
               >
                 <span className="material-symbols-outlined text-lg">{link.icon}</span>

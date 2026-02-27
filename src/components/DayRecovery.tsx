@@ -120,7 +120,7 @@ const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) =>
                   {task.title}
                 </span>
                 {isOverdue && (
-                  <span className="ml-2 font-mono text-[9px] text-tension/60 uppercase tracking-wider">
+                  <span className="ml-2 font-mono text-[11px] text-tension/60 uppercase tracking-wider">
                     overdue
                   </span>
                 )}

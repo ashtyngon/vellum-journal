@@ -816,7 +816,7 @@ export default function DailyLeaf() {
               {/* Intention — only for today/tomorrow (not week) */}
               {planTarget !== 'week' && (
                 <div>
-                  <label className="block font-mono text-[10px] text-accent uppercase tracking-[0.15em] mb-1.5">
+                  <label className="block font-mono text-[11px] text-accent uppercase tracking-[0.15em] mb-1.5">
                     {planTarget === 'today' ? "Today\u2019s intention" : "Tomorrow\u2019s intention"}
                   </label>
                   <input
@@ -833,7 +833,7 @@ export default function DailyLeaf() {
               {/* Entries list */}
               {planEntries.length > 0 && (
                 <div>
-                  <p className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em] mb-2 flex items-center gap-1.5">
+                  <p className="font-mono text-[11px] text-pencil uppercase tracking-[0.15em] mb-2 flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-[14px]">checklist</span>
                     {planEntries.length} item{planEntries.length !== 1 ? 's' : ''} {planTarget === 'today' ? 'today' : 'planned'}
                   </p>
@@ -846,12 +846,12 @@ export default function DailyLeaf() {
                         </span>
                         {/* Show date label in week view */}
                         {planTarget === 'week' && entry.date !== today && (
-                          <span className="font-mono text-[10px] text-pencil/50 flex-shrink-0">
+                          <span className="font-mono text-[11px] text-pencil/70 flex-shrink-0">
                             {new Date(entry.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}
                           </span>
                         )}
                         {entry.type === 'event' && entry.time && (
-                          <span className="font-mono text-[10px] text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded flex-shrink-0">{entry.time}</span>
+                          <span className="font-mono text-[11px] text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded flex-shrink-0">{entry.time}</span>
                         )}
                         <button onClick={() => deleteEntry(entry.id)} className="opacity-0 group-hover/item:opacity-100 text-ink-light/40 hover:text-tension transition-all shrink-0">
                           <span className="material-symbols-outlined text-[16px]">close</span>
@@ -963,7 +963,7 @@ export default function DailyLeaf() {
 
         {/* ── Focused Feed: single-column layout ──────────────────── */}
         <div className={`mx-auto px-4 sm:px-6 py-6 transition-all duration-500 ease-out ${
-          focusMode ? 'max-w-2xl' : 'max-w-3xl'
+          focusMode ? 'max-w-3xl' : 'max-w-6xl'
         }`}>
 
           {/* ── Header: date + companion + progress ring ────────── */}
@@ -976,7 +976,8 @@ export default function DailyLeaf() {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={goToPrevDay}
-                      className="flex-shrink-0 p-1 -ml-1 rounded-lg text-pencil/40 hover:text-ink hover:bg-surface-light transition-all"
+                      className="flex-shrink-0 p-2 -ml-2 rounded-lg text-pencil/60 hover:text-ink hover:bg-surface-light transition-all"
+                      aria-label="Previous day"
                     >
                       <span className="material-symbols-outlined text-xl sm:text-2xl">chevron_left</span>
                     </button>
@@ -986,22 +987,23 @@ export default function DailyLeaf() {
                     <button
                       onClick={goToNextDay}
                       disabled={dateKey >= maxFutureDate}
-                      className={`flex-shrink-0 p-1 rounded-lg transition-all ${
-                        dateKey >= maxFutureDate ? 'text-pencil/15 cursor-default' : 'text-pencil/40 hover:text-ink hover:bg-surface-light'
+                      className={`flex-shrink-0 p-2 rounded-lg transition-all ${
+                        dateKey >= maxFutureDate ? 'text-pencil/15 cursor-default' : 'text-pencil/60 hover:text-ink hover:bg-surface-light'
                       }`}
+                      aria-label="Next day"
                     >
                       <span className="material-symbols-outlined text-xl sm:text-2xl">chevron_right</span>
                     </button>
                     {!isViewingToday && (
                       <button
                         onClick={goToToday}
-                        className="flex-shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider bg-primary/10 text-primary transition-all"
+                        className="flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-mono uppercase tracking-wider bg-primary/10 text-primary transition-all"
                       >
                         Today
                       </button>
                     )}
                   </div>
-                  <span className="font-body text-xs sm:text-sm text-pencil/50 mt-0.5 block ml-1">
+                  <span className="font-body text-xs sm:text-sm text-pencil/70 mt-0.5 block ml-1">
                     {isViewingPast ? 'Looking back' : isViewingFuture ? 'Looking ahead' : `Good ${getGreeting()}`}
                   </span>
                 </div>
@@ -1022,16 +1024,18 @@ export default function DailyLeaf() {
                           className="transition-all duration-700 ease-out"
                         />
                       </svg>
-                      <span className="absolute font-mono text-[10px] text-ink tabular-nums">
+                      <span className="absolute font-mono text-xs text-ink tabular-nums">
                         {completedCount}/{totalTaskCount}
                       </span>
                     </div>
                   )}
 
-                  {/* Companion — animal with speech bubble (only today) */}
+                  {/* Companion — animal with speech bubble (only today) — hidden on mobile, shown below tasks */}
                   {isViewingToday ? (
                     <div
-                      className="flex flex-col items-center cursor-pointer relative"
+                      className="hidden sm:flex flex-col items-center cursor-pointer relative"
+                      role="button"
+                      aria-label={`Interact with companion ${companion.name}`}
                       onClick={() => {
                         triggerCompanionAnim('bounce');
                         // Track rapid clicks
@@ -1105,7 +1109,7 @@ export default function DailyLeaf() {
                             animation: bubbleFlash ? 'bubbleFlash 0.6s ease-out' : 'none',
                           }}
                         >
-                          <p className="font-body italic text-sm sm:text-base text-pencil/70 text-center leading-snug">{companionOverride ?? companion.messages[companionQuoteIdx % companion.messages.length]}</p>
+                          <p className="font-body italic text-sm sm:text-base text-ink/60 text-center leading-snug">{companionOverride ?? companion.messages[companionQuoteIdx % companion.messages.length]}</p>
                         </div>
                       </div>
                     </div>
@@ -1115,15 +1119,17 @@ export default function DailyLeaf() {
                   <div className="flex flex-col gap-1">
                     <button
                       onClick={() => setFocusMode(true)}
-                      className="p-1.5 rounded-lg text-pencil hover:text-primary hover:bg-primary/5 transition-all"
+                      className="p-2 rounded-lg text-pencil hover:text-primary hover:bg-primary/5 transition-all"
                       title="Focus mode"
+                      aria-label="Enter focus mode"
                     >
                       <span className="material-symbols-outlined text-lg">center_focus_strong</span>
                     </button>
                     <button
                       onClick={() => setPlanOverlayOpen(true)}
-                      className="p-1.5 rounded-lg text-pencil hover:text-primary hover:bg-primary/5 transition-all"
+                      className="p-2 rounded-lg text-pencil hover:text-primary hover:bg-primary/5 transition-all"
                       title="Plan"
+                      aria-label="Open plan overlay"
                     >
                       <span className="material-symbols-outlined text-lg">event_note</span>
                     </button>
@@ -1135,7 +1141,7 @@ export default function DailyLeaf() {
               <div className="mt-3">
                 <div className="relative group/input">
                   <input
-                    className="w-full bg-transparent border-none p-0 text-lg sm:text-xl font-display text-ink placeholder:text-pencil/25 focus:ring-0 focus:outline-none italic"
+                    className="w-full bg-transparent border-none p-0 text-lg sm:text-xl font-display text-ink placeholder:text-pencil/50 focus:ring-0 focus:outline-none italic"
                     placeholder="What's on your plate?"
                     type="text"
                     value={intention}
@@ -1155,7 +1161,7 @@ export default function DailyLeaf() {
                   <div className="mt-4 p-4 rounded-xl bg-surface-light/60 border border-wood-light/20">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="material-symbols-outlined text-base text-primary/60">nights_stay</span>
-                      <span className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em]">From last night&rsquo;s debrief</span>
+                      <span className="font-mono text-[11px] text-pencil uppercase tracking-[0.15em]">From last night&rsquo;s debrief</span>
                     </div>
                     {yesterdayDebrief.reflection && (
                       <p className="font-body text-base text-ink/75 italic mb-2">&ldquo;{yesterdayDebrief.reflection}&rdquo;</p>
@@ -1203,10 +1209,11 @@ export default function DailyLeaf() {
               </div>
               <button
                 onClick={() => setFocusMode(false)}
-                className="absolute right-0 top-1/2 -translate-y-1/2 text-pencil/30 hover:text-pencil/60 transition-colors"
+                className="absolute right-0 top-1/2 -translate-y-1/2 p-2 rounded-lg text-pencil/50 hover:text-ink hover:bg-surface-light transition-all"
                 title="Exit focus mode"
+                aria-label="Exit focus mode"
               >
-                <span className="material-symbols-outlined text-[16px]">close_fullscreen</span>
+                <span className="material-symbols-outlined text-xl">close_fullscreen</span>
               </button>
             </header>
           )}
@@ -1220,7 +1227,7 @@ export default function DailyLeaf() {
           {!focusMode && !showDayRecovery && todayTasks.length > 0 && (
             <button
               onClick={() => setShowDayRecovery(true)}
-              className="mb-3 font-mono text-[10px] text-pencil/50 hover:text-primary uppercase tracking-widest transition-colors"
+              className="mb-3 inline-flex items-center gap-1.5 font-mono text-xs text-pencil hover:text-primary uppercase tracking-widest transition-all px-3 py-2 rounded-lg border border-wood-light/20 hover:border-primary/20 hover:bg-primary/5"
             >
               Reset My Day
             </button>
@@ -1228,7 +1235,7 @@ export default function DailyLeaf() {
 
           {/* Capacity Warning */}
           {!focusMode && capacityWarning && (
-            <div className="mb-5 bg-bronze/8 border border-bronze/15 rounded-xl px-5 py-4 text-base font-body text-ink/80">
+            <div className="mb-5 bg-bronze/15 border border-bronze/25 rounded-xl px-5 py-4 text-base font-body text-ink/80">
               <span className="font-semibold">{capacityWarning.count} tasks</span>{' '}
               (~{capacityWarning.hours}hrs) today. Focus tip: start with just 1.
             </div>
@@ -1271,17 +1278,17 @@ export default function DailyLeaf() {
                     <div key={task.id} className="group/ot flex items-center gap-3 py-2 px-3 -mx-1 rounded-lg hover:bg-surface-light transition-colors">
                       <span className="inline-block size-2.5 rounded-full bg-pencil/30 flex-shrink-0" />
                       <span className="flex-1 font-body text-base text-ink truncate">{task.title}</span>
-                      <span className="font-mono text-[11px] text-pencil/50 flex-shrink-0">
+                      <span className="font-mono text-[11px] text-pencil/70 flex-shrink-0">
                         {new Date(task.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </span>
-                      <div className="flex items-center gap-1.5 opacity-0 group-hover/ot:opacity-100 transition-opacity flex-shrink-0">
-                        <button onClick={() => rescheduleOne(task.id)} className="text-primary hover:text-primary/80 transition-colors" title="Move to today">
+                      <div className="flex items-center gap-2.5 sm:opacity-0 sm:group-hover/ot:opacity-100 transition-opacity flex-shrink-0">
+                        <button onClick={() => rescheduleOne(task.id)} className="text-primary hover:text-primary/80 transition-colors p-1.5" title="Move to today" aria-label="Move to today">
                           <span className="material-symbols-outlined text-lg">arrow_forward</span>
                         </button>
-                        <button onClick={() => dismissOverdue(task.id)} className="text-pencil hover:text-sage transition-colors" title="Mark done">
+                        <button onClick={() => dismissOverdue(task.id)} className="text-pencil hover:text-sage transition-colors p-1.5" title="Mark done" aria-label="Mark done">
                           <span className="material-symbols-outlined text-lg">check</span>
                         </button>
-                        <button onClick={() => deleteEntry(task.id)} className="text-pencil hover:text-pencil/80 transition-colors" title="Delete">
+                        <button onClick={() => deleteEntry(task.id)} className="text-pencil hover:text-pencil/80 transition-colors p-1.5" title="Delete" aria-label="Delete">
                           <span className="material-symbols-outlined text-lg">close</span>
                         </button>
                       </div>
@@ -1299,11 +1306,13 @@ export default function DailyLeaf() {
                 <button
                   key={pill.type}
                   onClick={() => setEntryType(pill.type)}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-mono text-xs uppercase tracking-wider transition-all ${
+                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full font-mono text-xs uppercase tracking-wider transition-all ${
                     entryType === pill.type
                       ? 'bg-primary/12 text-primary font-medium border border-primary/25'
                       : 'text-pencil hover:bg-surface-light border border-transparent'
                   }`}
+                  role="radio"
+                  aria-checked={entryType === pill.type}
                 >
                   <span className="text-base">{pill.symbol}</span>
                   {pill.label}
@@ -1311,7 +1320,7 @@ export default function DailyLeaf() {
               ))}
               <button
                 onClick={() => setShowSignifierHelp((v) => !v)}
-                className="ml-auto font-mono text-[10px] text-pencil/40 hover:text-primary transition-colors uppercase tracking-widest"
+                className="ml-auto font-mono text-[11px] text-pencil hover:text-primary transition-colors uppercase tracking-widest px-2 py-1.5"
               >
                 Key
               </button>
@@ -1334,7 +1343,7 @@ export default function DailyLeaf() {
               <span className="material-symbols-outlined text-lg sm:text-xl text-primary/60">add</span>
               <input
                 ref={newInputRef}
-                className="flex-1 min-w-0 bg-transparent border-none p-0 text-base sm:text-lg font-body text-ink placeholder:text-pencil/35 focus:ring-0 focus:outline-none"
+                className="flex-1 min-w-0 bg-transparent border-none p-0 text-base sm:text-lg font-body text-ink placeholder:text-pencil/60 focus:ring-0 focus:outline-none"
                 placeholder={placeholder}
                 type="text"
                 value={newTitle}
@@ -1383,7 +1392,7 @@ export default function DailyLeaf() {
                           ? updateEntry(entry.id, { status: 'todo' })
                           : handleToggleTask(entry.id, e.currentTarget as HTMLElement)
                         }
-                        className={`flex-shrink-0 focus:outline-none rounded-md sm:rounded-lg transition-all flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 border-[1.5px] sm:border-2 ${
+                        className={`flex-shrink-0 focus:outline-none rounded-lg transition-all flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 border-2 ${
                           isDone
                             ? 'bg-primary border-primary text-white'
                             : isCancelled
@@ -1396,11 +1405,11 @@ export default function DailyLeaf() {
                         {isCancelled && <span className="material-symbols-outlined text-sm sm:text-lg">close</span>}
                       </button>
                     ) : (
-                      <div className="flex-shrink-0 flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8">
+                      <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11">
                         {isEvent ? (
-                          <span className="inline-flex items-center justify-center size-4 sm:size-5 rounded-full border-[1.5px] sm:border-2 border-primary/50" />
+                          <span className="inline-flex items-center justify-center size-5 sm:size-6 rounded-full border-2 border-primary/50" />
                         ) : (
-                          <span className="inline-block w-4 sm:w-5 h-[2px] sm:h-[2.5px] bg-ink/25 rounded-full" />
+                          <span className="inline-block w-5 sm:w-6 h-[2.5px] bg-ink/25 rounded-full" />
                         )}
                       </div>
                     )}
@@ -1425,7 +1434,7 @@ export default function DailyLeaf() {
                               : 'text-ink'
                           }`}
                           onDoubleClick={() => startEditing(entry.id, entry.title)}
-                          onClick={(e) => { if (isTask && !isCancelled) handleToggleTask(entry.id, e.currentTarget as HTMLElement); }}
+                          title="Double-click to edit"
                         >
                           {entry.title}
                         </button>
@@ -1433,7 +1442,7 @@ export default function DailyLeaf() {
                       {/* Meta row */}
                       <div className="flex items-center gap-2 mt-0.5">
                         {isNote && !isEditing && (
-                          <span className="font-mono text-[10px] text-pencil/40 uppercase tracking-widest">note</span>
+                          <span className="font-mono text-[11px] text-pencil/60 uppercase tracking-widest">note</span>
                         )}
                         {!isEditing && isEvent && entry.time && (
                           <span className="font-mono text-xs text-primary/70 bg-primary/8 px-2 py-0.5 rounded-md">{entry.time}</span>
@@ -1448,12 +1457,12 @@ export default function DailyLeaf() {
                           </button>
                         )}
                         {!isEditing && isTask && (entry.movedCount ?? 0) > 0 && (
-                          <span className="text-[10px] font-mono text-tension/60" title={`Rescheduled ${entry.movedCount} time(s)`}>
+                          <span className="text-[11px] font-mono text-tension/60" title={`Rescheduled ${entry.movedCount} time(s)`}>
                             ↻{entry.movedCount}
                           </span>
                         )}
                         {!isEditing && entry.tags && entry.tags.length > 0 && (
-                          <span className="font-mono text-[10px] text-pencil/50 bg-wood-light/15 px-1.5 py-0.5 rounded">
+                          <span className="font-mono text-[11px] text-pencil/70 bg-wood-light/15 px-1.5 py-0.5 rounded">
                             {entry.tags[0]}
                           </span>
                         )}
@@ -1462,40 +1471,42 @@ export default function DailyLeaf() {
 
                     {/* Actions \u2014 visible on hover */}
                     {!isEditing && (
-                      <div className="flex items-center gap-1 opacity-0 group-hover/entry:opacity-100 transition-opacity flex-shrink-0">
+                      <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover/entry:opacity-100 transition-opacity flex-shrink-0">
                         {/* Reorder arrows */}
                         <div className="flex flex-col -my-1 mr-1">
                           <button
                             onClick={() => moveEntry(entry.id, 'up')}
                             disabled={entryIdx === 0}
-                            className="text-pencil/40 hover:text-primary disabled:opacity-20 disabled:cursor-default transition-colors p-0.5 leading-none"
+                            className="text-pencil/60 hover:text-primary disabled:opacity-20 disabled:cursor-default transition-colors p-1.5 leading-none"
+                            aria-label="Move up"
                           >
                             <span className="material-symbols-outlined text-[16px]">keyboard_arrow_up</span>
                           </button>
                           <button
                             onClick={() => moveEntry(entry.id, 'down')}
                             disabled={entryIdx === todayEntries.length - 1}
-                            className="text-pencil/40 hover:text-primary disabled:opacity-20 disabled:cursor-default transition-colors p-0.5 leading-none"
+                            className="text-pencil/60 hover:text-primary disabled:opacity-20 disabled:cursor-default transition-colors p-1.5 leading-none"
+                            aria-label="Move down"
                           >
                             <span className="material-symbols-outlined text-[16px]">keyboard_arrow_down</span>
                           </button>
                         </div>
                         {isTask && !isInactive && (
-                          <button onClick={() => setStuckTask(entry)} className="font-mono text-[10px] text-pencil hover:text-primary bg-surface-light hover:bg-primary/10 px-2 py-1 rounded-lg transition-colors uppercase tracking-wider">
+                          <button onClick={() => setStuckTask(entry)} className="font-mono text-[11px] text-pencil hover:text-primary bg-surface-light hover:bg-primary/10 px-2.5 py-1.5 rounded-lg transition-colors uppercase tracking-wider">
                             Unblock
                           </button>
                         )}
                         {isTask && !isInactive && (
-                          <button onClick={() => updateEntry(entry.id, { status: 'cancelled' })} className="text-pencil hover:text-tension transition-colors p-1">
+                          <button onClick={() => updateEntry(entry.id, { status: 'cancelled' })} className="text-pencil hover:text-tension transition-colors p-1.5" aria-label="Cancel task">
                             <span className="material-symbols-outlined text-lg">block</span>
                           </button>
                         )}
                         {isTask && !isInactive && (
-                          <button onClick={() => updateEntry(entry.id, { date: tomorrow, movedCount: (entry.movedCount ?? 0) + 1 })} className="text-pencil hover:text-primary transition-colors p-1">
+                          <button onClick={() => updateEntry(entry.id, { date: tomorrow, movedCount: (entry.movedCount ?? 0) + 1 })} className="text-pencil hover:text-primary transition-colors p-1.5" aria-label="Move to tomorrow">
                             <span className="material-symbols-outlined text-lg">east</span>
                           </button>
                         )}
-                        <button onClick={() => deleteEntry(entry.id)} className="text-pencil hover:text-tension transition-colors p-1">
+                        <button onClick={() => deleteEntry(entry.id)} className="text-pencil hover:text-tension transition-colors p-1.5" aria-label="Delete entry">
                           <span className="material-symbols-outlined text-lg">delete</span>
                         </button>
                       </div>
@@ -1517,13 +1528,70 @@ export default function DailyLeaf() {
             })}
           </div>
 
+          {/* ── Mobile companion — shown below tasks on small screens ── */}
+          {!focusMode && isViewingToday && (
+            <div
+              className="sm:hidden flex flex-col items-center mt-6 mb-2 cursor-pointer"
+              role="button"
+              aria-label={`Interact with companion ${companion.name}`}
+              onClick={() => {
+                triggerCompanionAnim('bounce');
+                companionClickCount.current += 1;
+                if (companionClickTimer.current) clearTimeout(companionClickTimer.current);
+                companionClickTimer.current = setTimeout(() => { companionClickCount.current = 0; }, 3000);
+                const clicks = companionClickCount.current;
+                if (clicks >= 6) {
+                  const enoughLines = [
+                    'Okay okay, I love you too. Now go do something.',
+                    'You\'re adorable but I\'m running out of things to say.',
+                    'I\'m blushing. Stop it. Go be productive.',
+                    `— ${companion.name} has left the chat.`,
+                    'That tickles. Please. I have a reputation.',
+                  ];
+                  setCompanionOverride(enoughLines[Math.floor(Math.random() * enoughLines.length)]);
+                  companionClickCount.current = 0;
+                  setTimeout(() => setCompanionOverride(null), 4000);
+                  return;
+                }
+                if (clicks % 3 === 0 && companion.messages.length > 1) {
+                  setCompanionOverride(null);
+                  setCompanionQuoteIdx(prev => {
+                    const seen = companionSeenIndices.current;
+                    const allIndices = Array.from({ length: companion.messages.length }, (_, i) => i);
+                    let unseen = allIndices.filter(i => !seen.has(i) && i !== prev);
+                    if (unseen.length === 0) { seen.clear(); seen.add(prev); unseen = allIndices.filter(i => i !== prev); }
+                    const next = unseen[Math.floor(Math.random() * unseen.length)];
+                    seen.add(next);
+                    return next;
+                  });
+                }
+              }}
+            >
+              <img
+                src={`/animals/${companion.animal}.png`}
+                alt={companion.name}
+                className="w-24 h-24 mb-1 object-contain"
+                style={{ animation: companionAnim !== 'idle' ? `${companionAnim} 0.7s ease-out` : 'none' }}
+              />
+              <div className="relative">
+                <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rotate-45 bg-surface-light border-l border-t border-wood-light/25" />
+                <div
+                  className="relative rounded-lg bg-surface-light border border-wood-light/25 px-3 py-2 max-w-[200px]"
+                  style={{ animation: bubbleFlash ? 'bubbleFlash 0.6s ease-out' : 'none' }}
+                >
+                  <p className="font-body italic text-sm text-ink/60 text-center leading-snug">{companionOverride ?? companion.messages[companionQuoteIdx % companion.messages.length]}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* ── Expandable sections below tasks ───────────────── */}
           {!focusMode && (
             <div className="mt-8 space-y-3">
 
               {/* Upcoming Events */}
               {upcomingEvents.length > 0 && (
-                <details open className="group/section rounded-xl bg-surface-light/40 border border-wood-light/15 overflow-hidden">
+                <details className="group/section rounded-xl bg-surface-light/40 border border-wood-light/15 overflow-hidden">
                   <summary className="flex items-center justify-between px-5 py-3.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
                     <div className="flex items-center gap-2.5">
                       <span className="material-symbols-outlined text-primary/60 text-xl">event</span>
@@ -1567,7 +1635,7 @@ export default function DailyLeaf() {
                           </span>
                         )}
                         {/* Action buttons — visible on hover */}
-                        <div className="flex items-center gap-0.5 opacity-0 group-hover/ev:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover/ev:opacity-100 transition-opacity">
                           <button
                             onClick={() => { updateEntry(ev.id, { date: realToday, type: 'task', status: 'todo', section: undefined, timeBlock: undefined, duration: undefined }); }}
                             className="p-1 rounded text-pencil/40 hover:text-primary hover:bg-primary/5 transition-colors"
@@ -1591,7 +1659,7 @@ export default function DailyLeaf() {
 
               {/* Habits */}
               {habits.length > 0 && (
-                <details open className="group/section rounded-xl bg-surface-light/40 border border-wood-light/15 overflow-hidden">
+                <details className="group/section rounded-xl bg-surface-light/40 border border-wood-light/15 overflow-hidden">
                   <summary className="flex items-center justify-between px-5 py-3.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
                     <div className="flex items-center gap-2.5">
                       <span className="material-symbols-outlined text-primary/60 text-xl">show_chart</span>
@@ -1625,7 +1693,7 @@ export default function DailyLeaf() {
                             {habit.name}
                           </span>
                           {habit.streak > 0 && (
-                            <span className="text-[10px] font-mono text-pencil/40">{habit.streak}d</span>
+                            <span className="text-[11px] font-mono text-pencil/60">{habit.streak}d</span>
                           )}
                         </button>
                       );
@@ -1709,7 +1777,7 @@ export default function DailyLeaf() {
                     <span className="font-body text-base font-medium text-ink">Journal Exercises</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-[10px] text-primary/40 uppercase tracking-wider">
+                    <span className="font-mono text-[11px] text-primary/50 uppercase tracking-wider">
                       {getTimeLabel()} picks
                     </span>
                     <span className="material-symbols-outlined text-pencil text-lg transition-transform group-open/section:rotate-180">expand_more</span>
@@ -1741,7 +1809,7 @@ export default function DailyLeaf() {
                               <div className="flex items-center gap-1.5 mb-0.5">
                                 <span className="font-body text-sm font-medium text-ink">{method.name}</span>
                                 {isSuggested && (
-                                  <span className="font-mono text-[8px] text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded-full uppercase tracking-widest">now</span>
+                                  <span className="font-mono text-[11px] text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded-full uppercase tracking-widest">now</span>
                                 )}
                               </div>
                               <p className="font-body text-xs text-pencil leading-relaxed line-clamp-2">{method.description}</p>
@@ -1771,7 +1839,7 @@ export default function DailyLeaf() {
                         {entry.title && <p className="font-body text-base font-medium text-ink/70 mb-0.5 truncate">{entry.title}</p>}
                         <p className="text-sm font-body text-ink/45 italic line-clamp-2">{entry.content}</p>
                         {entry.method && (
-                          <span className="inline-block mt-1.5 font-mono text-[9px] text-primary/60 bg-primary/8 px-1.5 py-0.5 rounded uppercase tracking-widest">{entry.method}</span>
+                          <span className="inline-block mt-1.5 font-mono text-[11px] text-primary/60 bg-primary/8 px-1.5 py-0.5 rounded uppercase tracking-widest">{entry.method}</span>
                         )}
                       </Link>
                     ))}
@@ -1786,7 +1854,7 @@ export default function DailyLeaf() {
               >
                 <span className="material-symbols-outlined text-xl text-primary/50">calendar_view_day</span>
                 Flow View
-                <span className="material-symbols-outlined text-base text-pencil/30 ml-auto">arrow_forward</span>
+                <span className="material-symbols-outlined text-base text-pencil/60 ml-auto">arrow_forward</span>
               </Link>
             </div>
           )}

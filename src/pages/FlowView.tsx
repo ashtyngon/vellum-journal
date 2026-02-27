@@ -635,10 +635,10 @@ function ResizableTimelineCard({
             </p>
           )}
           <div className="flex items-center gap-1 mt-0.5">
-            <span className="text-[9px] font-mono text-primary/70">
+            <span className="text-[11px] font-mono text-primary/70">
               {formatTime12(entry.timeBlock!)}
             </span>
-            <span className="text-[9px] font-mono text-pencil/50">
+            <span className="text-[11px] font-mono text-pencil/50">
               {minutesToDurationStr(durationMin)}
             </span>
           </div>
@@ -1677,7 +1677,7 @@ function DayColumn({
             {info.full}
           </h3>
           {info.isWeekend && (
-            <span className="text-[9px] font-mono text-accent/60 bg-accent/10 px-1.5 py-0.5 rounded">weekend</span>
+            <span className="text-[11px] font-mono text-accent/60 bg-accent/10 px-1.5 py-0.5 rounded">weekend</span>
           )}
         </div>
         <span
@@ -2237,7 +2237,7 @@ export default function FlowView() {
                         {habit.name}
                       </span>
                       {habit.streak > 0 && (
-                        <span className="text-[9px] font-mono text-pencil/50 ml-auto">{habit.streak}d</span>
+                        <span className="text-[11px] font-mono text-pencil/50 ml-auto">{habit.streak}d</span>
                       )}
                     </div>
                   );
@@ -2727,13 +2727,13 @@ function SectionManagerRow({
         />
 
         {/* Time range */}
-        <span className="text-[9px] font-mono text-pencil/60 shrink-0">
+        <span className="text-[11px] font-mono text-pencil/60 shrink-0">
           {formatHour12(section.startHour)}–{formatHour12(section.endHour)}
         </span>
 
         {/* Pinned days hint */}
         {section.pinnedDays && section.pinnedDays.length > 0 && section.pinnedDays.length < 7 && (
-          <span className="text-[8px] font-mono text-primary/50 shrink-0">
+          <span className="text-[11px] font-mono text-primary/50 shrink-0">
             {section.pinnedDays.length === 5 && [1,2,3,4,5].every(d => section.pinnedDays!.includes(d))
               ? 'Wkdays'
               : section.pinnedDays.length === 2 && [0,6].every(d => section.pinnedDays!.includes(d))
@@ -2847,7 +2847,7 @@ function SectionManagerRow({
                   <button
                     key={preset.label}
                     onClick={() => onUpdate({ pinnedDays: preset.days ? [...preset.days] : undefined })}
-                    className={`text-[9px] font-mono px-2 py-1 rounded transition-all ${
+                    className={`text-[11px] font-mono px-2 py-1 rounded transition-all ${
                       isActive
                         ? 'bg-primary/15 text-primary border border-primary/30'
                         : 'text-pencil/50 hover:text-primary bg-surface-light/50 hover:bg-primary/5 border border-transparent'
