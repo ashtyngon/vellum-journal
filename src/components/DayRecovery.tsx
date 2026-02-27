@@ -20,22 +20,22 @@ const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) =>
     (e) => e.type === 'task' && e.status === 'todo' && e.date <= today
   );
 
-  // Track which tasks user wants to keep, skip, or defer
+  // Track which tasks user wants to keep, park, or defer
   // By default everything is "keep" (stays as-is for today)
-  const [decisions, setDecisions] = useState<Record<string, 'keep' | 'skip' | 'defer'>>({});
+  const [decisions, setDecisions] = useState<Record<string, 'keep' | 'park' | 'defer'>>({});
 
   const getDecision = (id: string) => decisions[id] || 'keep';
 
-  const setDecision = (id: string, decision: 'keep' | 'skip' | 'defer') => {
+  const setDecision = (id: string, decision: 'keep' | 'park' | 'defer') => {
     setDecisions((prev) => ({ ...prev, [id]: decision }));
   };
 
   const handleApply = () => {
     for (const task of actionableTasks) {
       const d = getDecision(task.id);
-      if (d === 'skip') {
-        // Move to parking lot (remove section/timeBlock, keep on today)
-        onUpdateEntry(task.id, { date: today, section: undefined, timeBlock: undefined });
+      if (d === 'park') {
+        // Move to parking lot — unschedule entirely (no date, no section, no timeBlock)
+        onUpdateEntry(task.id, { date: '', section: undefined, timeBlock: undefined });
       } else if (d === 'defer') {
         // Push to tomorrow
         const tomorrow = new Date();
@@ -78,7 +78,7 @@ const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) =>
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-wood-light/15">
         <div>
-          <h3 className="font-mono text-[10px] text-pencil uppercase tracking-[0.15em]">
+          <h3 className="font-mono text-xs text-pencil uppercase tracking-[0.15em]">
             Reset My Day
           </h3>
           <p className="font-body text-sm text-ink/70 mt-0.5">
@@ -104,7 +104,7 @@ const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) =>
             <div
               key={task.id}
               className={`flex items-center gap-3 px-5 py-2.5 transition-colors ${
-                decision === 'skip' || decision === 'defer' ? 'opacity-40' : ''
+                decision === 'park' || decision === 'defer' ? 'opacity-40' : ''
               }`}
             >
               {/* Priority dot */}
@@ -127,33 +127,34 @@ const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) =>
               </div>
 
               {/* Quick action pills */}
-              <div className="flex items-center gap-1 flex-shrink-0">
+              <div className="flex items-center gap-1.5 flex-shrink-0">
                 <button
-                  onClick={() => setDecision(task.id, decision === 'keep' ? 'skip' : 'keep')}
-                  className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider transition-all ${
+                  onClick={() => setDecision(task.id, 'keep')}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-mono uppercase tracking-wider transition-all ${
                     decision === 'keep'
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-pencil/40 hover:text-pencil'
+                      ? 'bg-primary/12 text-primary'
+                      : 'text-pencil/50 hover:text-pencil hover:bg-surface-light'
                   }`}
                 >
                   today
                 </button>
                 <button
-                  onClick={() => setDecision(task.id, decision === 'skip' ? 'keep' : 'skip')}
-                  className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider transition-all ${
-                    decision === 'skip'
-                      ? 'bg-pencil/10 text-pencil'
-                      : 'text-pencil/40 hover:text-pencil'
+                  onClick={() => setDecision(task.id, 'park')}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-mono uppercase tracking-wider transition-all ${
+                    decision === 'park'
+                      ? 'bg-sage/12 text-sage'
+                      : 'text-pencil/50 hover:text-pencil hover:bg-surface-light'
                   }`}
+                  title="Move to parking lot (backlog)"
                 >
-                  skip
+                  park
                 </button>
                 <button
-                  onClick={() => setDecision(task.id, decision === 'defer' ? 'keep' : 'defer')}
-                  className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider transition-all ${
+                  onClick={() => setDecision(task.id, 'defer')}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-mono uppercase tracking-wider transition-all ${
                     decision === 'defer'
-                      ? 'bg-bronze/10 text-bronze'
-                      : 'text-pencil/40 hover:text-pencil'
+                      ? 'bg-bronze/12 text-bronze'
+                      : 'text-pencil/50 hover:text-pencil hover:bg-surface-light'
                   }`}
                 >
                   tomorrow
@@ -166,7 +167,7 @@ const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) =>
 
       {/* Footer */}
       <div className="flex items-center justify-between px-5 py-3 border-t border-wood-light/15 bg-surface-light/30">
-        <span className="font-mono text-[10px] text-pencil">
+        <span className="font-mono text-xs text-pencil">
           Keeping {keepCount} of {actionableTasks.length}
         </span>
         <button

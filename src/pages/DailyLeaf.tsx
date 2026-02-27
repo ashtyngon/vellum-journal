@@ -1151,27 +1151,32 @@ export default function DailyLeaf() {
                 </div>
               </div>
 
-              {/* Last night's plan bridge — show if yesterday's debrief exists */}
+              {/* Last night's plan bridge — compact hint, expandable */}
               {(() => {
                 const yesterdayStr = dayBefore(dateKey);
                 const yesterdayDebrief = debriefs.find(d => d.date === yesterdayStr);
                 const tomorrowTasksFromYesterday = entries.filter(e => e.type === 'task' && e.date === today && e.status === 'todo');
                 if (!yesterdayDebrief || !isViewingToday || tomorrowTasksFromYesterday.length === 0) return null;
                 return (
-                  <div className="mt-4 p-5 rounded-xl bg-surface-light/60 border border-wood-light/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="material-symbols-outlined text-lg text-primary/60">nights_stay</span>
-                      <span className="font-mono text-sm text-pencil uppercase tracking-[0.15em]">From last night&rsquo;s debrief</span>
+                  <details className="mt-3 group/debrief">
+                    <summary className="flex items-center gap-2 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden px-1 py-1.5 rounded-lg hover:bg-surface-light/50 transition-colors">
+                      <span className="material-symbols-outlined text-base text-primary/50">nights_stay</span>
+                      <span className="font-body text-sm text-pencil">
+                        <span className="font-semibold text-ink/70">{tomorrowTasksFromYesterday.length}</span> task{tomorrowTasksFromYesterday.length !== 1 ? 's' : ''} from last night&rsquo;s debrief
+                      </span>
+                      <span className="material-symbols-outlined text-sm text-pencil/50 transition-transform group-open/debrief:rotate-180 ml-auto">expand_more</span>
+                    </summary>
+                    <div className="mt-2 p-4 rounded-xl bg-surface-light/60 border border-wood-light/20">
+                      {yesterdayDebrief.reflection && (
+                        <p className="font-body text-base text-ink/75 italic mb-2">&ldquo;{yesterdayDebrief.reflection}&rdquo;</p>
+                      )}
+                      <p className="font-body text-base text-ink/80">
+                        {yesterdayDebrief.planRealism >= 4 && 'Yesterday felt ambitious \u2014 maybe start with your top 3.'}
+                        {yesterdayDebrief.planRealism <= 2 && 'Yesterday was light \u2014 you might have room for more.'}
+                        {yesterdayDebrief.planRealism > 2 && yesterdayDebrief.planRealism < 4 && 'You know what to do.'}
+                      </p>
                     </div>
-                    {yesterdayDebrief.reflection && (
-                      <p className="font-body text-lg text-ink/75 italic mb-2">&ldquo;{yesterdayDebrief.reflection}&rdquo;</p>
-                    )}
-                    <p className="font-body text-lg text-ink/80">
-                      You planned <span className="font-semibold">{tomorrowTasksFromYesterday.length}</span> task{tomorrowTasksFromYesterday.length !== 1 ? 's' : ''} for today.
-                      {yesterdayDebrief.planRealism >= 4 && ' Yesterday felt ambitious \u2014 maybe start with your top 3.'}
-                      {yesterdayDebrief.planRealism <= 2 && ' Yesterday was light \u2014 you might have room for more.'}
-                    </p>
-                  </div>
+                  </details>
                 );
               })()}
             </header>
