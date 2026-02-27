@@ -9,12 +9,16 @@ import confetti from 'canvas-confetti';
    - Variable reinforcement: 8 distinct effects, never the same twice
    - Queue system: rapid completions queue up, each plays fully (4-6s)
    - Zero new dependencies — canvas-confetti is already installed
+   - Variable intensity: 40% standard, 30% enhanced, 20% minimal, 10% mega
 
    Usage: const celebrate = useTaskCelebration();
           celebrate(checkboxElement, completedCount);
 
    Standalone: import { celebrateTask } from './TaskCelebration';
                celebrateTask(el, count);
+
+   Section:    import { celebrateSection } from './TaskCelebration';
+               celebrateSection(el);
    ══════════════════════════════════════════════════════════════════════ */
 
 // ── Vivid Color Palettes ─────────────────────────────────────────────
@@ -33,6 +37,52 @@ const GOLD = ['#ffd700', '#ffb300', '#ff8f00', '#fff176', '#ffe082', '#ffffff'];
 
 /** Party — maximum variety */
 const PARTY = ['#f44336', '#e91e63', '#9c27b0', '#2196f3', '#00bcd4', '#4caf50', '#ffeb3b', '#ff9800'];
+
+
+// ── Intensity System ─────────────────────────────────────────────────
+// Each celebration randomly gets an intensity tier:
+//   standard (40%) — normal 1x particles
+//   enhanced (30%) — 2x particles, 1.5x duration
+//   minimal  (20%) — glow only, no confetti
+//   mega     (10%) — 3x particles, forced dramatic effect
+
+type Intensity = 'standard' | 'enhanced' | 'minimal' | 'mega';
+
+function rollIntensity(): Intensity {
+  const roll = Math.random();
+  if (roll < 0.40) return 'standard';
+  if (roll < 0.70) return 'enhanced';
+  if (roll < 0.90) return 'minimal';
+  return 'mega';
+}
+
+function intensityMultiplier(intensity: Intensity): number {
+  switch (intensity) {
+    case 'standard': return 1;
+    case 'enhanced': return 2;
+    case 'minimal':  return 0;
+    case 'mega':     return 3;
+  }
+}
+
+/** Current particle multiplier — set before playing an effect, reset after. */
+let currentMultiplier = 1;
+
+/**
+ * Intensity-aware confetti wrapper. All effect functions call this
+ * instead of confetti() directly. Applies the current intensity
+ * multiplier to particleCount.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function fire(opts: any) {
+  if (opts && typeof opts.particleCount === 'number') {
+    return confetti({
+      ...opts,
+      particleCount: Math.round(opts.particleCount * currentMultiplier),
+    });
+  }
+  return confetti(opts);
+}
 
 
 // ── Utility ──────────────────────────────────────────────────────────
@@ -123,7 +173,7 @@ async function confettiCannon(origin: Point): Promise<void> {
   const norm = toNormalized(origin);
 
   // First big burst
-  confetti({
+  fire({
     particleCount: 150,
     spread: 100,
     origin: norm,
@@ -138,7 +188,7 @@ async function confettiCannon(origin: Point): Promise<void> {
   await sleep(150);
 
   // Second burst — wider, more particles
-  confetti({
+  fire({
     particleCount: 100,
     spread: 140,
     origin: norm,
@@ -153,7 +203,7 @@ async function confettiCannon(origin: Point): Promise<void> {
   await sleep(200);
 
   // Third burst — stars mixed in
-  confetti({
+  fire({
     particleCount: 60,
     spread: 80,
     origin: norm,
@@ -181,7 +231,7 @@ async function fireworks(_origin: Point): Promise<void> {
   const end = Date.now() + duration;
 
   const interval = setInterval(() => {
-    confetti({
+    fire({
       particleCount: rand(80, 120),
       spread: 360,
       origin: {
@@ -215,7 +265,7 @@ async function fireworks(_origin: Point): Promise<void> {
 
 async function starBurst(_origin: Point): Promise<void> {
   // Wave 1: center burst
-  confetti({
+  fire({
     particleCount: 80,
     spread: 360,
     origin: { x: 0.5, y: 0.4 },
@@ -231,7 +281,7 @@ async function starBurst(_origin: Point): Promise<void> {
   await sleep(600);
 
   // Wave 2: dual side bursts
-  confetti({
+  fire({
     particleCount: 50,
     spread: 120,
     angle: 45,
@@ -244,7 +294,7 @@ async function starBurst(_origin: Point): Promise<void> {
     scalar: 1.5,
     zIndex: 9999,
   });
-  confetti({
+  fire({
     particleCount: 50,
     spread: 120,
     angle: 135,
@@ -261,7 +311,7 @@ async function starBurst(_origin: Point): Promise<void> {
   await sleep(700);
 
   // Wave 3: big finale
-  confetti({
+  fire({
     particleCount: 120,
     spread: 360,
     origin: { x: 0.5, y: 0.35 },
@@ -290,7 +340,7 @@ async function sideCannons(_origin: Point): Promise<void> {
 
   for (let i = 0; i < 5; i++) {
     // Left cannon
-    confetti({
+    fire({
       particleCount: 40,
       angle: 60,
       spread: 55,
@@ -304,7 +354,7 @@ async function sideCannons(_origin: Point): Promise<void> {
     });
 
     // Right cannon
-    confetti({
+    fire({
       particleCount: 40,
       angle: 120,
       spread: 55,
@@ -343,7 +393,7 @@ async function emojiRain(_origin: Point): Promise<void> {
       emojiShapes[Math.floor(Math.random() * emojiShapes.length)],
     ];
 
-    confetti({
+    fire({
       particleCount: 15,
       spread: 160,
       origin: { x: rand(0.1, 0.9), y: -0.1 },
@@ -371,7 +421,7 @@ async function emojiRain(_origin: Point): Promise<void> {
 
 async function realisticCascade(_origin: Point): Promise<void> {
   // Layer 1: fast, small, wide
-  confetti({
+  fire({
     particleCount: 100,
     spread: 160,
     startVelocity: 25,
@@ -384,7 +434,7 @@ async function realisticCascade(_origin: Point): Promise<void> {
   });
 
   // Layer 2: medium, normal
-  confetti({
+  fire({
     particleCount: 70,
     spread: 100,
     startVelocity: 40,
@@ -399,7 +449,7 @@ async function realisticCascade(_origin: Point): Promise<void> {
   await sleep(200);
 
   // Layer 3: slow, big, floaty
-  confetti({
+  fire({
     particleCount: 40,
     spread: 70,
     startVelocity: 50,
@@ -415,7 +465,7 @@ async function realisticCascade(_origin: Point): Promise<void> {
   await sleep(800);
 
   // Layer 4: star accent
-  confetti({
+  fire({
     particleCount: 30,
     spread: 360,
     startVelocity: 35,
@@ -441,7 +491,7 @@ async function realisticCascade(_origin: Point): Promise<void> {
 
 async function goldenShower(_origin: Point): Promise<void> {
   for (let wave = 0; wave < 8; wave++) {
-    confetti({
+    fire({
       particleCount: 25,
       spread: 180,
       origin: { x: rand(0.1, 0.9), y: -0.1 },
@@ -481,7 +531,7 @@ async function prideBurst(_origin: Point): Promise<void> {
   for (let i = 0; i < 6; i++) {
     const side = i % 2 === 0;
 
-    confetti({
+    fire({
       particleCount: 60,
       angle: side ? 55 : 125,
       spread: 60,
@@ -495,7 +545,7 @@ async function prideBurst(_origin: Point): Promise<void> {
     });
 
     // Opposite side stars
-    confetti({
+    fire({
       particleCount: 20,
       angle: side ? 125 : 55,
       spread: 40,
@@ -533,7 +583,7 @@ async function heartExplosion(origin: Point): Promise<void> {
   const norm = toNormalized(origin);
 
   // Wave 1: big heart-shaped burst from the task
-  confetti({
+  fire({
     particleCount: 60,
     spread: 360,
     origin: norm,
@@ -547,7 +597,7 @@ async function heartExplosion(origin: Point): Promise<void> {
   });
 
   // Pink/red confetti underneath for density
-  confetti({
+  fire({
     particleCount: 80,
     spread: 120,
     origin: norm,
@@ -562,7 +612,7 @@ async function heartExplosion(origin: Point): Promise<void> {
   await sleep(400);
 
   // Wave 2: heart cannons from both sides
-  confetti({
+  fire({
     particleCount: 35,
     angle: 60,
     spread: 55,
@@ -575,7 +625,7 @@ async function heartExplosion(origin: Point): Promise<void> {
     scalar: 2.5,
     zIndex: 9999,
   });
-  confetti({
+  fire({
     particleCount: 35,
     angle: 120,
     spread: 55,
@@ -593,7 +643,7 @@ async function heartExplosion(origin: Point): Promise<void> {
 
   // Wave 3: heart rain from top — large hearts floating down
   for (let i = 0; i < 3; i++) {
-    confetti({
+    fire({
       particleCount: 20,
       spread: 180,
       origin: { x: rand(0.1, 0.9), y: -0.1 },
@@ -609,7 +659,7 @@ async function heartExplosion(origin: Point): Promise<void> {
   }
 
   // Final accent — star sparkles mixed with hearts
-  confetti({
+  fire({
     particleCount: 40,
     spread: 360,
     origin: { x: 0.5, y: 0.4 },
@@ -634,7 +684,7 @@ async function heartExplosion(origin: Point): Promise<void> {
 
 async function supernova(_origin: Point): Promise<void> {
   // Everything at once — maximum density
-  confetti({
+  fire({
     particleCount: 200,
     spread: 360,
     origin: { x: 0.5, y: 0.4 },
@@ -646,7 +696,7 @@ async function supernova(_origin: Point): Promise<void> {
     zIndex: 9999,
   });
 
-  confetti({
+  fire({
     particleCount: 150,
     spread: 360,
     origin: { x: 0.5, y: 0.4 },
@@ -659,7 +709,7 @@ async function supernova(_origin: Point): Promise<void> {
     zIndex: 9999,
   });
 
-  confetti({
+  fire({
     particleCount: 100,
     spread: 360,
     origin: { x: 0.5, y: 0.4 },
@@ -691,7 +741,7 @@ async function fourCorners(_origin: Point): Promise<void> {
 
   // Round 1: all corners fire
   for (const corner of corners) {
-    confetti({
+    fire({
       particleCount: 60,
       angle: corner.angle,
       spread: 70,
@@ -709,7 +759,7 @@ async function fourCorners(_origin: Point): Promise<void> {
 
   // Round 2: corners fire again with stars
   for (const corner of corners) {
-    confetti({
+    fire({
       particleCount: 40,
       angle: corner.angle,
       spread: 90,
@@ -727,7 +777,7 @@ async function fourCorners(_origin: Point): Promise<void> {
   await sleep(600);
 
   // Round 3: center explosion from all the colliding confetti
-  confetti({
+  fire({
     particleCount: 150,
     spread: 360,
     origin: { x: 0.5, y: 0.5 },
@@ -757,7 +807,7 @@ async function confettiSpiral(_origin: Point): Promise<void> {
     const radians = (angle * Math.PI) / 180;
     const r = 0.25;
 
-    confetti({
+    fire({
       particleCount: 30,
       angle: angle + 90,
       spread: 40,
@@ -777,7 +827,7 @@ async function confettiSpiral(_origin: Point): Promise<void> {
   }
 
   // Final center burst
-  confetti({
+  fire({
     particleCount: 100,
     spread: 360,
     origin: { x: 0.5, y: 0.45 },
@@ -802,7 +852,7 @@ async function confettiSpiral(_origin: Point): Promise<void> {
 
 async function thunderBurst(_origin: Point): Promise<void> {
   // Top cannon aimed down
-  confetti({
+  fire({
     particleCount: 120,
     angle: 270,
     spread: 100,
@@ -816,7 +866,7 @@ async function thunderBurst(_origin: Point): Promise<void> {
   });
 
   // Bottom cannon aimed up
-  confetti({
+  fire({
     particleCount: 120,
     angle: 90,
     spread: 100,
@@ -832,7 +882,7 @@ async function thunderBurst(_origin: Point): Promise<void> {
   await sleep(400);
 
   // Collision shockwave — massive 360° from center
-  confetti({
+  fire({
     particleCount: 200,
     spread: 360,
     origin: { x: 0.5, y: 0.5 },
@@ -844,7 +894,7 @@ async function thunderBurst(_origin: Point): Promise<void> {
     zIndex: 9999,
   });
 
-  confetti({
+  fire({
     particleCount: 60,
     spread: 360,
     origin: { x: 0.5, y: 0.5 },
@@ -884,7 +934,11 @@ const effects: EffectFn[] = [
 ];
 
 let lastEffectIndex = -1;
-const queue: { origin: Point; el: HTMLElement }[] = [];
+
+/** Indices of the most dramatic effects — fireworks and starBurst */
+const DRAMATIC_INDICES = [1, 2]; // fireworks = index 1, starBurst = index 2
+
+const queue: { origin: Point; el: HTMLElement; intensity: Intensity }[] = [];
 let isPlaying = false;
 
 async function playNext() {
@@ -894,20 +948,38 @@ async function playNext() {
   }
 
   isPlaying = true;
-  const { origin } = queue.shift()!;
+  const { origin, intensity } = queue.shift()!;
 
-  // Pick a random effect, avoiding the last one used
+  // Minimal intensity: just the row glow (already fired), skip confetti entirely
+  if (intensity === 'minimal') {
+    playNext();
+    return;
+  }
+
+  // Pick the effect
   let index: number;
-  do {
-    index = Math.floor(Math.random() * effects.length);
-  } while (index === lastEffectIndex && effects.length > 1);
+  if (intensity === 'mega') {
+    // Mega always picks a dramatic effect (fireworks or starBurst)
+    index = DRAMATIC_INDICES[Math.floor(Math.random() * DRAMATIC_INDICES.length)];
+  } else {
+    // Standard/enhanced: random, avoiding repeat
+    do {
+      index = Math.floor(Math.random() * effects.length);
+    } while (index === lastEffectIndex && effects.length > 1);
+  }
   lastEffectIndex = index;
+
+  // Set the intensity multiplier for the duration of this effect
+  currentMultiplier = intensityMultiplier(intensity);
 
   try {
     await effects[index](origin);
   } catch (err) {
     console.error('[TaskCelebration] Effect error:', err);
   }
+
+  // Reset multiplier
+  currentMultiplier = 1;
 
   // Play next in queue
   playNext();
@@ -921,15 +993,36 @@ export function celebrateTask(el: HTMLElement, _completedCount: number = 1): voi
     // Instant micro-feedback (always fires immediately)
     rowGlowPulse(el);
 
+    // Roll intensity for variable reinforcement
+    const intensity = rollIntensity();
+
     // Queue the full-screen celebration — stacking is intentional!
     // Each completion deserves its own moment of dopamine.
-    queue.push({ origin, el });
+    queue.push({ origin, el, intensity });
     if (!isPlaying) {
       playNext();
     }
   } catch (err) {
     console.error('[TaskCelebration] Celebrate error:', err);
   }
+}
+
+/**
+ * Section completion celebration — bigger, always dramatic.
+ * Called when an entire section of tasks is completed.
+ */
+export function celebrateSection(el: HTMLElement): void {
+  rowGlowPulse(el);
+  const { x, y } = toNormalized(getCenter(el));
+  confetti({
+    particleCount: 80,
+    spread: 100,
+    origin: { x, y },
+    colors: GOLD,
+    startVelocity: 30,
+    gravity: 0.8,
+    ticks: 150,
+  });
 }
 
 /** React hook wrapper — returns the same celebrateTask function via useCallback. */
