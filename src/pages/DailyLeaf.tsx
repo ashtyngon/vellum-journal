@@ -6,7 +6,8 @@ import { getPlaceholder, SIGNIFIER_TOOLTIPS } from '../lib/bujoHints';
 import { JOURNAL_METHODS } from '../lib/journalMethods';
 import JournalWalkthrough from '../components/JournalWalkthrough';
 import ProcrastinationUnpacker from '../components/ProcrastinationUnpacker';
-import DayRecovery from '../components/DayRecovery';
+import MorningFlow from '../components/MorningFlow';
+import WeekPlanner from '../components/WeekPlanner';
 import DayDebriefComponent from '../components/DayDebrief';
 import { useTaskCelebration } from '../components/TaskCelebration';
 import Walkthrough from '../components/Walkthrough';
@@ -25,8 +26,6 @@ const TYPE_PILLS: { type: EntryType; symbol: string; label: string }[] = [
   { type: 'event', symbol: '\u25cb', label: 'Event' },
   { type: 'note', symbol: '\u2014', label: 'Note' },
 ];
-
-const ESTIMATED_TASK_HOURS = 0.75; // ~45 min per task average
 
 /* ── Helpers ──────────────────────────────────────────────────────── */
 
@@ -184,8 +183,18 @@ export default function DailyLeaf() {
   /* ── Overlays ────────────────────────────────────────────────── */
 
   const [stuckTask, setStuckTask] = useState<RapidLogEntry | null>(null);
-  const [showDayRecovery, setShowDayRecovery] = useState(false);
   const [activeMethod, setActiveMethod] = useState<JournalMethod | null>(null);
+  const [showWeekPlanner, setShowWeekPlanner] = useState(false);
+
+  // Morning Flow — shows once per day on first open
+  const morningFlowKey = `vellum-morning-done-${todayStr()}`;
+  const [morningFlowDone, setMorningFlowDone] = useState(() =>
+    localStorage.getItem(morningFlowKey) === 'true',
+  );
+  const completeMorningFlow = useCallback(() => {
+    localStorage.setItem(morningFlowKey, 'true');
+    setMorningFlowDone(true);
+  }, [morningFlowKey]);
   const [showSignifierHelp, setShowSignifierHelp] = useState(false);
   const [planOverlayOpen, setPlanOverlayOpen] = useState(false);
   const [debriefOverlayOpen, setDebriefOverlayOpen] = useState(false);
@@ -382,15 +391,6 @@ export default function DailyLeaf() {
 
   const todaysCompletedTasks = todayTasks.filter((t) => t.status === 'done');
 
-  // Carried-over tasks: incomplete tasks from days before REAL today (not the viewed date)
-  // Only shown when viewing today — not when browsing past days
-  // Tasks with date === '' are in the parking lot — not carried over.
-  const carriedTasks = useMemo(
-    () => isViewingToday
-      ? entries.filter((e) => e.type === 'task' && e.status === 'todo' && e.date !== '' && e.date < realToday)
-      : [],
-    [entries, realToday, isViewingToday],
-  );
 
   // Journal-based wins for today (from exercises like 3 Good Things)
   const todaysJournalWins = useMemo(() => {
@@ -398,53 +398,17 @@ export default function DailyLeaf() {
     return todayJournals.flatMap(j => j.wins ?? []);
   }, [journalEntries, today]);
 
-  const [carriedExpanded, setCarriedExpanded] = useState(false);
-
-  const rescheduleAll = useCallback(() => {
-    if (carriedTasks.length === 0) return;
-    batchUpdateEntries(carriedTasks.map(t => ({
-      id: t.id,
-      updates: { date: today, movedCount: (t.movedCount ?? 0) + 1 },
-    })));
-  }, [carriedTasks, today, batchUpdateEntries]);
-
-  const parkAll = useCallback(() => {
-    if (carriedTasks.length === 0) return;
-    batchUpdateEntries(carriedTasks.map(t => ({
-      id: t.id,
-      updates: { date: '', section: undefined, timeBlock: undefined },
-    })));
-  }, [carriedTasks, batchUpdateEntries]);
-
-  const rescheduleOne = useCallback((id: string) => {
-    const task = carriedTasks.find(t => t.id === id);
-    if (task) {
-      updateEntry(id, { date: today, movedCount: (task.movedCount ?? 0) + 1 });
-    }
-  }, [carriedTasks, today, updateEntry]);
-
-  const dismissCarried = useCallback((id: string) => {
-    updateEntry(id, { status: 'done' });
-  }, [updateEntry]);
+  // Morning flow should show when there are open tasks and it hasn't been completed today
+  const hasOpenTasks = useMemo(
+    () => entries.some((e) => e.type === 'task' && e.status === 'todo'),
+    [entries],
+  );
+  const showMorningFlow = isViewingToday && !morningFlowDone && hasOpenTasks;
 
   const todaysJournalEntries = useMemo(
     () => journalEntries.filter((j) => j.date === today),
     [journalEntries, today],
   );
-
-  /* Day recovery is manual-only — no auto-show (avoids duplicating the task list) */
-
-  /* ── Capacity warning ────────────────────────────────────────── */
-
-  const capacityWarning = useMemo(() => {
-    const openTasks = todayTasks.filter((t) => t.status === 'todo').length;
-    if (openTasks <= 5) return null;
-    const estimatedHours = (openTasks * ESTIMATED_TASK_HOURS).toFixed(1);
-    return {
-      count: openTasks,
-      hours: estimatedHours,
-    };
-  }, [todayTasks]);
 
   /* ── Handlers: Add entry ─────────────────────────────────────── */
 
@@ -912,6 +876,17 @@ export default function DailyLeaf() {
         </div>
       )}
 
+      {/* ── Week Planner Overlay ────────────────────────────────────── */}
+      {showWeekPlanner && (
+        <WeekPlanner
+          entries={entries}
+          onAddEntry={addEntry}
+          onUpdateEntry={updateEntry}
+          onDeleteEntry={deleteEntry}
+          onClose={() => setShowWeekPlanner(false)}
+        />
+      )}
+
       {/* ── Debrief Overlay — focused, full-screen, distraction-free ── */}
       {debriefOverlayOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => { setDebriefOverlayOpen(false); }}>
@@ -1225,84 +1200,15 @@ export default function DailyLeaf() {
             </header>
           )}
 
-          {/* Day Recovery */}
-          {!focusMode && showDayRecovery && (
-            <div className="mb-5">
-              <DayRecovery entries={entries} onUpdateEntry={updateEntry} onDeleteEntry={deleteEntry} onDismiss={() => setShowDayRecovery(false)} />
-            </div>
-          )}
-          {!focusMode && !showDayRecovery && todayTasks.length > 0 && (
-            <button
-              onClick={() => setShowDayRecovery(true)}
-              className="mb-3 inline-flex items-center gap-1.5 font-mono text-sm text-pencil hover:text-primary uppercase tracking-widest transition-all px-4 py-2.5 rounded-lg border border-wood-light/20 hover:border-primary/20 hover:bg-primary/5"
-            >
-              Reset My Day
-            </button>
-          )}
-
-          {/* Capacity Warning */}
-          {!focusMode && capacityWarning && (
-            <div className="mb-5 bg-bronze/15 border border-bronze/25 rounded-xl px-5 py-4 text-base font-body text-ink/80">
-              <span className="font-semibold">{capacityWarning.count} tasks</span>{' '}
-              (~{capacityWarning.hours}hrs) today. Focus tip: start with just 1.
-            </div>
-          )}
-
-          {/* ── Carried-over Tasks ────────────────────────────── */}
-          {!focusMode && carriedTasks.length > 0 && (
-            <div className="mb-5 bg-surface-light/60 border border-wood-light/20 rounded-xl overflow-hidden">
-              <div
-                className="flex items-center justify-between px-5 py-4 cursor-pointer select-none"
-                onClick={() => setCarriedExpanded(v => !v)}
-              >
-                <div className="flex items-center gap-2.5">
-                  <span className="material-symbols-outlined text-pencil text-xl">history</span>
-                  <span className="font-body text-lg text-ink">
-                    <span className="font-semibold">{carriedTasks.length}</span> from earlier
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); rescheduleAll(); }}
-                    className="text-sm font-mono text-primary hover:text-primary/80 bg-primary/10 hover:bg-primary/15 px-3 py-1.5 rounded-full transition-colors uppercase tracking-wider"
-                  >
-                    &rarr; Today
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); parkAll(); }}
-                    className="text-sm font-mono text-pencil hover:text-ink bg-wood-light/20 hover:bg-wood-light/30 px-3 py-1.5 rounded-full transition-colors uppercase tracking-wider"
-                  >
-                    &rarr; Later
-                  </button>
-                  <span className={`material-symbols-outlined text-pencil text-lg transition-transform ${carriedExpanded ? '' : '-rotate-90'}`}>
-                    expand_more
-                  </span>
-                </div>
-              </div>
-              {carriedExpanded && (
-                <div className="px-5 pb-4 space-y-1">
-                  {carriedTasks.map(task => (
-                    <div key={task.id} className="group/ot flex items-center gap-3 py-2 px-3 -mx-1 rounded-lg hover:bg-surface-light transition-colors">
-                      <span className="inline-block size-2.5 rounded-full bg-pencil/30 flex-shrink-0" />
-                      <span className="flex-1 font-body text-base text-ink truncate">{task.title}</span>
-                      <span className="font-mono text-[13px] text-pencil/70 flex-shrink-0">
-                        {new Date(task.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      </span>
-                      <div className="flex items-center gap-2.5 sm:opacity-0 sm:group-hover/ot:opacity-100 transition-opacity flex-shrink-0">
-                        <button onClick={() => rescheduleOne(task.id)} className="text-primary hover:text-primary/80 transition-colors p-1.5" title="Move to today" aria-label="Move to today">
-                          <span className="material-symbols-outlined text-lg">arrow_forward</span>
-                        </button>
-                        <button onClick={() => dismissCarried(task.id)} className="text-pencil hover:text-sage transition-colors p-1.5" title="Mark done" aria-label="Mark done">
-                          <span className="material-symbols-outlined text-lg">check</span>
-                        </button>
-                        <button onClick={() => deleteEntry(task.id)} className="text-pencil hover:text-pencil/80 transition-colors p-1.5" title="Delete" aria-label="Delete">
-                          <span className="material-symbols-outlined text-lg">close</span>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+          {/* ── Morning Flow — first-open-of-day task triage ──── */}
+          {!focusMode && showMorningFlow && (
+            <div className="mb-6">
+              <MorningFlow
+                entries={entries}
+                onBatchUpdate={batchUpdateEntries}
+                onDeleteEntry={deleteEntry}
+                onComplete={completeMorningFlow}
+              />
             </div>
           )}
 
@@ -1854,15 +1760,26 @@ export default function DailyLeaf() {
                 </details>
               )}
 
-              {/* Quick link to Flow */}
-              <Link
-                to="/flow"
-                className="flex items-center gap-2.5 px-5 py-3.5 rounded-xl bg-surface-light/40 border border-wood-light/15 text-base font-body text-ink hover:text-primary hover:border-primary/20 transition-all"
+              {/* Week Planner */}
+              <button
+                onClick={() => setShowWeekPlanner(true)}
+                className="w-full flex items-center gap-2.5 px-5 py-3.5 rounded-xl bg-surface-light/40 border border-wood-light/15 text-base font-body text-ink hover:text-primary hover:border-primary/20 transition-all"
               >
-                <span className="material-symbols-outlined text-xl text-primary/50">calendar_view_day</span>
-                Flow View
+                <span className="material-symbols-outlined text-xl text-primary/50">date_range</span>
+                This Week
                 <span className="material-symbols-outlined text-base text-pencil/60 ml-auto">arrow_forward</span>
-              </Link>
+              </button>
+
+              {/* Re-do morning triage */}
+              {morningFlowDone && (
+                <button
+                  onClick={() => { setMorningFlowDone(false); localStorage.removeItem(morningFlowKey); }}
+                  className="w-full flex items-center gap-2.5 px-5 py-3.5 rounded-xl bg-surface-light/40 border border-wood-light/15 text-base font-body text-pencil hover:text-primary hover:border-primary/20 transition-all"
+                >
+                  <span className="material-symbols-outlined text-xl text-pencil/50">restart_alt</span>
+                  Redo morning triage
+                </button>
+              )}
             </div>
           )}
         </div>

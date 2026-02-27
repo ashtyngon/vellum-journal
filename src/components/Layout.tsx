@@ -56,7 +56,6 @@ const Layout = ({ children }: { children: ReactNode }) => {
 
   const navLinks = [
     { to: '/daily', label: 'Daily', icon: 'edit_note' },
-    { to: '/flow', label: 'Flow', icon: 'timeline' },
     { to: '/habit-trace', label: 'Habits', icon: 'show_chart' },
     { to: '/archive', label: 'Archive', icon: 'inventory_2' },
   ];
