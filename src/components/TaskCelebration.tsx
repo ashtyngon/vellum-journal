@@ -921,10 +921,9 @@ export function celebrateTask(el: HTMLElement, _completedCount: number = 1): voi
     // Instant micro-feedback (always fires immediately)
     rowGlowPulse(el);
 
-    // Queue the full-screen celebration (cap at 1 to prevent stacking)
-    if (queue.length < 1) {
-      queue.push({ origin, el });
-    }
+    // Queue the full-screen celebration — stacking is intentional!
+    // Each completion deserves its own moment of dopamine.
+    queue.push({ origin, el });
     if (!isPlaying) {
       playNext();
     }
