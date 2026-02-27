@@ -382,11 +382,10 @@ export default function DailyLeaf() {
 
   const todaysCompletedTasks = todayTasks.filter((t) => t.status === 'done');
 
-  // Overdue tasks: incomplete tasks from days before REAL today (not the viewed date)
+  // Carried-over tasks: incomplete tasks from days before REAL today (not the viewed date)
   // Only shown when viewing today — not when browsing past days
-  // Overdue = has a real date AND that date is before today.
-  // Tasks with date === '' are in the parking lot — NOT overdue.
-  const overdueTasks = useMemo(
+  // Tasks with date === '' are in the parking lot — not carried over.
+  const carriedTasks = useMemo(
     () => isViewingToday
       ? entries.filter((e) => e.type === 'task' && e.status === 'todo' && e.date !== '' && e.date < realToday)
       : [],
@@ -399,32 +398,32 @@ export default function DailyLeaf() {
     return todayJournals.flatMap(j => j.wins ?? []);
   }, [journalEntries, today]);
 
-  const [overdueExpanded, setOverdueExpanded] = useState(false);
+  const [carriedExpanded, setCarriedExpanded] = useState(false);
 
   const rescheduleAll = useCallback(() => {
-    if (overdueTasks.length === 0) return;
-    batchUpdateEntries(overdueTasks.map(t => ({
+    if (carriedTasks.length === 0) return;
+    batchUpdateEntries(carriedTasks.map(t => ({
       id: t.id,
       updates: { date: today, movedCount: (t.movedCount ?? 0) + 1 },
     })));
-  }, [overdueTasks, today, batchUpdateEntries]);
+  }, [carriedTasks, today, batchUpdateEntries]);
 
   const parkAll = useCallback(() => {
-    if (overdueTasks.length === 0) return;
-    batchUpdateEntries(overdueTasks.map(t => ({
+    if (carriedTasks.length === 0) return;
+    batchUpdateEntries(carriedTasks.map(t => ({
       id: t.id,
       updates: { date: '', section: undefined, timeBlock: undefined },
     })));
-  }, [overdueTasks, batchUpdateEntries]);
+  }, [carriedTasks, batchUpdateEntries]);
 
   const rescheduleOne = useCallback((id: string) => {
-    const task = overdueTasks.find(t => t.id === id);
+    const task = carriedTasks.find(t => t.id === id);
     if (task) {
       updateEntry(id, { date: today, movedCount: (task.movedCount ?? 0) + 1 });
     }
-  }, [overdueTasks, today, updateEntry]);
+  }, [carriedTasks, today, updateEntry]);
 
-  const dismissOverdue = useCallback((id: string) => {
+  const dismissCarried = useCallback((id: string) => {
     updateEntry(id, { status: 'done' });
   }, [updateEntry]);
 
@@ -1258,17 +1257,17 @@ export default function DailyLeaf() {
             </div>
           )}
 
-          {/* ── Overdue Tasks ─────────────────────────────────── */}
-          {!focusMode && overdueTasks.length > 0 && (
+          {/* ── Carried-over Tasks ────────────────────────────── */}
+          {!focusMode && carriedTasks.length > 0 && (
             <div className="mb-5 bg-surface-light/60 border border-wood-light/20 rounded-xl overflow-hidden">
               <div
                 className="flex items-center justify-between px-5 py-4 cursor-pointer select-none"
-                onClick={() => setOverdueExpanded(v => !v)}
+                onClick={() => setCarriedExpanded(v => !v)}
               >
                 <div className="flex items-center gap-2.5">
                   <span className="material-symbols-outlined text-pencil text-xl">history</span>
                   <span className="font-body text-lg text-ink">
-                    <span className="font-semibold">{overdueTasks.length}</span> overdue
+                    <span className="font-semibold">{carriedTasks.length}</span> from earlier
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1284,14 +1283,14 @@ export default function DailyLeaf() {
                   >
                     &rarr; Later
                   </button>
-                  <span className={`material-symbols-outlined text-pencil text-lg transition-transform ${overdueExpanded ? '' : '-rotate-90'}`}>
+                  <span className={`material-symbols-outlined text-pencil text-lg transition-transform ${carriedExpanded ? '' : '-rotate-90'}`}>
                     expand_more
                   </span>
                 </div>
               </div>
-              {overdueExpanded && (
+              {carriedExpanded && (
                 <div className="px-5 pb-4 space-y-1">
-                  {overdueTasks.map(task => (
+                  {carriedTasks.map(task => (
                     <div key={task.id} className="group/ot flex items-center gap-3 py-2 px-3 -mx-1 rounded-lg hover:bg-surface-light transition-colors">
                       <span className="inline-block size-2.5 rounded-full bg-pencil/30 flex-shrink-0" />
                       <span className="flex-1 font-body text-base text-ink truncate">{task.title}</span>
@@ -1302,7 +1301,7 @@ export default function DailyLeaf() {
                         <button onClick={() => rescheduleOne(task.id)} className="text-primary hover:text-primary/80 transition-colors p-1.5" title="Move to today" aria-label="Move to today">
                           <span className="material-symbols-outlined text-lg">arrow_forward</span>
                         </button>
-                        <button onClick={() => dismissOverdue(task.id)} className="text-pencil hover:text-sage transition-colors p-1.5" title="Mark done" aria-label="Mark done">
+                        <button onClick={() => dismissCarried(task.id)} className="text-pencil hover:text-sage transition-colors p-1.5" title="Mark done" aria-label="Mark done">
                           <span className="material-symbols-outlined text-lg">check</span>
                         </button>
                         <button onClick={() => deleteEntry(task.id)} className="text-pencil hover:text-pencil/80 transition-colors p-1.5" title="Delete" aria-label="Delete">

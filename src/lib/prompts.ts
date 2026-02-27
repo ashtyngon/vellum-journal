@@ -119,17 +119,17 @@ function getContextualPrompt(data: {
   const today = todayStr();
   const yesterday = yesterdayStr();
 
-  // ── Check for overdue tasks (tasks from before today still open) ──
-  // Parked tasks (date === '') are intentionally unscheduled, not overdue
-  const overdueTasks = entries.filter(
+  // ── Check for carried-over tasks (tasks from before today still open) ──
+  // Parked tasks (date === '') are intentionally unscheduled
+  const carriedTasks = entries.filter(
     (e) =>
       e.type === 'task' &&
       e.status === 'todo' &&
       e.date !== '' &&
       e.date < today,
   );
-  if (overdueTasks.length > 0) {
-    return `You have ${overdueTasks.length} task${overdueTasks.length === 1 ? '' : 's'} from yesterday still open \u2014 want to review them?`;
+  if (carriedTasks.length > 0) {
+    return `You have ${carriedTasks.length} task${carriedTasks.length === 1 ? '' : 's'} from earlier still open \u2014 want to review them?`;
   }
 
   // ── Check yesterday's debrief for planRealism > 4 ──

@@ -15,7 +15,7 @@ interface DayRecoveryProps {
 const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) => {
   const today = todayStr();
 
-  // All tasks that need attention: today's undone + overdue from past
+  // All tasks that need attention: today's undone + carried over from past
   // Exclude parked tasks (date === '') — those are intentionally unscheduled
   const actionableTasks = entries.filter(
     (e) => e.type === 'task' && e.status === 'todo' && e.date !== '' && e.date <= today
@@ -44,7 +44,7 @@ const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) =>
         const tomorrowStr = tomorrow.toISOString().split('T')[0];
         onUpdateEntry(task.id, { date: tomorrowStr, movedCount: (task.movedCount ?? 0) + 1 });
       } else if (d === 'keep' && task.date < today) {
-        // Overdue task being kept → move to today
+        // Carried-over task being kept → move to today
         onUpdateEntry(task.id, { date: today, movedCount: (task.movedCount ?? 0) + 1 });
       }
     }
@@ -100,7 +100,7 @@ const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) =>
       <div className="divide-y divide-wood-light/10 max-h-[50vh] overflow-y-auto">
         {actionableTasks.map((task) => {
           const decision = getDecision(task.id);
-          const isOverdue = task.date < today;
+          const isFromEarlier = task.date < today;
           return (
             <div
               key={task.id}
@@ -120,9 +120,9 @@ const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) =>
                 >
                   {task.title}
                 </span>
-                {isOverdue && (
-                  <span className="ml-2 font-mono text-sm text-tension/60 uppercase tracking-wider">
-                    overdue
+                {isFromEarlier && (
+                  <span className="ml-2 font-mono text-sm text-pencil/40 uppercase tracking-wider">
+                    from {new Date(task.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
                 )}
               </div>

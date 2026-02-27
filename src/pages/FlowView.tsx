@@ -1,14 +1,7 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import { todayStr, formatLocalDate, dateStr } from '../lib/dateUtils';
-import { getColorOfTheDay, getDailyCompanion } from '../lib/colorOfTheDay';
-import type { ReactiveMessages } from '../lib/colorOfTheDay';
-import { checkAchievements, getAchievementDef } from '../lib/achievements';
-import type { AchievementContext } from '../lib/achievements';
-import CompanionPanel from '../components/CompanionPanel';
-import type { CompanionExpression, SectionProgress } from '../components/CompanionPanel';
 import WeekStrip from '../components/WeekStrip';
-import CleanLeafCelebration from '../components/CleanLeafCelebration';
 import {
   SectionHeader,
   SectionBody,
@@ -24,50 +17,11 @@ import {
 } from '../components/flow';
 import { parseNaturalEntry } from '../lib/nlParser';
 import { celebrateTask, celebrateSection } from '../components/TaskCelebration';
-import AchievementToast from '../components/AchievementToast';
 import type { RapidLogEntry } from '../context/AppContext';
 
 /* ══════════════════════════════════════════════════════════════════════════
-   FlowView — Single-day view with companion sidebar and week strip nav.
+   FlowView — Single-day task management with week strip navigation.
    ══════════════════════════════════════════════════════════════════════════ */
-
-/* ── Mobile companion floating avatar ────────────────────────────────────── */
-
-function MobileCompanionAvatar({
-  companion,
-  expression,
-  onClick,
-}: {
-  companion: { animal: string; name: string };
-  expression: CompanionExpression;
-  onClick: () => void;
-}) {
-  const [imgError, setImgError] = useState(false);
-  const scaleClass =
-    expression === 'happy' ? 'scale-110' :
-    expression === 'excited' ? 'scale-115' : '';
-
-  return (
-    <button
-      onClick={onClick}
-      className={`md:hidden fixed bottom-4 right-4 z-40 w-14 h-14 rounded-full bg-surface-light shadow-lifted border border-wood-light/40 overflow-hidden transition-transform duration-300 ${scaleClass}`}
-      aria-label={`Open ${companion.name} panel`}
-    >
-      {!imgError ? (
-        <img
-          src={`/animals/${companion.animal}.png`}
-          alt={companion.name}
-          className="w-full h-full object-cover"
-          onError={() => setImgError(true)}
-        />
-      ) : (
-        <span className="material-symbols-outlined text-2xl text-pencil/40">pets</span>
-      )}
-    </button>
-  );
-}
-
-/* ── Main FlowView ───────────────────────────────────────────────────────── */
 
 export default function FlowView() {
   const {
@@ -78,15 +32,6 @@ export default function FlowView() {
     deleteEntry,
     habits,
     toggleHabit,
-    achievements,
-    totalActiveDays,
-    lastActiveDate,
-    unlockAchievement,
-    markAchievementSeen,
-    recordActiveDay,
-    journalEntries,
-    collections,
-    debriefs,
   } = useApp();
 
   /* ── Date navigation state ───────────────────────────────────────────── */
@@ -112,47 +57,6 @@ export default function FlowView() {
       document.removeEventListener('visibilitychange', onVisible);
       clearInterval(interval);
     };
-  }, []);
-
-  /* ── Daily color & companion ─────────────────────────────────────────── */
-
-  const dailyColor = useMemo(() => getColorOfTheDay(currentDate), [currentDate]);
-  const companion = useMemo(() => getDailyCompanion(dailyColor), [dailyColor]);
-
-  /* ── Companion expression system ─────────────────────────────────────── */
-
-  const [companionExpression, setCompanionExpression] = useState<CompanionExpression>('neutral');
-  const [reactiveState, setReactiveState] = useState<keyof ReactiveMessages>('morning_greeting');
-  const sessionTasksRef = useRef(0); // tasks completed in this session
-  const expressionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Set initial reactive state based on time of day
-  useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setReactiveState('morning_greeting');
-    else if (hour < 17) setReactiveState('momentum');
-    else setReactiveState('morning_greeting');
-  }, []);
-
-  // Check for return after absence
-  useEffect(() => {
-    if (lastActiveDate) {
-      const last = new Date(lastActiveDate + 'T12:00:00');
-      const now = new Date();
-      const daysDiff = Math.floor((now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
-      if (daysDiff >= 3) {
-        setReactiveState('return_after_absence');
-      }
-    }
-  }, [lastActiveDate]);
-
-  const flashExpression = useCallback((expr: CompanionExpression, durationMs: number) => {
-    if (expressionTimerRef.current) clearTimeout(expressionTimerRef.current);
-    setCompanionExpression(expr);
-    expressionTimerRef.current = setTimeout(() => {
-      setCompanionExpression('neutral');
-      expressionTimerRef.current = null;
-    }, durationMs);
   }, []);
 
   /* ── Sections ────────────────────────────────────────────────────────── */
@@ -278,30 +182,7 @@ export default function FlowView() {
   const parkingInputRef = useRef<HTMLInputElement>(null);
   const [parkingDragOver, setParkingDragOver] = useState(false);
 
-  /* ── Section progress for CompanionPanel ─────────────────────────────── */
-
-  const sectionProgress: SectionProgress[] = useMemo(() =>
-    visibleSections.map(s => {
-      const tasks = tasksBySection[s.id] ?? [];
-      const done = tasks.filter(t => t.status === 'done').length;
-      const total = tasks.length;
-      return {
-        name: sectionNames[s.id] ?? s.name,
-        status: total === 0
-          ? 'not_started' as const
-          : done === total
-            ? 'complete' as const
-            : done > 0
-              ? 'in_progress' as const
-              : 'not_started' as const,
-      };
-    }),
-  [visibleSections, tasksBySection, sectionNames]);
-
-  const allSectionsComplete = useMemo(() => {
-    const sectionsWithTasks = sectionProgress.filter(s => s.status !== 'not_started');
-    return sectionsWithTasks.length > 0 && sectionsWithTasks.every(s => s.status === 'complete');
-  }, [sectionProgress]);
+  /* (companion panel removed — lives on DailyLeaf only) */
 
   /* ── Week completion status for WeekStrip ────────────────────────────── */
 
@@ -334,100 +215,6 @@ export default function FlowView() {
     return status;
   }, [entries, currentDate]);
 
-  /* ── Clean Leaf celebration ──────────────────────────────────────────── */
-
-  const [showCleanLeaf, setShowCleanLeaf] = useState(false);
-  const cleanLeafShownRef = useRef(false);
-
-  // Count clean sweep days this month
-  const cleanSweepDaysThisMonth = useMemo(() => {
-    const monthPrefix = currentDate.slice(0, 7); // "YYYY-MM"
-    let count = 0;
-
-    // Check each day of the month up to today
-    const today = todayStr();
-    for (let day = 1; day <= 31; day++) {
-      const ds = `${monthPrefix}-${String(day).padStart(2, '0')}`;
-      if (ds > today) break;
-
-      const dayTasks = entries.filter(e =>
-        e.date === ds && e.type === 'task' && (e.section || e.timeBlock),
-      );
-      if (dayTasks.length > 0 && dayTasks.every(t => t.status === 'done')) {
-        count++;
-      }
-    }
-    return count;
-  }, [entries, currentDate]);
-
-  /* ── Achievement tracking ────────────────────────────────────────────── */
-
-  const [achievementQueue, setAchievementQueue] = useState<string[]>([]);
-
-  const latestAchievement = useMemo(() => {
-    if (achievements.length === 0) return null;
-    const sorted = [...achievements].sort((a, b) => b.unlockedAt.localeCompare(a.unlockedAt));
-    const def = getAchievementDef(sorted[0].id);
-    return def ? { name: def.name, icon: def.icon } : null;
-  }, [achievements]);
-
-  const runAchievementCheck = useCallback((ctx: Partial<AchievementContext>) => {
-    const totalTasksCompleted = entries.filter(e => e.type === 'task' && e.status === 'done').length;
-    const now = new Date();
-
-    const fullCtx: AchievementContext = {
-      totalActiveDays,
-      todayTasksCompleted: dayEntries.filter(e => e.type === 'task' && e.status === 'done').length,
-      todaySessionTasksInARow: sessionTasksRef.current,
-      allSectionsComplete,
-      sectionJustCompleted: false,
-      cleanSweepDaysThisMonth,
-      cleanSweepDaysTotal: 0, // simplified — could track across all months
-      totalTasksCompleted,
-      journalExercisesCompleted: journalEntries.length,
-      journalMethodsUsed: new Set(journalEntries.map(j => j.method).filter(Boolean) as string[]),
-      hasDebrief: debriefs.length > 0,
-      currentHour: now.getHours(),
-      isWeekend: now.getDay() === 0 || now.getDay() === 6,
-      daysSinceLastActive: lastActiveDate
-        ? Math.floor((now.getTime() - new Date(lastActiveDate + 'T12:00:00').getTime()) / (1000 * 60 * 60 * 24))
-        : 999,
-      parkingLotUsageCount: 0,
-      deferredTaskCount: entries.filter(e => e.status === 'deferred').length,
-      maxRescheduleCount: Math.max(0, ...entries.map(e => e.movedCount ?? 0)),
-      collectionsCreated: collections.length,
-      maxCollectionSize: Math.max(0, ...collections.map(c => c.items.length)),
-      sectionCompletedInUnder30Min: false,
-      allDailyTasksCompletedInUnder2Hours: false,
-      ...ctx,
-    };
-
-    const unlockedSet = new Set(achievements.map(a => a.id));
-    const newlyUnlocked = checkAchievements(fullCtx, unlockedSet);
-
-    for (const id of newlyUnlocked) {
-      unlockAchievement(id);
-    }
-
-    if (newlyUnlocked.length > 0) {
-      setAchievementQueue(prev => [...prev, ...newlyUnlocked]);
-    }
-  }, [
-    totalActiveDays, dayEntries, allSectionsComplete, cleanSweepDaysThisMonth,
-    entries, journalEntries, debriefs, lastActiveDate, collections, achievements,
-    unlockAchievement,
-  ]);
-
-  // Process achievement queue (show toast, then mark seen)
-  useEffect(() => {
-    if (achievementQueue.length === 0) return;
-    const timer = setTimeout(() => {
-      const id = achievementQueue[0];
-      markAchievementSeen(id);
-      setAchievementQueue(prev => prev.slice(1));
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [achievementQueue, markAchievementSeen]);
 
   /* ── Bulk selection ──────────────────────────────────────────────────── */
 
@@ -561,134 +348,42 @@ export default function FlowView() {
     }
   }, [batchUpdateEntries, clearSelection]);
 
-  /* ── Habit auto-population ───────────────────────────────────────────── */
-
-  useEffect(() => {
-    if (!habits || habits.length === 0) return;
-
-    for (const habit of habits) {
-      // Check if a task with sourceHabit matching this habit already exists for currentDate
-      const exists = entries.some(
-        e => e.date === currentDate && e.sourceHabit === habit.name,
-      );
-      if (!exists) {
-        addEntry({
-          id: uid(),
-          type: 'task',
-          title: habit.name,
-          status: 'todo',
-          date: currentDate,
-          sourceHabit: habit.name,
-          section: sections[0]?.id, // default to first section
-          movedCount: 0,
-        });
-      }
-    }
-    // Only run when date or habits change — entries intentionally excluded to avoid loops
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentDate, habits]);
-
-  /* ── handleUpdateEntry wrapper (completion triggers) ─────────────────── */
+  /* ── handleUpdateEntry wrapper (completion celebrations) ─────────────── */
 
   const handleUpdateEntry = useCallback((id: string, updates: Partial<RapidLogEntry>) => {
-    // Call the real updateEntry first
     updateEntry(id, updates);
 
-    // Check for task completion triggers
     if (updates.status === 'done') {
-      sessionTasksRef.current += 1;
-
-      // Flash happy expression
-      flashExpression('happy', 300);
-
       // Celebrate with confetti on the task element
       const el = document.querySelector(`[data-entry-id="${id}"]`) as HTMLElement | null;
       if (el) celebrateTask(el);
 
-      // Set reactive state based on session progress
-      if (sessionTasksRef.current === 1) {
-        setReactiveState('first_task');
-      } else if (sessionTasksRef.current >= 3) {
-        setReactiveState('momentum');
-      }
-
       // Check section completion on next tick (after state updates)
       setTimeout(() => {
-        // Re-check sections — we need fresh data
         const currentTasks = entries.filter(e =>
           e.date === currentDate && e.type === 'task' && (e.section || e.timeBlock),
         );
-
-        // Include the update we just made
         const updatedTasks = currentTasks.map(t =>
           t.id === id ? { ...t, ...updates } : t,
         );
 
-        const allDone = updatedTasks.length > 0 &&
-          updatedTasks.every(t => t.status === 'done');
+        // Celebrate section completion
+        for (const s of visibleSections) {
+          const sectionTasks = updatedTasks.filter(t => {
+            const timeStr = t.timeBlock || t.time;
+            const sectionByTime = timeStr ? getSectionForTime(timeStr, visibleSections) : null;
+            return sectionByTime === s.id || t.section === s.id;
+          });
 
-        if (allDone && !cleanLeafShownRef.current) {
-          cleanLeafShownRef.current = true;
-          flashExpression('excited', 2000);
-          setReactiveState('all_done');
-          setShowCleanLeaf(true);
-          recordActiveDay();
-          runAchievementCheck({ allSectionsComplete: true });
-        } else {
-          // Check if any section just completed
-          for (const s of visibleSections) {
-            const sectionTasks = updatedTasks.filter(t => {
-              const timeStr = t.timeBlock || t.time;
-              const sectionByTime = timeStr ? getSectionForTime(timeStr, visibleSections) : null;
-              return sectionByTime === s.id || t.section === s.id;
-            });
-
-            if (sectionTasks.length > 0 && sectionTasks.every(t => t.status === 'done')) {
-              flashExpression('excited', 1000);
-              setReactiveState('section_done');
-              // Celebrate on the section element
-              const sectionEl = document.querySelector(`[data-section-id="${s.id}"]`) as HTMLElement | null;
-              if (sectionEl) celebrateSection(sectionEl);
-              runAchievementCheck({ sectionJustCompleted: true });
-              break;
-            }
+          if (sectionTasks.length > 0 && sectionTasks.every(t => t.status === 'done')) {
+            const sectionEl = document.querySelector(`[data-section-id="${s.id}"]`) as HTMLElement | null;
+            if (sectionEl) celebrateSection(sectionEl);
+            break;
           }
         }
       }, 50);
-
-      // Record active day and run basic achievement check
-      recordActiveDay();
-      runAchievementCheck({});
     }
-  }, [
-    updateEntry, entries, currentDate, visibleSections, flashExpression,
-    recordActiveDay, runAchievementCheck,
-  ]);
-
-  /* ── Reset clean leaf shown flag when date changes ───────────────────── */
-
-  useEffect(() => {
-    cleanLeafShownRef.current = false;
-  }, [currentDate]);
-
-  /* ── Mobile companion panel ──────────────────────────────────────────── */
-
-  const [mobileCompanionOpen, setMobileCompanionOpen] = useState(false);
-
-  /* ── Achievement toast display ───────────────────────────────────────── */
-
-  const currentAchievementToast = useMemo(() => {
-    if (achievementQueue.length === 0) return null;
-    return getAchievementDef(achievementQueue[0]);
-  }, [achievementQueue]);
-
-  /* ── Unlocked achievement for CleanLeaf ──────────────────────────────── */
-
-  const cleanLeafAchievement = useMemo(() => {
-    if (!showCleanLeaf || achievementQueue.length === 0) return null;
-    const def = getAchievementDef(achievementQueue[0]);
-    return def ? { name: def.name, icon: def.icon, description: def.description } : null;
-  }, [showCleanLeaf, achievementQueue]);
+  }, [updateEntry, entries, currentDate, visibleSections]);
 
   /* ═══════════════════════════════════════════════════════════════════════
      RENDER
@@ -696,31 +391,15 @@ export default function FlowView() {
 
   return (
     <div
-      className="flex h-[calc(100vh-64px)] overflow-hidden bg-paper"
+      className="flex flex-col h-[calc(100vh-64px)] overflow-hidden bg-paper"
       onDragEnd={handleDragEnd}
     >
-      {/* ── Companion Panel — desktop only ──────────────────────────────── */}
-      <div className="hidden md:block">
-        <CompanionPanel
-          companion={companion}
-          dailyColor={dailyColor}
-          expression={companionExpression}
-          reactiveState={reactiveState}
-          sectionProgress={sectionProgress}
-          achievementCount={achievements.length}
-          totalActiveDays={totalActiveDays}
-          latestAchievement={latestAchievement}
-        />
-      </div>
-
-      {/* ── Main content area ──────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
-        {/* Week Strip */}
-        <WeekStrip
-          currentDate={currentDate}
-          onSelectDate={setCurrentDate}
-          completionStatus={weekCompletionStatus}
-        />
+      {/* Week Strip */}
+      <WeekStrip
+        currentDate={currentDate}
+        onSelectDate={setCurrentDate}
+        completionStatus={weekCompletionStatus}
+      />
 
         {/* Sections (single day, vertical scroll) */}
         <div className="flex-1 overflow-y-auto px-4 md:px-8 py-4 space-y-4 no-scrollbar">
@@ -921,58 +600,6 @@ export default function FlowView() {
             )}
           </div>
         </div>
-      </div>
-
-      {/* ── Mobile companion floating avatar ────────────────────────────── */}
-      <MobileCompanionAvatar
-        companion={companion}
-        expression={companionExpression}
-        onClick={() => setMobileCompanionOpen(true)}
-      />
-
-      {/* ── Mobile companion sheet ──────────────────────────────────────── */}
-      {mobileCompanionOpen && (
-        <div className="md:hidden fixed inset-0 z-50">
-          <div
-            className="absolute inset-0 bg-ink/30"
-            onClick={() => setMobileCompanionOpen(false)}
-          />
-          <div className="absolute bottom-0 left-0 right-0 max-h-[70vh] bg-paper rounded-t-2xl shadow-lifted overflow-y-auto">
-            <CompanionPanel
-              companion={companion}
-              dailyColor={dailyColor}
-              expression={companionExpression}
-              reactiveState={reactiveState}
-              sectionProgress={sectionProgress}
-              achievementCount={achievements.length}
-              totalActiveDays={totalActiveDays}
-              latestAchievement={latestAchievement}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* ── Clean Leaf Celebration ──────────────────────────────────────── */}
-      {showCleanLeaf && (
-        <CleanLeafCelebration
-          dailyColor={dailyColor}
-          companion={companion}
-          cleanDayCount={cleanSweepDaysThisMonth}
-          unlockedAchievement={cleanLeafAchievement}
-          onDismiss={() => setShowCleanLeaf(false)}
-        />
-      )}
-
-      {/* ── Achievement toast ──────────────────────────────────────────── */}
-      {currentAchievementToast && !showCleanLeaf && (
-        <AchievementToast
-          achievement={currentAchievementToast}
-          onDismiss={() => {
-            setAchievementQueue(prev => prev.slice(1));
-            if (achievementQueue[0]) markAchievementSeen(achievementQueue[0]);
-          }}
-        />
-      )}
     </div>
   );
 }
