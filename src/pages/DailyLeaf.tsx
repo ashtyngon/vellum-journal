@@ -432,16 +432,7 @@ export default function DailyLeaf() {
     [journalEntries, today],
   );
 
-  /* Auto-show day recovery: after noon with no tasks done */
-  const isAfterNoon = new Date().getHours() >= 12;
-  const shouldAutoShowRecovery =
-    isAfterNoon && todayTasks.length > 0 && completedCount === 0;
-
-  useEffect(() => {
-    if (shouldAutoShowRecovery) {
-      setShowDayRecovery(true);
-    }
-  }, [shouldAutoShowRecovery]);
+  /* Day recovery is manual-only — no auto-show (avoids duplicating the task list) */
 
   /* ── Capacity warning ────────────────────────────────────────── */
 
