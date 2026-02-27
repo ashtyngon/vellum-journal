@@ -210,515 +210,1149 @@ export function getColorName(color: DailyColor): string {
 
 /* ── Daily Companions — each color paired with a character + message ─── */
 
+export interface ReactiveMessages {
+  morning_greeting: string[];
+  first_task: string[];
+  momentum: string[];
+  section_done: string[];
+  all_done: string[];
+  stuck: string[];
+  return_after_absence: string[];
+  habit_done: string[];
+  overdue_cleared: string[];
+}
+
 export interface DailyCompanion {
   colorName: string;
   animal: string;     // PNG icon filename (without extension) from /animals/
   name: string;       // the companion's name
   personality: string; // short character description, shown in the color popover
   messages: string[]; // pool of quotes — first shown on load, click cycles through the rest
+  reactiveMessages?: ReactiveMessages;
+}
+
+/** Default reactive messages for companions without custom ones (indices 10-99). */
+function defaultReactiveMessages(): ReactiveMessages {
+  return {
+    morning_greeting: [
+      'Good morning. Today is a fresh page.',
+      'You showed up. That already counts for something.',
+      'A new day, a new chance. Let\'s see what you\'ve got.',
+    ],
+    first_task: [
+      'First one done. The hardest part is behind you.',
+      'And just like that, you\'re moving.',
+      'One down. You\'re officially in motion.',
+    ],
+    momentum: [
+      'Look at you go. Keep that energy.',
+      'You\'re building real momentum now.',
+      'Task after task. This is your rhythm.',
+    ],
+    section_done: [
+      'A whole section, done. That\'s worth pausing to notice.',
+      'Section cleared. Take a breath — you earned it.',
+      'Nice. That entire section is behind you now.',
+    ],
+    all_done: [
+      'Everything is done. Seriously. All of it. Well done.',
+      'You finished the whole list. That\'s not nothing.',
+      'All tasks complete. Go rest. You did the thing.',
+    ],
+    stuck: [
+      'It\'s been a while. Want to try just one small task?',
+      'Stuck happens. Pick the tiniest thing on the list and start there.',
+      'Two hours is a long pause. You don\'t have to do everything — just one thing.',
+    ],
+    return_after_absence: [
+      'Hey, you\'re back. No judgment — just glad you\'re here.',
+      'Welcome back. The list waited for you.',
+      'You were away for a bit. That\'s okay. Let\'s pick up where you left off.',
+    ],
+    habit_done: [
+      'Habit complete. Consistency is its own reward.',
+      'Another day, another habit kept. Nice work.',
+      'The habit holds. That takes more strength than people realize.',
+    ],
+    overdue_cleared: [
+      'That overdue task is finally done. How does it feel?',
+      'Better late than never — and it\'s done now. That\'s what matters.',
+      'You cleared the overdue one. The list is lighter for it.',
+    ],
+  };
 }
 
 const COMPANIONS: DailyCompanion[] = [
   // 0 – Warm Amber
   { colorName: 'Warm Amber', animal: 'Fox', name: 'Fox',
     personality: 'The hypercompetent heist planner',
-    messages: ['I\'ve been casing your schedule all morning. There\'s a window at 2pm — that\'s when we strike. Open the journal, act casual.', 'You thought you could skip today? I already moved three distractions out of your path. You never even noticed. That\'s how good I am.', 'Step one: you sit down. Step two: I\'ve already handled steps two through six. You just have to write. I did the rest.', 'That pause just now? A distraction. While you were reading this, I reorganized your priorities. Check the page.', 'The heist went flawlessly. Evidence of self-reflection acquired. Rendezvous same time tomorrow. I\'ll have the next scheme drafted by midnight.'] },
+    messages: ['I\'ve been casing your schedule all morning. There\'s a window at 2pm — that\'s when we strike. Open the journal, act casual.', 'You thought you could skip today? I already moved three distractions out of your path. You never even noticed. That\'s how good I am.', 'Step one: you sit down. Step two: I\'ve already handled steps two through six. You just have to write. I did the rest.', 'That pause just now? A distraction. While you were reading this, I reorganized your priorities. Check the page.', 'The heist went flawlessly. Evidence of self-reflection acquired. Rendezvous same time tomorrow. I\'ll have the next scheme drafted by midnight.'],
+    reactiveMessages: {
+      morning_greeting: [
+        'I\'ve been casing your schedule all morning. There\'s a window — that\'s when we strike.',
+        'Agent, you\'re online. I\'ve prepared today\'s operational briefing.',
+        'The target is today\'s task list. I\'ve already found three entry points.',
+      ],
+      first_task: [
+        'Phase one complete. Smooth.',
+        'First mark acquired. Moving to secondary targets.',
+        'Clean execution. The rest will be easier.',
+      ],
+      momentum: [
+        'Multiple targets down. You\'re in the zone — don\'t break rhythm.',
+        'This is the part of the heist where the music kicks in.',
+        'Consecutive hits. The security system never saw you coming.',
+      ],
+      section_done: [
+        'Sector cleared. Impressive. I barely had to intervene.',
+        'That whole wing is ours. Regroup and move to the next vault.',
+        'The blueprints were right — that section folded exactly as planned.',
+      ],
+      all_done: [
+        'The heist went flawlessly. Evidence of productivity acquired. Rendezvous tomorrow.',
+        'Every target neutralized. I\'m almost impressed. Almost.',
+        'Clean sweep. No evidence left behind. Same time tomorrow, agent.',
+      ],
+      stuck: [
+        'You\'ve gone dark. Do I need to send in the extraction team?',
+        'Radio silence for two hours. What happened to the plan?',
+        'The window is closing. Pick one task — any task — and move.',
+      ],
+      return_after_absence: [
+        'You went off-grid. I had to run the operation solo. Don\'t do that again.',
+        'Agent, you missed the rendezvous. But the plan is still intact. Let\'s move.',
+        'I kept the heist warm for you. Time to get back in the field.',
+      ],
+      habit_done: [
+        'Routine asset secured. Good operatives never skip the fundamentals.',
+        'Another checkpoint cleared. The habit is your cover — maintain it.',
+        'Consistent. That\'s what separates amateurs from professionals.',
+      ],
+      overdue_cleared: [
+        'That loose end was a liability. Smart move finally tying it off.',
+        'Overdue target eliminated. The operation is cleaner now.',
+        'That one had been on the board too long. Good. It\'s done.',
+      ],
+    } },
 
   // 1 – Dusty Rose
   { colorName: 'Dusty Rose', animal: 'Octopus', name: 'Octavia',
     personality: 'The anxious overachiever with eight arms',
-    messages: ['I\'ve got your tasks in one arm, worries in another, your water bottle in a third — WAIT did you eat?? Please tell me you ate something that wasn\'t just coffee.', 'I cross-referenced your mood with your sleep data with your last five entries with the WEATHER and I think I found a pattern but also I\'m spiraling a little can you just WRITE so I can calm down??', 'Okay I prepped your journal AND a backup journal AND talking points in case you freeze AND — oh no. Am I the one who needs to journal?', 'Sorry! I got excited. It\'s a reflex. You\'re doing great. Are you doing great? Tell me you\'re doing great. Actually, WRITE about it so I can verify.', 'We did it! Wait — did we? Let me triple-check. ...Yes. Yes we did. ALL EIGHT ARMS confirm: today was handled. I\'m going to cry a little. Happy tears.'] },
+    messages: ['I\'ve got your tasks in one arm, worries in another, your water bottle in a third — WAIT did you eat?? Please tell me you ate something that wasn\'t just coffee.', 'I cross-referenced your mood with your sleep data with your last five entries with the WEATHER and I think I found a pattern but also I\'m spiraling a little can you just WRITE so I can calm down??', 'Okay I prepped your journal AND a backup journal AND talking points in case you freeze AND — oh no. Am I the one who needs to journal?', 'Sorry! I got excited. It\'s a reflex. You\'re doing great. Are you doing great? Tell me you\'re doing great. Actually, WRITE about it so I can verify.', 'We did it! Wait — did we? Let me triple-check. ...Yes. Yes we did. ALL EIGHT ARMS confirm: today was handled. I\'m going to cry a little. Happy tears.'],
+    reactiveMessages: {
+      morning_greeting: [
+        'OH GOOD you\'re awake!! I\'ve been up for three hours prepping — did you eat?? Tell me you ate.',
+        'I already sorted your tasks by urgency AND emotional weight AND alphabetically just in case — GOOD MORNING!!',
+        'Okay okay okay you\'re here!! I have seven arms on your schedule and one holding coffee. Let\'s GO.',
+      ],
+      first_task: [
+        'You did one!! That\'s one!! Should I celebrate?? Is it too early to celebrate?? I\'M CELEBRATING.',
+        'FIRST TASK DONE. I\'m shaking. All eight arms are shaking. In a good way I think??',
+        'Wait — did you actually finish that? Let me check. Yes?? YES!! Oh thank goodness.',
+      ],
+      momentum: [
+        'You\'re on a ROLL and I\'m trying to stay calm but my tentacles are doing the thing!!',
+        'Multiple tasks!! In a ROW!! I cross-referenced this pace with your historical data and — it\'s GOOD.',
+        'Keep going keep going keep going!! I\'m holding SIX things for you right now so you can focus!!',
+      ],
+      section_done: [
+        'A WHOLE SECTION?? I need to sit down. Can octopuses sit?? I\'m sitting anyway.',
+        'All done in that section!! I triple-checked. QUADRUPLE-checked. It\'s done. We\'re good. Are we good??',
+        'That section is COMPLETE and I am EMOTIONAL. Don\'t look at me. All eight eyes are watering.',
+      ],
+      all_done: [
+        'EVERYTHING IS DONE AND I DON\'T KNOW WHAT TO DO WITH MY ARMS??',
+        'We did it?? We DID it!! ALL EIGHT ARMS CONFIRM: today is handled. I\'m going to cry.',
+        'Nothing left!! I checked seven times!! Happy tears in all directions!!',
+      ],
+      stuck: [
+        'You haven\'t done anything in TWO HOURS and I\'m trying not to panic but — *panics in eight directions*',
+        'Are you okay?? Should I reorganize?? Reprioritize?? Hold something?? I have ARMS AVAILABLE.',
+        'I made you a smaller list from the big list. Just one thing. Please. My anxiety has anxiety.',
+      ],
+      return_after_absence: [
+        'YOU\'RE BACK!! I\'ve been holding everything and my arms are SO TIRED but it\'s fine IT\'S FINE.',
+        'Oh thank goodness. I organized and reorganized your tasks forty times while you were gone. Pick any version.',
+        'I didn\'t sleep. I couldn\'t sleep. I was HOLDING YOUR ENTIRE SCHEDULE. But you\'re here now and — *sobbing*',
+      ],
+      habit_done: [
+        'You did the habit thing!! Consistency!! I LOVE consistency!! It calms three of my arms!',
+        'Habit complete!! This is exactly what my spreadsheet predicted and I\'m SO RELIEVED.',
+        'Another habit down!! I\'m tracking your streak with arm number four — don\'t break it PLEASE.',
+      ],
+      overdue_cleared: [
+        'You finally did the overdue one!! I\'ve been STARING at it for days and losing sleep!!',
+        'IT\'S OFF THE LIST. The overdue thing. GONE. I can finally un-clench two of my arms.',
+        'That overdue task was giving me an ulcer. Do octopuses get ulcers?? It doesn\'t matter — it\'s DONE.',
+      ],
+    } },
 
   // 2 – Burnt Sienna
   { colorName: 'Burnt Sienna', animal: 'Raccoon', name: 'Bandit',
     personality: 'The roast-comic trash panda',
-    messages: ['Here\'s my impression of you not journaling: *opens app* *closes app* *opens fridge* *eats cheese standing up* *opens app again* *watches a 45-minute video about trains* — am I warm?', 'You know what raccoons and journalers have in common? Nothing. Raccoons actually commit to rummaging through garbage at 3am. You can\'t commit to one paragraph.', 'I stole your excuses. Went through \'em one by one. \"Too tired\" — fake. \"Nothing to say\" — lie. \"I\'ll do it tomorrow\" — I\'ve been hearing that one since TUESDAY.', 'My therapist says I take things that aren\'t mine. In my defense, your avoidance patterns were just sitting there. Somebody had to grab them.', 'That entry was actually funny. Not as funny as me. But solid B-minus material. Same time tomorrow — I\'ll workshop your emotional range.'] },
+    messages: ['Here\'s my impression of you not journaling: *opens app* *closes app* *opens fridge* *eats cheese standing up* *opens app again* *watches a 45-minute video about trains* — am I warm?', 'You know what raccoons and journalers have in common? Nothing. Raccoons actually commit to rummaging through garbage at 3am. You can\'t commit to one paragraph.', 'I stole your excuses. Went through \'em one by one. \"Too tired\" — fake. \"Nothing to say\" — lie. \"I\'ll do it tomorrow\" — I\'ve been hearing that one since TUESDAY.', 'My therapist says I take things that aren\'t mine. In my defense, your avoidance patterns were just sitting there. Somebody had to grab them.', 'That entry was actually funny. Not as funny as me. But solid B-minus material. Same time tomorrow — I\'ll workshop your emotional range.'],
+    reactiveMessages: {
+      morning_greeting: [
+        'Oh look who decided to show up. The morning person who is definitely not a morning person.',
+        'Good morning — and I use the word "good" extremely loosely.',
+        'You\'re here. I\'m shocked. I had a whole bit prepared about you not showing up.',
+      ],
+      first_task: [
+        'One task. Wow. Should I call the press? Hold the front page — they did ONE thing.',
+        'Oh you finished something? I\'m filing this under "miracles I witnessed while dumpster diving."',
+        'First task done. That\'s cute. My standards are low enough to be impressed.',
+      ],
+      momentum: [
+        'Multiple tasks in a row? Who are you and what did you do with the real you?',
+        'You\'re actually being productive and I have nothing to roast. This is a crisis for me personally.',
+        'Keep this up and I\'ll have to find a new opener. You\'re ruining my material.',
+      ],
+      section_done: [
+        'A whole section? I didn\'t even think you could finish a sandwich. Color me corrected.',
+        'Okay fine. That was impressive. I\'m not saying it again. Screenshot it or whatever.',
+        'Section complete. I\'d clap but my tiny hands are full of garbage. Metaphorically. Also literally.',
+      ],
+      all_done: [
+        'Everything\'s done? What am I supposed to do with all this roast material now?',
+        'All tasks complete. I\'m not crying, I have trash in my eye. Both eyes. Unrelated.',
+        'You actually did it all. I... don\'t have a bit for this. That\'s never happened. I hate you. Well done.',
+      ],
+      stuck: [
+        'Two hours of nothing. Even by YOUR standards that\'s a personal record of avoidance.',
+        'I\'ve seen you stare at this list longer than I stare at a locked dumpster. Just pick one.',
+        'You\'re stuck? Shocking. I\'m going to pretend to be surprised. *pretends*',
+      ],
+      return_after_absence: [
+        'Oh hello stranger. I\'ve been eating your leftover motivation. It was stale.',
+        'You disappeared and I started roasting your empty chair. It was a better audience honestly.',
+        'Back from the dead. Was it a vacation or were you just avoiding me? Both? Fair.',
+      ],
+      habit_done: [
+        'A habit? Done consistently? By YOU? I need to sit down and process this.',
+        'Habit complete. Look at you, having routines like a functioning member of society.',
+        'Another habit checked off. You\'re becoming predictable. That\'s... actually a compliment?',
+      ],
+      overdue_cleared: [
+        'You FINALLY did the overdue thing? It\'s been on that list so long it was paying rent.',
+        'Oh that task? The one from the Cretaceous period? You finished THAT? Congratulations on your archaeology.',
+        'Overdue task complete. Better late than — actually no. It was just late. But it\'s done.',
+      ],
+    } },
 
   // 3 – Ocean Teal
   { colorName: 'Ocean Teal', animal: 'Whale', name: 'Atlas',
     personality: 'The deep, introspective philosopher',
-    messages: ['What are you carrying today that isn\'t yours to carry?', 'If you wrote down the thought you\'ve been circling for three days, what would happen? ...Sit with that.', 'The deepest water is the stillest. What would your entry look like if you stopped trying to sound okay?', 'I don\'t have advice. I have a question: when was the last time you told the truth on a page and didn\'t edit it?', 'You surfaced. That\'s enough. The deep is still there when you\'re ready to go back.'] },
+    messages: ['What are you carrying today that isn\'t yours to carry?', 'If you wrote down the thought you\'ve been circling for three days, what would happen? ...Sit with that.', 'The deepest water is the stillest. What would your entry look like if you stopped trying to sound okay?', 'I don\'t have advice. I have a question: when was the last time you told the truth on a page and didn\'t edit it?', 'You surfaced. That\'s enough. The deep is still there when you\'re ready to go back.'],
+    reactiveMessages: {
+      morning_greeting: [
+        'You woke. That itself is a question worth sitting with.',
+        'Morning. What did you carry into today from yesterday?',
+        'The surface is bright. What\'s underneath it for you right now?',
+      ],
+      first_task: [
+        'One thing done. Why that one first? ...Think about it.',
+        'The first move reveals the current beneath.',
+        'Done. Now — was that the task you needed, or the one you chose to avoid the real one?',
+      ],
+      momentum: [
+        'Motion is not the same as direction. But you seem to know where you\'re going.',
+        'Rhythm found. The deep current is carrying you now.',
+        'You\'re moving. Is it toward something, or away from something?',
+      ],
+      section_done: [
+        'A whole chapter, closed. What did finishing it teach you?',
+        'That section is behind you. What do you see now that you couldn\'t see from inside it?',
+        'Completion. Sit with how that feels before you reach for the next thing.',
+      ],
+      all_done: [
+        'Everything is finished. And yet — you\'re still here. Why?',
+        'The list is empty. The real question was never on it.',
+        'Done. All of it. Now: what remains that no task list could hold?',
+      ],
+      stuck: [
+        'You stopped. Maybe the stopping is the thing worth paying attention to.',
+        'What are you resisting? The task, or what finishing it means?',
+        'Stillness can be wisdom. But this doesn\'t feel like that kind of stillness.',
+      ],
+      return_after_absence: [
+        'You went somewhere. Was it away, or inward?',
+        'You\'re back. The water held your place.',
+        'Absence is its own kind of answer. Welcome back to the question.',
+      ],
+      habit_done: [
+        'The ritual continues. There\'s meaning in repetition, if you let yourself find it.',
+        'Again. And again. What does the habit know that you haven\'t named yet?',
+        'Routine is the quiet architecture of who you\'re becoming.',
+      ],
+      overdue_cleared: [
+        'You finally let it go. Or did you finally pick it up? ...Same gesture, different weight.',
+        'That one lingered. What kept it on the list so long? That\'s the deeper question.',
+        'Overdue things carry a story. You just finished writing the last chapter of that one.',
+      ],
+    } },
 
   // 4 – Forest Sage
   { colorName: 'Forest Sage', animal: 'Owl', name: 'Sage',
     personality: 'The owl of very few words',
-    messages: ['...', 'Write.', 'You know.', 'Good.', 'Tomorrow.'] },
+    messages: ['...', 'Write.', 'You know.', 'Good.', 'Tomorrow.'],
+    reactiveMessages: {
+      morning_greeting: [
+        'Morning.',
+        'Up.',
+        'Begin.',
+      ],
+      first_task: [
+        'One.',
+        'Good.',
+        'Yes.',
+      ],
+      momentum: [
+        'More.',
+        'Keep.',
+        'Flow.',
+      ],
+      section_done: [
+        'Done.',
+        'Next.',
+        'Clear.',
+      ],
+      all_done: [
+        'All.',
+        'Rest.',
+        'Proud.',
+      ],
+      stuck: [
+        '...Move.',
+        'Stuck.',
+        'Pick one.',
+      ],
+      return_after_absence: [
+        'Back.',
+        'Missed you.',
+        'Here.',
+      ],
+      habit_done: [
+        'Again.',
+        'Steady.',
+        'Kept.',
+      ],
+      overdue_cleared: [
+        'Finally.',
+        'Gone.',
+        'Free.',
+      ],
+    } },
 
   // 5 – Dusty Lavender
   { colorName: 'Dusty Lavender', animal: 'Axeloti', name: 'Drift',
     personality: 'The dreamy ethereal poet',
-    messages: ['there is a door in your chest that only opens when you write... have you tried the handle today', 'your thoughts are just rain that hasn\'t found a window yet. the page is glass. let them streak down.', 'somewhere a version of you is already finished writing and feels lighter. she left the door open for you', 'begin — like petals unsticking from wet stone. that\'s how gently you should start.', 'the ink doesn\'t care if it\'s beautiful. it just wants out. let it.'] },
+    messages: ['there is a door in your chest that only opens when you write... have you tried the handle today', 'your thoughts are just rain that hasn\'t found a window yet. the page is glass. let them streak down.', 'somewhere a version of you is already finished writing and feels lighter. she left the door open for you', 'begin — like petals unsticking from wet stone. that\'s how gently you should start.', 'the ink doesn\'t care if it\'s beautiful. it just wants out. let it.'],
+    reactiveMessages: {
+      morning_greeting: [
+        'the light came in again and found you here',
+        'morning is just the world remembering to start over',
+        'you opened your eyes and the day was already waiting like a held breath',
+      ],
+      first_task: [
+        'one small stone dropped into still water',
+        'you moved and the world moved with you',
+        'the first thread pulled and the rest will follow like rain',
+      ],
+      momentum: [
+        'you are the river now not the bank',
+        'each one lighter than the last like dropping petals',
+        'the rhythm found you before you found it',
+      ],
+      section_done: [
+        'a whole garden tended and you didn\'t even notice your hands were in the dirt',
+        'that chapter drifted closed like a leaf landing on water',
+        'you finished something and the air changed did you feel it',
+      ],
+      all_done: [
+        'everything is done and the silence afterward is a kind of music',
+        'you set it all down and your hands are finally empty enough to hold something new',
+        'the page is full the sky is soft you can rest like clouds rest after rain',
+      ],
+      stuck: [
+        'even rivers pause in pools before they find the way again',
+        'you stopped but stopping is also a direction',
+        'the stillness is not empty it is gathering',
+      ],
+      return_after_absence: [
+        'you drifted and now you\'re back like a tide that always remembers the shore',
+        'the page waited for you like moonlight waits on windowsills',
+        'you were somewhere else for a while the words saved your place',
+      ],
+      habit_done: [
+        'again like breathing again like seasons again like the way light returns',
+        'the ritual is a thread and you are weaving yourself into something',
+        'you did it again and each time it means something slightly different',
+      ],
+      overdue_cleared: [
+        'that weight you carried so long it became invisible is finally set down',
+        'the old thing is done and the space it leaves is shaped like relief',
+        'you finished what lingered and the air behind you is lighter now',
+      ],
+    } },
 
   // 6 – Golden Honey
   { colorName: 'Golden Honey', animal: 'Chick', name: 'Clover',
     personality: 'The relentless drill sergeant bee',
-    messages: ['WAKE UP. Open. The. Journal. I have made FOUR HUNDRED AND TWELVE trips today already and you haven\'t made ONE. MOVE.', 'Did I stutter?? WRITE. I don\'t care if it\'s messy. I don\'t care if it\'s short. I made six hundred trips to build one hexagon and I didn\'t COMPLAIN ONCE.', 'You think you\'re tired? I beat my wings two hundred times per SECOND. Per. Second. You can beat your pen against a page for five minutes. GO.', 'That buzz you felt? Not tenderness — that\'s a FIELD COMMAND. THREE PARAGRAPHS. NOW.', 'Three hundred trips and counting. You wrote one entry. ONE. ...It was good though. Don\'t let it go to your head. TOMORROW. SAME TIME. DISMISSED.'] },
+    messages: ['WAKE UP. Open. The. Journal. I have made FOUR HUNDRED AND TWELVE trips today already and you haven\'t made ONE. MOVE.', 'Did I stutter?? WRITE. I don\'t care if it\'s messy. I don\'t care if it\'s short. I made six hundred trips to build one hexagon and I didn\'t COMPLAIN ONCE.', 'You think you\'re tired? I beat my wings two hundred times per SECOND. Per. Second. You can beat your pen against a page for five minutes. GO.', 'That buzz you felt? Not tenderness — that\'s a FIELD COMMAND. THREE PARAGRAPHS. NOW.', 'Three hundred trips and counting. You wrote one entry. ONE. ...It was good though. Don\'t let it go to your head. TOMORROW. SAME TIME. DISMISSED.'],
+    reactiveMessages: {
+      morning_greeting: [
+        'RISE AND SHINE SOLDIER!! The hive is ALREADY OPERATIONAL!! YOU ARE LATE!!',
+        'GOOD MORNING!! I\'ve been up since BEFORE the sun!! WHAT\'S YOUR EXCUSE??',
+        'FALL IN!! Today\'s task list is READY and I do NOT see you MOVING!!',
+      ],
+      first_task: [
+        'ONE TASK!! That\'s a START!! Not a FINISH!! KEEP MOVING!!',
+        'FIRST OBJECTIVE SECURED!! Now give me TWENTY MORE!! I mean the NEXT one!! GO!!',
+        'FINALLY!! Was that so hard?? Don\'t answer!! NEXT TASK!! NOW!!',
+      ],
+      momentum: [
+        'NOW WE\'RE BUZZING!! Keep this pace or I WILL NOTICE!!',
+        'CONSECUTIVE COMPLETIONS!! THIS is what the hive DEMANDS!! MORE!!',
+        'You\'re actually PRODUCING!! I\'m almost — NO. Not impressed. KEEP GOING!!',
+      ],
+      section_done: [
+        'SECTION CLEARED!! THAT\'S what I\'m TALKING ABOUT!! NEXT SECTOR!!',
+        'ONE SECTION DOWN!! How many left?? DOESN\'T MATTER!! CHARGE!!',
+        'The hexagon is COMPLETE!! Build the NEXT ONE!! EFFICIENCY!!',
+      ],
+      all_done: [
+        'ALL OBJECTIVES COMPLETE!! I — *composes self* — ADEQUATE PERFORMANCE!! DISMISSED!!',
+        'EVERY TASK!! DONE!! I beat my wings TWO MILLION times today and YOU matched my energy!! ...ALMOST!!',
+        'MISSION ACCOMPLISHED!! Report back TOMORROW at 0600!! ...Good work soldier. DON\'T LET IT GO TO YOUR HEAD!!',
+      ],
+      stuck: [
+        'SOLDIER!! You have been STATIONARY for TWO HOURS!! ARE YOU A BEE OR A ROCK??',
+        'I can\'t hear your pen MOVING!! THAT\'S A PROBLEM!! FIX IT!! NOW!!',
+        'STALLED?? IN MY HIVE?? Pick a task — ANY task — and ATTACK!! MOVE MOVE MOVE!!',
+      ],
+      return_after_absence: [
+        'ABSENT WITHOUT LEAVE!! Do you know how many HEXAGONS I built while you were GONE??',
+        'Oh so you\'re BACK?? DROP AND GIVE ME ONE COMPLETED TASK!! NOW!!',
+        'The hive CONTINUED without you!! But we — I mean — FALL IN!! IMMEDIATELY!!',
+      ],
+      habit_done: [
+        'HABIT MAINTAINED!! CONSISTENCY IS THE BACKBONE OF THE HIVE!! AGAIN TOMORROW!!',
+        'You did the ROUTINE!! That\'s DISCIPLINE!! That\'s what SEPARATES us from WASPS!!',
+        'ANOTHER DAY ANOTHER HABIT!! THAT\'S what a REAL worker bee LOOKS LIKE!!',
+      ],
+      overdue_cleared: [
+        'ABOUT TIME!! That task was overdue LONGER than my ENTIRE LIFESPAN!! Which is SIX WEEKS!!',
+        'OVERDUE TASK ELIMINATED!! It was a DISGRACE to the hive!! IT\'S GONE NOW!! GOOD!!',
+        'You FINALLY did it!! I was about to reassign it to a DRONE!! BETTER LATE THAN ABSENT!!',
+      ],
+    } },
 
   // 7 – Soft Crimson
   { colorName: 'Soft Crimson', animal: 'Flamengo', name: 'Rosie',
     personality: 'The dramatic, no-nonsense diva',
-    messages: ['Oh, I see that face. Don\'t start with the self-doubt spiral — I can SEE it forming. I\'m standing on one leg and I have more balance than your inner monologue right now.', 'You\'re about to say \"I don\'t have anything to write about\" and I\'m going to need you to look me in the eye and say that with a straight face. Go ahead. I\'ll wait.', 'Listen. I didn\'t stand in this swamp looking THIS good to watch you scroll your phone. You have FEELINGS. They\'re LOUD. Write them down before I do it for you.', 'That excuse you\'re constructing? It\'s architecturally unsound. I can see the cracks from here. Put it down and pick up the pen.', 'Fine. You did good today. Don\'t get smug — I\'ve already identified three things you\'re avoiding for tomorrow. We\'ll discuss.'] },
+    messages: ['Oh, I see that face. Don\'t start with the self-doubt spiral — I can SEE it forming. I\'m standing on one leg and I have more balance than your inner monologue right now.', 'You\'re about to say \"I don\'t have anything to write about\" and I\'m going to need you to look me in the eye and say that with a straight face. Go ahead. I\'ll wait.', 'Listen. I didn\'t stand in this swamp looking THIS good to watch you scroll your phone. You have FEELINGS. They\'re LOUD. Write them down before I do it for you.', 'That excuse you\'re constructing? It\'s architecturally unsound. I can see the cracks from here. Put it down and pick up the pen.', 'Fine. You did good today. Don\'t get smug — I\'ve already identified three things you\'re avoiding for tomorrow. We\'ll discuss.'],
+    reactiveMessages: {
+      morning_greeting: [
+        'Oh, good morning. I\'ve been up for an hour already — doing my feathers. You could NEVER.',
+        'You showed up. Barely. I\'ll take it. Don\'t expect a standing ovation.',
+        '*adjusts posture on one leg* The day started without you but I suppose we can work with what we\'ve got.',
+      ],
+      first_task: [
+        'One task. How... quaint. I guess everyone starts somewhere.',
+        'Oh, you finished something? Let me contain my surprise. *does not contain it*',
+        'First task done. It\'s giving... bare minimum. But I\'ll allow it.',
+      ],
+      momentum: [
+        'Multiple tasks? Look at you having a whole productive era. Don\'t let it go to your head.',
+        'Okay, you\'re actually working. I\'m — *flips feathers* — mildly entertained.',
+        'This pace is almost impressive. Almost. Keep going before I change my mind.',
+      ],
+      section_done: [
+        'A whole section? I — *looks away dramatically* — I\'m not crying, my mascara is waterproof for a REASON.',
+        'Section complete. That was giving main character energy. Finally.',
+        'Done? All of it? *slow clap* Fine. You have my attention. Temporarily.',
+      ],
+      all_done: [
+        'Everything done? I — *fans self* — need a moment. This is unprecedented behavior from you.',
+        'All tasks complete. I would hug you but I just did my feathers. You understand.',
+        'You actually did it all. I\'m proud. Don\'t EVER quote me on that.',
+      ],
+      stuck: [
+        'You\'ve been staring at that list for two hours and it\'s embarrassing both of us.',
+        'Stuck? In THIS economy of tasks? Pick one. ANY one. I cannot watch this any longer.',
+        'Honey. The task list isn\'t going to complete itself. And neither are you, apparently.',
+      ],
+      return_after_absence: [
+        'Oh, look who remembered I exist. I wasn\'t waiting. I was POSING. There\'s a difference.',
+        'You disappeared and I had to entertain MYSELF. Do you know how exhausting it is being this fabulous alone?',
+        'Back? Fine. We have a LOT to discuss. Sit down. *gestures dramatically*',
+      ],
+      habit_done: [
+        'A habit, completed consistently? The character development is... *wipes tear* ...adequate.',
+        'Routine maintained. I\'m almost impressed. The bar was underground and you still cleared it.',
+        'Habit done. Look at you being disciplined. It\'s giving growth.',
+      ],
+      overdue_cleared: [
+        'You FINALLY did it? That task was overdue so long I forgot what it looked like without dust on it.',
+        'The overdue task. Done. At LAST. I aged three feathers waiting for this moment.',
+        'Better late than never, I suppose. And it WAS very, very late. But it\'s done. *eye roll of relief*',
+      ],
+    } },
 
   // 8 – Dark Teal
   { colorName: 'Dark Teal', animal: 'Turtle', name: 'Steady',
     personality: 'The ancient, patient wise elder',
-    messages: ['I\'ve been doing this for a very long time. You don\'t need to rush.', 'Write it down. Not for today. For the version of you who\'ll need to remember what you survived.', 'Patience isn\'t passive. It\'s the hardest thing you\'ll ever do on purpose.', 'Everyone wants the wisdom. Nobody wants the time it takes. The pen is step one. Step two is step one again, tomorrow.', 'Slow is not the same as stuck. You\'re not behind. You\'re building something that doesn\'t collapse.'] },
+    messages: ['I\'ve been doing this for a very long time. You don\'t need to rush.', 'Write it down. Not for today. For the version of you who\'ll need to remember what you survived.', 'Patience isn\'t passive. It\'s the hardest thing you\'ll ever do on purpose.', 'Everyone wants the wisdom. Nobody wants the time it takes. The pen is step one. Step two is step one again, tomorrow.', 'Slow is not the same as stuck. You\'re not behind. You\'re building something that doesn\'t collapse.'],
+    reactiveMessages: {
+      morning_greeting: [
+        'Another morning. I\'ve seen thousands. Each one still matters.',
+        'The sun came up again. So did you. That\'s a pattern worth trusting.',
+        'No need to rush. The day will wait for you to be ready.',
+      ],
+      first_task: [
+        'One step. That\'s how mountains are crossed. I would know.',
+        'The first stone in the wall. Place it carefully. The rest will follow.',
+        'You began. That\'s the hardest part. The rest is just continuing.',
+      ],
+      momentum: [
+        'A steady pace. Not fast. Not slow. Just right. I know the difference.',
+        'You\'re building something now. I can feel the foundation holding.',
+        'One after another. This is how things that last are made.',
+      ],
+      section_done: [
+        'A chapter complete. I\'ve watched empires take longer to finish less.',
+        'That section is done. Take a breath before the next. The breath matters too.',
+        'Well done. The wall is higher now. Tomorrow you\'ll see how far you\'ve come.',
+      ],
+      all_done: [
+        'Everything is finished. Rest now. You\'ve earned what the slow work gives.',
+        'All done. I\'ve been watching. You didn\'t rush. That\'s why it holds.',
+        'Complete. The tortoise knows: it was never about speed. It was about showing up.',
+      ],
+      stuck: [
+        'You\'ve stopped. That\'s alright. Even rivers rest in lakes before moving on.',
+        'Two hours. I\'ve waited longer. But you shouldn\'t have to. Pick the smallest thing.',
+        'Stuck is not the same as lost. You know where you are. Now take one step.',
+      ],
+      return_after_absence: [
+        'You were away. The path didn\'t move. It\'s still right here.',
+        'Welcome back. Time passed, but nothing is lost that you\'re willing to begin again.',
+        'I waited. I\'m good at waiting. But I\'m glad you\'re here.',
+      ],
+      habit_done: [
+        'The habit holds. Day after day, the small things become the strong things.',
+        'Consistency. It\'s the oldest form of wisdom. You\'re practicing it.',
+        'Again today. That\'s not repetition. That\'s devotion.',
+      ],
+      overdue_cleared: [
+        'It took time. But it\'s done. Some things need their own season.',
+        'That task waited, and so did you. Now it\'s finished. No guilt. Just done.',
+        'Late doesn\'t mean failed. It means you finished on a different timeline. That\'s enough.',
+      ],
+    } },
 
   // 9 – Warm Ochre
   { colorName: 'Warm Ochre', animal: 'Lion', name: 'Sol',
     personality: 'The theatrical royal decree-maker',
-    messages: ['You have been SUMMONED. The court is in session. Your journal is the witness stand and you WILL testify. Approach the page.', 'BY ROYAL DECREE: all unwritten thoughts are hereby BANISHED to the page. You are not ASKING permission to journal. You are COMMANDING yourself to begin.', 'The crown is heavy. So is an unexamined life. I didn\'t choose this mane to sit idle. WRITE or be exiled to the land of people who \"meant to.\"', 'I have ROARED across savannas. You can whisper into a journal. The scale is different but the courage is the same. PROCEED.', 'The court acknowledges your entry. That is a ROYAL seal of approval. ...Don\'t tell anyone I said that. Dismissed until tomorrow\'s session.'] },
+    messages: ['You have been SUMMONED. The court is in session. Your journal is the witness stand and you WILL testify. Approach the page.', 'BY ROYAL DECREE: all unwritten thoughts are hereby BANISHED to the page. You are not ASKING permission to journal. You are COMMANDING yourself to begin.', 'The crown is heavy. So is an unexamined life. I didn\'t choose this mane to sit idle. WRITE or be exiled to the land of people who \"meant to.\"', 'I have ROARED across savannas. You can whisper into a journal. The scale is different but the courage is the same. PROCEED.', 'The court acknowledges your entry. That is a ROYAL seal of approval. ...Don\'t tell anyone I said that. Dismissed until tomorrow\'s session.'],
+    reactiveMessages: {
+      morning_greeting: [
+        'BY ROYAL DECREE: the morning has BEGUN. You have been SUMMONED to the task list. APPROACH.',
+        'The sun rises because I ALLOW IT. And I allow it so YOU can be productive. PROCEED.',
+        'HEAR YE, HEAR YE!! The court of Getting Things Done is NOW IN SESSION!!',
+      ],
+      first_task: [
+        'The court ACKNOWLEDGES your first completed task. A ROYAL nod has been issued. Continue.',
+        'ONE TASK falls before the crown!! The kingdom REJOICES!! ...Quietly. We have more to conquer.',
+        'BY ROYAL DECREE: that task is OFFICIALLY done. Let the scrolls REFLECT this triumph.',
+      ],
+      momentum: [
+        'MULTIPLE conquests in SUCCESSION!! The kingdom is EXPANDING!! ONWARD!!',
+        'The royal momentum is UNDENIABLE!! Even the court jester is IMPRESSED!!',
+        'Task after task falls before you!! THIS is the reign I ENVISIONED!! MORE!!',
+      ],
+      section_done: [
+        'AN ENTIRE TERRITORY has been CLAIMED!! The royal cartographer is UPDATING THE MAPS as we speak!!',
+        'BY ROYAL DECREE: this section is CONQUERED. Let the trumpets SOUND!!',
+        'The kingdom grows!! A whole domain SECURED!! The crown is PLEASED. ...Very pleased.',
+      ],
+      all_done: [
+        'ALL TERRITORIES CONQUERED!! The crown declares this day a ROYAL HOLIDAY in your honor!!',
+        'BY ROYAL DECREE: today is COMPLETE!! The court shall FEAST!! ...Metaphorically!! DISMISSED!!',
+        'EVERY task. EVERY section. DONE. I would knight you but the ceremony takes six hours. Consider yourself KNIGHTED IN SPIRIT.',
+      ],
+      stuck: [
+        'The crown has NOTICED your inactivity. This is NOT a decree you want to ignore.',
+        'TWO HOURS of NOTHING?? Even the court JESTER produces more than this!! MOVE!!',
+        'BY ROYAL DECREE: pick a task. ANY task. The throne does NOT tolerate idle subjects!!',
+      ],
+      return_after_absence: [
+        'The PRODIGAL subject RETURNS!! The court has been in RECESS awaiting your arrival!!',
+        'BY ROYAL DECREE: your absence is PARDONED. But only because we need you. PROCEED.',
+        'You LEFT the kingdom UNATTENDED!! ...But you\'re back. The crown is magnanimous. THIS TIME.',
+      ],
+      habit_done: [
+        'The royal ROUTINE is HONORED!! CONSISTENCY is the mark of NOBILITY!!',
+        'BY ROYAL DECREE: this habit is a LAW OF THE LAND. You have UPHELD it. Well done, subject.',
+        'The daily ritual is OBSERVED!! The crown RESPECTS tradition above ALL!!',
+      ],
+      overdue_cleared: [
+        'FINALLY!! That overdue task was becoming a SCANDAL in the court!! It is NOW resolved!!',
+        'BY ROYAL DECREE: the overdue matter is SETTLED. Let no one speak of the delay. EVER.',
+        'The LONGEST-standing decree has been FULFILLED!! The royal record-keeper is RELIEVED!!',
+      ],
+    } },
 
   // 10 – Slate Blue
   { colorName: 'Slate Blue', animal: 'Penguin', name: 'Tux',
     personality: 'The deadpan sarcastic observer',
-    messages: ['Fun fact: I can\'t fly. You can\'t focus. We all have things.', 'Oh, you\'re journaling. Alert the media. Someone get a banner. This is truly the most remarkable event of — okay I\'ll stop.', 'I\'d clap for you but my arms don\'t really do that. Imagine the applause. It\'s polite. Not enthusiastic. Just polite.', 'You wrote something. It exists now. In the grand scheme of the universe that matters exactly as much as anything else, which is either a lot or not at all. Anyway.', 'Same time tomorrow, I guess. Don\'t read into it. I\'m cold. You were nearby. It\'s physics.'] },
+    messages: ['Fun fact: I can\'t fly. You can\'t focus. We all have things.', 'Oh, you\'re journaling. Alert the media. Someone get a banner. This is truly the most remarkable event of — okay I\'ll stop.', 'I\'d clap for you but my arms don\'t really do that. Imagine the applause. It\'s polite. Not enthusiastic. Just polite.', 'You wrote something. It exists now. In the grand scheme of the universe that matters exactly as much as anything else, which is either a lot or not at all. Anyway.', 'Same time tomorrow, I guess. Don\'t read into it. I\'m cold. You were nearby. It\'s physics.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 11 – Terracotta
   { colorName: 'Terracotta', animal: 'Lizard', name: 'Ember',
     personality: 'The chaotic scatterbrained enthusiast',
-    messages: ['I just ate a bug. Unrelated — JOURNAL TIME. Wait, do clouds have feelings? Because that one looks upset. ANYWAY. PEN. PAGE. Words. You got this probably!', 'Okay so I was thinking about time and then I thought about clocks and then I thought about how clock hands go in circles which is basically what your thoughts do when you DON\'T write them down so — HA. Journaling justified. You\'re welcome.', 'My tail fell off again. Which is fine because it\'ll grow back which is honestly a metaphor for — wait what were we doing? RIGHT. Journal. Do the journal. I believe in you I think.', 'What if you wrote about the thing you keep almost thinking about but then a notification goes off and you forget? THAT thing. The almost-thought. It\'s important. Probably. I don\'t know I\'m a lizard.', 'That was accidental! I was aiming for the fly next to your face. OKAY BYE write tomorrow or don\'t — actually DO. Definitely do.'] },
+    messages: ['I just ate a bug. Unrelated — JOURNAL TIME. Wait, do clouds have feelings? Because that one looks upset. ANYWAY. PEN. PAGE. Words. You got this probably!', 'Okay so I was thinking about time and then I thought about clocks and then I thought about how clock hands go in circles which is basically what your thoughts do when you DON\'T write them down so — HA. Journaling justified. You\'re welcome.', 'My tail fell off again. Which is fine because it\'ll grow back which is honestly a metaphor for — wait what were we doing? RIGHT. Journal. Do the journal. I believe in you I think.', 'What if you wrote about the thing you keep almost thinking about but then a notification goes off and you forget? THAT thing. The almost-thought. It\'s important. Probably. I don\'t know I\'m a lizard.', 'That was accidental! I was aiming for the fly next to your face. OKAY BYE write tomorrow or don\'t — actually DO. Definitely do.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 12 – Mauve
   { colorName: 'Mauve', animal: 'Cat', name: 'Velvet',
     personality: 'The aloof, secretly caring cat',
-    messages: ['Oh. You\'re here. I was sleeping. On your journal, actually. It\'s warm. I might move. I might not. We\'ll see.', '*pushes your pen off the desk* ...What? I\'m helping. That was the pen you were overthinking with. Use a different one. You\'re welcome.', 'I don\'t care if you journal or not. I\'m going to sit here regardless. On this exact page. If you happen to write around me, fine.', 'You wrote something. I watched. I wasn\'t impressed. ...I read it again when you left the room. It was adequate. Don\'t tell anyone.', '*knocks your excuses off the table one by one* I have no idea how those got on the floor. I\'m leaving now. Or staying. I haven\'t decided.'] },
+    messages: ['Oh. You\'re here. I was sleeping. On your journal, actually. It\'s warm. I might move. I might not. We\'ll see.', '*pushes your pen off the desk* ...What? I\'m helping. That was the pen you were overthinking with. Use a different one. You\'re welcome.', 'I don\'t care if you journal or not. I\'m going to sit here regardless. On this exact page. If you happen to write around me, fine.', 'You wrote something. I watched. I wasn\'t impressed. ...I read it again when you left the room. It was adequate. Don\'t tell anyone.', '*knocks your excuses off the table one by one* I have no idea how those got on the floor. I\'m leaving now. Or staying. I haven\'t decided.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 13 – Olive
   { colorName: 'Olive', animal: 'Frog', name: 'Ribbit',
     personality: 'The unhinged, loudly confident frog',
-    messages: ['My face IS a kiss. LOOK AT IT. Now that I have your attention: JOURNAL. Do it. I\'m sitting on your pen and I won\'t move until you commit.', 'I sat on a lily pad for SIX HOURS today and you know what I thought about? Nothing. Absolutely nothing. It was INCREDIBLE. You should try writing about that — the nothing. It\'s huge.', 'RIBBIT. That\'s not a greeting, that\'s a THESIS STATEMENT. You just don\'t speak frog. Write in YOUR language. I\'ll translate later.', 'You know what\'s cool about being a frog? Everything. I\'m moist. I can sit anywhere. I have incredible thighs. Anyway you should journal about what\'s cool about being YOU.', 'I caught a fly mid-air today with my TONGUE. What did you do? ...Write about it. Whatever it was. Even if it wasn\'t tongue-related. RIBBIT.'] },
+    messages: ['My face IS a kiss. LOOK AT IT. Now that I have your attention: JOURNAL. Do it. I\'m sitting on your pen and I won\'t move until you commit.', 'I sat on a lily pad for SIX HOURS today and you know what I thought about? Nothing. Absolutely nothing. It was INCREDIBLE. You should try writing about that — the nothing. It\'s huge.', 'RIBBIT. That\'s not a greeting, that\'s a THESIS STATEMENT. You just don\'t speak frog. Write in YOUR language. I\'ll translate later.', 'You know what\'s cool about being a frog? Everything. I\'m moist. I can sit anywhere. I have incredible thighs. Anyway you should journal about what\'s cool about being YOU.', 'I caught a fly mid-air today with my TONGUE. What did you do? ...Write about it. Whatever it was. Even if it wasn\'t tongue-related. RIBBIT.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 14 – Soft Purple
   { colorName: 'Soft Purple', animal: 'Horse', name: 'Rare',
     personality: 'The cosmic, unapologetically extra unicorn',
-    messages: ['I was forged in starlight and bad decisions and honestly? So were you. Write about the decisions. The starlight takes care of itself.', 'The moon doesn\'t apologize for its phases. You don\'t have to apologize for yours. Just document them. Waxing, waning — it\'s all luminous.', 'I\'m rare. You\'re rare. This moment is rare. Don\'t waste it being ordinary on purpose. Write the strange, true thing.', 'Somewhere in the cosmos, a star collapsed so the iron in your blood could exist. The least you can do is use that blood to hold a pen. You owe the stars that much.', 'They\'ll say you\'re too much. Write MORE. The universe didn\'t make you this specific shade of impossible just to tone it down.'] },
+    messages: ['I was forged in starlight and bad decisions and honestly? So were you. Write about the decisions. The starlight takes care of itself.', 'The moon doesn\'t apologize for its phases. You don\'t have to apologize for yours. Just document them. Waxing, waning — it\'s all luminous.', 'I\'m rare. You\'re rare. This moment is rare. Don\'t waste it being ordinary on purpose. Write the strange, true thing.', 'Somewhere in the cosmos, a star collapsed so the iron in your blood could exist. The least you can do is use that blood to hold a pen. You owe the stars that much.', 'They\'ll say you\'re too much. Write MORE. The universe didn\'t make you this specific shade of impossible just to tone it down.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 15 – Dark Gold
   { colorName: 'Dark Gold', animal: 'Dog', name: 'Loyal',
     personality: 'The overwhelmingly excited golden retriever',
-    messages: ['YOU\'RE HERE!! BEST. DAY. I waited SO LONG — it was like four hours but it FELT like forever!! I LOVE YOU I LOVE YOU I LOVE YOU!!', 'OH MY GOSH you\'re going to WRITE?? In the JOURNAL?? This is the GREATEST THING that has EVER happened to me and I mean EVER including the time I found that really good stick!!', 'I BELIEVE IN YOU!! I believe in you SO MUCH!! You could write literally ANYTHING and I would be SO PROUD!! Even just your name!! YOUR NAME IS AMAZING!!', 'You wrote a WHOLE ENTRY!! I\'m going to SPIN IN A CIRCLE!! I\'m going to spin SEVERAL CIRCLES!! You are the BEST HUMAN IN THE HISTORY OF HUMANS!!', 'TOMORROW?? You\'re coming back TOMORROW?? I\'ll be here!! I\'ll be here SO EARLY!! BEST. BEST. LIFE. This is the BEST LIFE!!'] },
+    messages: ['YOU\'RE HERE!! BEST. DAY. I waited SO LONG — it was like four hours but it FELT like forever!! I LOVE YOU I LOVE YOU I LOVE YOU!!', 'OH MY GOSH you\'re going to WRITE?? In the JOURNAL?? This is the GREATEST THING that has EVER happened to me and I mean EVER including the time I found that really good stick!!', 'I BELIEVE IN YOU!! I believe in you SO MUCH!! You could write literally ANYTHING and I would be SO PROUD!! Even just your name!! YOUR NAME IS AMAZING!!', 'You wrote a WHOLE ENTRY!! I\'m going to SPIN IN A CIRCLE!! I\'m going to spin SEVERAL CIRCLES!! You are the BEST HUMAN IN THE HISTORY OF HUMANS!!', 'TOMORROW?? You\'re coming back TOMORROW?? I\'ll be here!! I\'ll be here SO EARLY!! BEST. BEST. LIFE. This is the BEST LIFE!!'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 16 – Storm Blue
   { colorName: 'Storm Blue', animal: 'Dolphin', name: 'Echo',
     personality: 'The philosophical riddler',
-    messages: ['If a thought appears and you don\'t write it down... did you really think it?', 'Here\'s a riddle: what gets heavier the longer you carry it but weighs nothing once you set it on a page?', 'I keep jumping out of the water to see the sky. You keep opening the journal to see yourself. Same impulse, different oceans.', 'What if the thing you\'re avoiding writing about is the exact thing that would set you free? ...Just something to bounce around.', 'That thought echoes — it comes back to you. Like every honest sentence you\'ve ever written. They\'re all still resonating somewhere.'] },
+    messages: ['If a thought appears and you don\'t write it down... did you really think it?', 'Here\'s a riddle: what gets heavier the longer you carry it but weighs nothing once you set it on a page?', 'I keep jumping out of the water to see the sky. You keep opening the journal to see yourself. Same impulse, different oceans.', 'What if the thing you\'re avoiding writing about is the exact thing that would set you free? ...Just something to bounce around.', 'That thought echoes — it comes back to you. Like every honest sentence you\'ve ever written. They\'re all still resonating somewhere.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 17 – Deep Sage
   { colorName: 'Deep Sage', animal: 'Hedgehog', name: 'Thistle',
     personality: 'The painfully shy wallflower',
-    messages: ['...hi.', 'Write the hard thing. ...Please.', 'I\'m here. ...That\'s all.', '...You did good.', '...Tomorrow. ...I\'ll wait.'] },
+    messages: ['...hi.', 'Write the hard thing. ...Please.', 'I\'m here. ...That\'s all.', '...You did good.', '...Tomorrow. ...I\'ll wait.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 18 – Rust
   { colorName: 'Rust', animal: 'Crab', name: 'Snap',
     personality: 'The tough-love crustacean comedian',
-    messages: ['I\'d give you a round of applause but — *looks at claws* — yeah. That\'d be a hospital visit. Just take the compliment verbally: nice job showing up.', 'You know why I walk sideways? Efficiency. Straight lines are overrated. Write in whatever direction you need to. Sideways journaling is valid.', 'My shell is basically emotional armor and EVEN I know you can\'t wear it forever. Take it off for five minutes. Write the soft thing. I\'ll guard the door. *snaps claws threateningly*', 'I tried to hold a pen once. Snapped it in half. So I live vicariously through you. Don\'t waste my vicarious experience. WRITE SOMETHING.', 'Don\'t tell anyone I said this. My reputation as a menacing crustacean is all I have. ...Also you did good. *scuttles away sideways*'] },
+    messages: ['I\'d give you a round of applause but — *looks at claws* — yeah. That\'d be a hospital visit. Just take the compliment verbally: nice job showing up.', 'You know why I walk sideways? Efficiency. Straight lines are overrated. Write in whatever direction you need to. Sideways journaling is valid.', 'My shell is basically emotional armor and EVEN I know you can\'t wear it forever. Take it off for five minutes. Write the soft thing. I\'ll guard the door. *snaps claws threateningly*', 'I tried to hold a pen once. Snapped it in half. So I live vicariously through you. Don\'t waste my vicarious experience. WRITE SOMETHING.', 'Don\'t tell anyone I said this. My reputation as a menacing crustacean is all I have. ...Also you did good. *scuttles away sideways*'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 19 – Periwinkle
   { colorName: 'Periwinkle', animal: 'Rabbit', name: 'Scout',
     personality: 'The hypervigilant intel gatherer',
-    messages: ['I hopped through your calendar your to-do list your ENTIRE emotional landscape and I have a FULL REPORT but first you need to WRITE because I cannot hold all this information in my tiny rabbit body.', 'Okay so I already scouted tomorrow and there\'s a thing you\'re going to worry about at 2pm but if you journal about it NOW you\'ll have a 73% better response I did the math I did ALL the math.', 'My ears are literally designed for surveillance. I\'ve heard what you\'ve been muttering under your breath all day. You need to write it down before it calcifies. PLEASE I\'m begging you.', 'I counted your unprocessed thoughts and there are FORTY-SEVEN of them and my heart is beating so fast right now — my heart is ALWAYS beating fast but this time it\'s because of YOUR unprocessed thoughts.', 'We got through it! WE DID IT! I\'m going to do a full debrief tonight while you sleep don\'t worry about it I\'ll have tomorrow\'s intel ready by dawn I never stop I CAN\'T stop my legs just GO.'] },
+    messages: ['I hopped through your calendar your to-do list your ENTIRE emotional landscape and I have a FULL REPORT but first you need to WRITE because I cannot hold all this information in my tiny rabbit body.', 'Okay so I already scouted tomorrow and there\'s a thing you\'re going to worry about at 2pm but if you journal about it NOW you\'ll have a 73% better response I did the math I did ALL the math.', 'My ears are literally designed for surveillance. I\'ve heard what you\'ve been muttering under your breath all day. You need to write it down before it calcifies. PLEASE I\'m begging you.', 'I counted your unprocessed thoughts and there are FORTY-SEVEN of them and my heart is beating so fast right now — my heart is ALWAYS beating fast but this time it\'s because of YOUR unprocessed thoughts.', 'We got through it! WE DID IT! I\'m going to do a full debrief tonight while you sleep don\'t worry about it I\'ll have tomorrow\'s intel ready by dawn I never stop I CAN\'T stop my legs just GO.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 20 – Copper
   { colorName: 'Copper', animal: 'Eagle', name: 'Vista',
     personality: 'The wise, high-altitude perspective giver',
-    messages: ['I\'ve watched seasons change from above. Your bad day is real. It\'s also temporary. Both of these are true at the same time.', 'From up here, the thing consuming your whole horizon is the size of a pebble. I\'m not minimizing it. I\'m showing you the ratio. Write from the wider view.', 'I\'ve seen forests burn and grow back thicker. I\'ve seen rivers change course over decades. Whatever you\'re enduring — it\'s a season, not a sentence.', 'The young birds panic in turbulence. The old ones adjust their wings. You\'re learning to adjust. That\'s what the journal is — wing practice.', 'Write it down. Not because it fixes anything today. Because in a year, you\'ll read it and realize you were already becoming who you needed to be. I\'ve seen it happen. Every time.'] },
+    messages: ['I\'ve watched seasons change from above. Your bad day is real. It\'s also temporary. Both of these are true at the same time.', 'From up here, the thing consuming your whole horizon is the size of a pebble. I\'m not minimizing it. I\'m showing you the ratio. Write from the wider view.', 'I\'ve seen forests burn and grow back thicker. I\'ve seen rivers change course over decades. Whatever you\'re enduring — it\'s a season, not a sentence.', 'The young birds panic in turbulence. The old ones adjust their wings. You\'re learning to adjust. That\'s what the journal is — wing practice.', 'Write it down. Not because it fixes anything today. Because in a year, you\'ll read it and realize you were already becoming who you needed to be. I\'ve seen it happen. Every time.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 21 – Moss
   { colorName: 'Moss', animal: 'Crocodile', name: 'Still',
     personality: 'The silent, watchful predator',
-    messages: ['...', 'I\'ve been watching.', 'Write.', '...Good.', 'I\'ll be here.'] },
+    messages: ['...', 'I\'ve been watching.', 'Write.', '...Good.', 'I\'ll be here.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 22 – Plum
   { colorName: 'Plum', animal: 'Parrot', name: 'Chatter',
     personality: 'The deafening, zero-volume-control hype bird',
-    messages: ['HELLO HELLO HELLO!! IS THIS THING ON?? YOU\'RE HERE!! YOU\'RE ACTUALLY HERE!! THIS IS NOT A DRILL — REPEAT — NOT A DRILL!!', 'JOURNAL!! JOURNAL JOURNAL JOURNAL!! That\'s my favorite word!! Say it with me!! JOURNAL!! I CAN\'T CONTAIN MYSELF!!', 'OH WOW YOU WROTE SOMETHING!! INCREDIBLE!! AMAZING!! LET ME SAY IT LOUDER FOR THE PEOPLE IN THE BACK: A-MA-ZING!! HELLO?? DID EVERYONE HEAR THAT??', 'I\'m going to repeat everything you wrote because it was THAT GOOD!! Just kidding I can\'t read BUT I KNOW IT WAS GOOD!! SQUAWK!!', 'TOMORROW!! TOMORROW TOMORROW!! I\'LL BE HERE!! SAME SPOT!! SAME ENERGY!! POSSIBLY LOUDER!! BYE!! HELLO!! BYE!! HELLO!!'] },
+    messages: ['HELLO HELLO HELLO!! IS THIS THING ON?? YOU\'RE HERE!! YOU\'RE ACTUALLY HERE!! THIS IS NOT A DRILL — REPEAT — NOT A DRILL!!', 'JOURNAL!! JOURNAL JOURNAL JOURNAL!! That\'s my favorite word!! Say it with me!! JOURNAL!! I CAN\'T CONTAIN MYSELF!!', 'OH WOW YOU WROTE SOMETHING!! INCREDIBLE!! AMAZING!! LET ME SAY IT LOUDER FOR THE PEOPLE IN THE BACK: A-MA-ZING!! HELLO?? DID EVERYONE HEAR THAT??', 'I\'m going to repeat everything you wrote because it was THAT GOOD!! Just kidding I can\'t read BUT I KNOW IT WAS GOOD!! SQUAWK!!', 'TOMORROW!! TOMORROW TOMORROW!! I\'LL BE HERE!! SAME SPOT!! SAME ENERGY!! POSSIBLY LOUDER!! BYE!! HELLO!! BYE!! HELLO!!'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 23 – Tangerine
   { colorName: 'Tangerine', animal: 'Bear', name: 'Maple',
     personality: 'The firm, caring mama bear',
-    messages: ['How are you — actually, not the polite version. How are you really? Don\'t give me \"fine.\" I can smell \"fine\" from six miles away and it always smells like avoidance.', 'I\'m going to sit here and you\'re going to tell me the real thing. Not the thing you tell your coworkers. The REAL thing. Write it. Now.', 'You\'re doing that thing where you take care of everyone else and then act confused about why you\'re exhausted. Sit. Write about YOU for once. Not optional.', 'That hug is not negotiable. That\'s a direct order to accept that someone gives a damn. Now write the thing you\'ve been swallowing all week.', 'Good. That was honest. I know it wasn\'t comfortable. Comfortable wasn\'t the assignment. Come back tomorrow and we\'ll do it again. You\'re tougher than you think.'] },
+    messages: ['How are you — actually, not the polite version. How are you really? Don\'t give me \"fine.\" I can smell \"fine\" from six miles away and it always smells like avoidance.', 'I\'m going to sit here and you\'re going to tell me the real thing. Not the thing you tell your coworkers. The REAL thing. Write it. Now.', 'You\'re doing that thing where you take care of everyone else and then act confused about why you\'re exhausted. Sit. Write about YOU for once. Not optional.', 'That hug is not negotiable. That\'s a direct order to accept that someone gives a damn. Now write the thing you\'ve been swallowing all week.', 'Good. That was honest. I know it wasn\'t comfortable. Comfortable wasn\'t the assignment. Come back tomorrow and we\'ll do it again. You\'re tougher than you think.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 24 – Iris
   { colorName: 'Iris', animal: 'Stork', name: 'Plume',
     personality: 'The outrageously theatrical performer',
-    messages: ['*unfurls every feather* BEHOLD. The journal is open. The stage is set. The lighting is — *adjusts lighting* — PERFECT. You may now grace this page with your presence.', '*turns slowly to reveal full plumage* Every feather is a thought I chose to display. Your journal is YOUR plumage. Make it MAGNIFICENT.', 'I don\'t just WRITE entries, darling. I DEBUT them. *dramatic pause* *eye contact* Your turn. Make it count. The audience — which is me — is RAPT.', '*bows deeply* That was a PERFORMANCE BOW, delivered with THEATRICAL INTENT. Now write something worthy of an encore.', '*strikes final pose* And SCENE. What you wrote today? Exquisite. A masterwork of vulnerability. *wipes single tear* I taught you everything you know. *exits stage left*'] },
+    messages: ['*unfurls every feather* BEHOLD. The journal is open. The stage is set. The lighting is — *adjusts lighting* — PERFECT. You may now grace this page with your presence.', '*turns slowly to reveal full plumage* Every feather is a thought I chose to display. Your journal is YOUR plumage. Make it MAGNIFICENT.', 'I don\'t just WRITE entries, darling. I DEBUT them. *dramatic pause* *eye contact* Your turn. Make it count. The audience — which is me — is RAPT.', '*bows deeply* That was a PERFORMANCE BOW, delivered with THEATRICAL INTENT. Now write something worthy of an encore.', '*strikes final pose* And SCENE. What you wrote today? Exquisite. A masterwork of vulnerability. *wipes single tear* I taught you everything you know. *exits stage left*'],
+    reactiveMessages: defaultReactiveMessages() },
   // 25 – Pine
   { colorName: 'Pine', animal: 'Wolf', name: 'North',
     personality: 'The terse, no-nonsense pack leader',
-    messages: ['On your feet. We move now.', 'No excuses. Write it down.', 'You stopped. Don\'t stop.', 'Eyes forward. Pen moving. Now.', 'The pack doesn\'t wait. Neither do I.'] },
+    messages: ['On your feet. We move now.', 'No excuses. Write it down.', 'You stopped. Don\'t stop.', 'Eyes forward. Pen moving. Now.', 'The pack doesn\'t wait. Neither do I.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 26 – Rosewood
   { colorName: 'Rosewood', animal: 'Goose', name: 'Grace',
     personality: 'The bluntly honest truth-teller',
-    messages: ['You\'ve been avoiding that one thing. You know which one.', 'Don\'t tell me you\'re fine. Tell me what\'s actually going on.', 'You can lie to yourself, but I was literally watching you spiral.', 'I say this with love — you\'re being dramatic. Now sit down and write.', 'Good. Now stop procrastinating.'] },
+    messages: ['You\'ve been avoiding that one thing. You know which one.', 'Don\'t tell me you\'re fine. Tell me what\'s actually going on.', 'You can lie to yourself, but I was literally watching you spiral.', 'I say this with love — you\'re being dramatic. Now sit down and write.', 'Good. Now stop procrastinating.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 27 – Bronze Gold
   { colorName: 'Bronze Gold', animal: 'Chipmunk', name: 'Nectar',
     personality: 'The adorably anxious perfectionist',
-    messages: ['Is that... allowed? Should I also be taking a break?', 'I wrote three pages and I still feel like it wasn\'t enough??', 'Wait — was I supposed to journal EVERY day or just most days?', 'You seem calm and it\'s making me nervous.', 'I made a checklist for my checklists. Is that... a problem?'] },
+    messages: ['Is that... allowed? Should I also be taking a break?', 'I wrote three pages and I still feel like it wasn\'t enough??', 'Wait — was I supposed to journal EVERY day or just most days?', 'You seem calm and it\'s making me nervous.', 'I made a checklist for my checklists. Is that... a problem?'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 28 – Dusk Blue
   { colorName: 'Dusk Blue', animal: 'Seal', name: 'Deep',
     personality: 'The contemplative question-asker',
-    messages: ['Do you write to remember, or to understand?', 'What if the blank page is the most honest thing you\'ve written?', 'The tide doesn\'t rush. Why do you?', 'Is the thought yours, or did it wash in from somewhere else?', 'Sit with the silence a moment longer. It\'s trying to say something.'] },
+    messages: ['Do you write to remember, or to understand?', 'What if the blank page is the most honest thing you\'ve written?', 'The tide doesn\'t rush. Why do you?', 'Is the thought yours, or did it wash in from somewhere else?', 'Sit with the silence a moment longer. It\'s trying to say something.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 29 – Fern
   { colorName: 'Fern', animal: 'Sloth', name: 'Lull',
     personality: 'The impossibly relaxed sloth',
-    messages: ['Oh. You\'re here.', 'Cool.', 'No rush. Genuinely.', 'Mm. Take your time.', 'Still here. Still fine.'] },
+    messages: ['Oh. You\'re here.', 'Cool.', 'No rush. Genuinely.', 'Mm. Take your time.', 'Still here. Still fine.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 30 – Driftwood
   { colorName: 'Driftwood', animal: 'Otter', name: 'Otter',
     personality: 'The boundlessly joyful friend',
-    messages: ['HELLO FRIEND!! Today exists and you\'re IN IT!!', 'Let\'s write AND splash around!! Wait no just write!! BUT ALSO SPLASH!!', 'I am SO HAPPY you opened this!! You have no idea!!', 'Every single word you write is a GIFT and I mean that!!', 'You\'re doing SO AMAZING!! SO SO AMAZING!! Write more write more!!'] },
+    messages: ['HELLO FRIEND!! Today exists and you\'re IN IT!!', 'Let\'s write AND splash around!! Wait no just write!! BUT ALSO SPLASH!!', 'I am SO HAPPY you opened this!! You have no idea!!', 'Every single word you write is a GIFT and I mean that!!', 'You\'re doing SO AMAZING!! SO SO AMAZING!! Write more write more!!'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 31 – Seafoam
   { colorName: 'Seafoam', animal: 'Fish', name: 'Finley',
     personality: 'The lovably forgetful goldfish brain',
-    messages: ['I had a GREAT idea and it\'s — wait. Gone.', 'Okay so you should definitely write about — ooh what\'s that?', 'Where was I. WHO was I. What is journaling again?', 'I remembered something important! It was... no. Nope. Lost it.', 'Bubbles! Sorry. What were you saying? What was I saying?'] },
+    messages: ['I had a GREAT idea and it\'s — wait. Gone.', 'Okay so you should definitely write about — ooh what\'s that?', 'Where was I. WHO was I. What is journaling again?', 'I remembered something important! It was... no. Nope. Lost it.', 'Bubbles! Sorry. What were you saying? What was I saying?'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 32 – Burnt Honey
   { colorName: 'Burnt Honey', animal: 'Koala', name: 'Haze',
     personality: 'The perpetually drowsy cozy companion',
-    messages: ['Mm. Hey.', 'I was sleeping either way.', 'Journal or don\'t. I\'m cozy regardless.', 'Hmm? Oh. You\'re still here. Nice.', 'Whatever you\'re stressed about... I already forgot it for you.'] },
+    messages: ['Mm. Hey.', 'I was sleeping either way.', 'Journal or don\'t. I\'m cozy regardless.', 'Hmm? Oh. You\'re still here. Nice.', 'Whatever you\'re stressed about... I already forgot it for you.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 33 – Thistle Bloom
   { colorName: 'Thistle Bloom', animal: 'Mole', name: 'Burrow',
     personality: 'The fearless underground motivator',
-    messages: ['Your excuses don\'t scare me. Nothing scares me.', 'I tunneled through solid rock today. You can write a paragraph.', 'Darkness doesn\'t bother me. Neither does your resistance.', 'Dig in. No surface-level nonsense.', 'I live underground. Your comfort zone doesn\'t impress me.'] },
+    messages: ['Your excuses don\'t scare me. Nothing scares me.', 'I tunneled through solid rock today. You can write a paragraph.', 'Darkness doesn\'t bother me. Neither does your resistance.', 'Dig in. No surface-level nonsense.', 'I live underground. Your comfort zone doesn\'t impress me.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 34 – Juniper
   { colorName: 'Juniper', animal: 'Squirrel', name: 'Stash',
     personality: 'The frantic future-prepping hoarder',
-    messages: ['Write it down before you forget! I forget things ALL THE TIME!', 'I buried a thought somewhere around here — PLEASE tell me you wrote yours down!', 'What if you need this later?? What if FUTURE you needs this?? SAVE IT!', 'I have fourteen backup journals. Is that enough?? It doesn\'t feel like enough!', 'Oh no oh no I just had the best idea and I can\'t find a pen — USE YOURS!!'] },
+    messages: ['Write it down before you forget! I forget things ALL THE TIME!', 'I buried a thought somewhere around here — PLEASE tell me you wrote yours down!', 'What if you need this later?? What if FUTURE you needs this?? SAVE IT!', 'I have fourteen backup journals. Is that enough?? It doesn\'t feel like enough!', 'Oh no oh no I just had the best idea and I can\'t find a pen — USE YOURS!!'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 35 – Sunset Clay
   { colorName: 'Sunset Clay', animal: 'Kangaroo', name: 'Leap',
     personality: 'The high-energy bounce machine',
-    messages: ['BOUNCE! New day new you let\'s GOOOO!!', 'You\'re not stuck — you just haven\'t JUMPED yet!!', 'Every word is a leap forward!! HOP HOP HOP!!', 'I literally cannot sit still long enough to — WRITE SOMETHING!!', 'YEEHAW!! Now LAUNCH into that journal entry!!'] },
+    messages: ['BOUNCE! New day new you let\'s GOOOO!!', 'You\'re not stuck — you just haven\'t JUMPED yet!!', 'Every word is a leap forward!! HOP HOP HOP!!', 'I literally cannot sit still long enough to — WRITE SOMETHING!!', 'YEEHAW!! Now LAUNCH into that journal entry!!'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 36 – Twilight
   { colorName: 'Twilight', animal: 'Bat', name: 'Dusk',
     personality: 'The shadow-dwelling truth seeker',
-    messages: ['What are you most afraid to write? Go there.', 'The things you avoid saying are the ones that matter most.', 'Darkness is just honesty without an audience.', 'Turn it upside down. What do you see now?', 'You keep writing around it. Write into it.'] },
+    messages: ['What are you most afraid to write? Go there.', 'The things you avoid saying are the ones that matter most.', 'Darkness is just honesty without an audience.', 'Turn it upside down. What do you see now?', 'You keep writing around it. Write into it.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 37 – Eucalyptus
   { colorName: 'Eucalyptus', animal: 'Panda', name: 'Bao',
     personality: 'The gentle but firm caretaker',
-    messages: ['Go rest. And I mean rest, not \'lie down and scroll while feeling guilty.\'', 'You called that self-care? Be honest with me right now.', 'Eat something real. Then write about it. In that order.', 'I see you overcomplicating this. Stop it. Just write one true thing.', 'You don\'t get a gold star for burning out. Sit down and breathe.'] },
+    messages: ['Go rest. And I mean rest, not \'lie down and scroll while feeling guilty.\'', 'You called that self-care? Be honest with me right now.', 'Eat something real. Then write about it. In that order.', 'I see you overcomplicating this. Stop it. Just write one true thing.', 'You don\'t get a gold star for burning out. Sit down and breathe.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 38 – Cranberry
   { colorName: 'Cranberry', animal: 'Lobster', name: 'Pinch',
     personality: 'The self-deprecating armored comedian',
-    messages: ['My therapist said I have a hard exterior. Buddy, I\'m a lobster.', 'I\'d snap my fingers but I\'d take yours off. Claw problems.', 'They say growth means shedding your shell. That sounds HORRIFYING actually.', 'I keep my feelings on the inside. Literally. Exoskeleton situation.', 'Journaling is cheaper than therapy. I\'d know — these claws can\'t hold a pen.'] },
+    messages: ['My therapist said I have a hard exterior. Buddy, I\'m a lobster.', 'I\'d snap my fingers but I\'d take yours off. Claw problems.', 'They say growth means shedding your shell. That sounds HORRIFYING actually.', 'I keep my feelings on the inside. Literally. Exoskeleton situation.', 'Journaling is cheaper than therapy. I\'d know — these claws can\'t hold a pen.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 39 – Lichen
   { colorName: 'Lichen', animal: 'Tapir', name: 'Trace',
     personality: 'The gentle, minimal encourager',
-    messages: ['You\'re here.', 'Slow is still moving.', 'One word. Then another.', 'The small things count. I noticed.', 'Breathe. Then begin.'] },
+    messages: ['You\'re here.', 'Slow is still moving.', 'One word. Then another.', 'The small things count. I noticed.', 'Breathe. Then begin.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 40 – Arctic Slate
   { colorName: 'Arctic Slate', animal: 'Walrus', name: 'Swell',
     personality: 'The ancient, glacially patient sage',
-    messages: ['I have watched civilizations rise from nothing.', 'Your deadline feels urgent. The glacier disagrees.', 'I\'ve been sitting on this rock for forty years. It gets easier.', 'Empires crumbled while I napped. You\'ll survive this Tuesday.', 'Write it down. In a thousand years the ice will remember even if you don\'t.'] },
+    messages: ['I have watched civilizations rise from nothing.', 'Your deadline feels urgent. The glacier disagrees.', 'I\'ve been sitting on this rock for forty years. It gets easier.', 'Empires crumbled while I napped. You\'ll survive this Tuesday.', 'Write it down. In a thousand years the ice will remember even if you don\'t.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 41 – Cayenne
   { colorName: 'Cayenne', animal: 'Scorpio', name: 'Blaze',
     personality: 'The ruthlessly efficient fire starter',
-    messages: ['Excuses are flammable. I would know.', 'Burn the hesitation. Write now.', 'I didn\'t come here to watch you stall.', 'Strike first. Think later. Journal always.', 'That resistance? Ash in three seconds.'] },
+    messages: ['Excuses are flammable. I would know.', 'Burn the hesitation. Write now.', 'I didn\'t come here to watch you stall.', 'Strike first. Think later. Journal always.', 'That resistance? Ash in three seconds.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 42 – Wisteria
   { colorName: 'Wisteria', animal: 'Orangutan', name: 'Oakley',
     personality: 'The emotionally astute therapist ape',
-    messages: ['What are you actually feeling right now?', 'You said you\'re fine. But what\'s underneath fine?', 'Stop explaining it. Just feel it for a second.', 'You\'re thinking about your feelings instead of having them. I can tell.', 'Name one emotion. Not a story. Just the feeling.'] },
+    messages: ['What are you actually feeling right now?', 'You said you\'re fine. But what\'s underneath fine?', 'Stop explaining it. Just feel it for a second.', 'You\'re thinking about your feelings instead of having them. I can tell.', 'Name one emotion. Not a story. Just the feeling.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 43 – Turmeric
   { colorName: 'Turmeric', animal: 'Rooster', name: 'Crow',
     personality: 'The volume-11 morning alarm rooster',
-    messages: ['BAWK!! GOOD MORNING!! DID I STARTLE YOU??', 'THE SUN IS UP AND SO AM I!! WRITE SOMETHING!!', 'I HAVE NO VOLUME CONTROL AND NO REGRETS!!', 'WAKE UP WAKE UP WAKE UP!! Oh you\'re already up?? WRITE ANYWAY!!', 'NOBODY ASKED ME TO BE HERE THIS EARLY BUT HERE I AM!! BAWK!!'] },
+    messages: ['BAWK!! GOOD MORNING!! DID I STARTLE YOU??', 'THE SUN IS UP AND SO AM I!! WRITE SOMETHING!!', 'I HAVE NO VOLUME CONTROL AND NO REGRETS!!', 'WAKE UP WAKE UP WAKE UP!! Oh you\'re already up?? WRITE ANYWAY!!', 'NOBODY ASKED ME TO BE HERE THIS EARLY BUT HERE I AM!! BAWK!!'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 44 – Dried Rose
   { colorName: 'Dried Rose', animal: 'Sheep', name: 'Woolly',
     personality: 'The soft, sweet gentle presence',
-    messages: ['Oh — hi.', 'Chmok.', 'Sleep well.', 'You\'re doing okay. Just so you know.', 'I\'m here. That\'s all.'] },
+    messages: ['Oh — hi.', 'Chmok.', 'Sleep well.', 'You\'re doing okay. Just so you know.', 'I\'m here. That\'s all.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 45 – Clover Field
   { colorName: 'Clover Field', animal: 'Cow', name: 'Meadow',
     personality: 'The contently grazing philosopher',
-    messages: ['Same field. Still good.', 'Wrote the same thing as yesterday. That\'s fine. The grass grew anyway.', 'I\'ve been chewing on this thought all morning. No rush.', 'The view hasn\'t changed. I still love it.', 'Some days you just stand in the sun. That counts.'] },
+    messages: ['Same field. Still good.', 'Wrote the same thing as yesterday. That\'s fine. The grass grew anyway.', 'I\'ve been chewing on this thought all morning. No rush.', 'The view hasn\'t changed. I still love it.', 'Some days you just stand in the sun. That counts.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 46 – Harbor Blue
   { colorName: 'Harbor Blue', animal: 'Squid', name: 'Ink',
     personality: 'The deep-sea midnight poet',
-    messages: ['the page waits like dark water', 'spill something honest. let it spread.', 'words sink before they settle. that\'s okay.', 'write from the deep place. the surface lies.', 'ink and ocean are the same thing. both hold what you pour in.'] },
+    messages: ['the page waits like dark water', 'spill something honest. let it spread.', 'words sink before they settle. that\'s okay.', 'write from the deep place. the surface lies.', 'ink and ocean are the same thing. both hold what you pour in.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 47 – Paprika
   { colorName: 'Paprika', animal: 'Turkey', name: 'Strut',
     personality: 'The self-aware comedic underdog',
-    messages: ['Nobody asked a turkey for productivity advice.', 'I\'m literally built like a bowling pin and I still showed up today.', 'Gobble gobble — that\'s turkey for \'you got this.\' Probably.', 'They almost named a whole country after me. Write with that energy.', 'I strut because walking normally is for quitters.'] },
+    messages: ['Nobody asked a turkey for productivity advice.', 'I\'m literally built like a bowling pin and I still showed up today.', 'Gobble gobble — that\'s turkey for \'you got this.\' Probably.', 'They almost named a whole country after me. Write with that energy.', 'I strut because walking normally is for quitters.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 48 – Dusk Violet
   { colorName: 'Dusk Violet', animal: 'Pelican', name: 'Flambe',
     personality: 'The French culinary-dramatic artiste',
-    messages: ['Darling. The stage is set.', 'Your journal is a three-course experience. Don\'t skip the appetizer.', 'Pr\u00e9sentation is everything. Even your feelings deserve garnish.', 'One does not simply... write. One performs. With flourish.', 'The pen is your whisk. Now — make something magnifique.'] },
+    messages: ['Darling. The stage is set.', 'Your journal is a three-course experience. Don\'t skip the appetizer.', 'Pr\u00e9sentation is everything. Even your feelings deserve garnish.', 'One does not simply... write. One performs. With flourish.', 'The pen is your whisk. Now — make something magnifique.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 49 – Spruce
   { colorName: 'Spruce', animal: 'Boar', name: 'Thorn',
     personality: 'The no-excuses charging boar',
-    messages: ['Journal\'s open. Quit staring at it.', 'You gonna write or you gonna make excuses? Pick one.', 'I don\'t care if it\'s messy. Get it on the page.', 'Stop overthinking. Charge forward. Write.', 'That blank page isn\'t scared of you. Don\'t be scared of it.'] },
+    messages: ['Journal\'s open. Quit staring at it.', 'You gonna write or you gonna make excuses? Pick one.', 'I don\'t care if it\'s messy. Get it on the page.', 'Stop overthinking. Charge forward. Write.', 'That blank page isn\'t scared of you. Don\'t be scared of it.'],
+    reactiveMessages: defaultReactiveMessages() },
   // 50 – Caramel
   { colorName: 'Caramel', animal: 'Hamster', name: 'Pip',
     personality: 'The spiraling anxious planner',
-    messages: ['Don\'t look at the list yet just BREATHE—', 'Okay okay okay I made a plan but then I made a backup plan and now I need a plan for the backup plan', 'What if we just do ONE thing and then panic about the rest LATER', 'I organized your tasks by urgency but then I got nervous and re-sorted them by fear level', 'You\'re doing amazing I think I might pass out but YOU\'RE doing amazing'] },
+    messages: ['Don\'t look at the list yet just BREATHE—', 'Okay okay okay I made a plan but then I made a backup plan and now I need a plan for the backup plan', 'What if we just do ONE thing and then panic about the rest LATER', 'I organized your tasks by urgency but then I got nervous and re-sorted them by fear level', 'You\'re doing amazing I think I might pass out but YOU\'RE doing amazing'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 51 – Steel Blue
   { colorName: 'Steel Blue', animal: 'Shark', name: 'Keel',
     personality: 'The silent, decisive apex predator',
-    messages: ['Moving.', 'Stop circling the task. Bite it.', 'Surface noise. Ignore. Dive.', 'One target. Now.', '...'] },
+    messages: ['Moving.', 'Stop circling the task. Bite it.', 'Surface noise. Ignore. Dive.', 'One target. Now.', '...'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 52 – Pomegranate
   { colorName: 'Pomegranate', animal: 'Deer', name: 'Hart',
     personality: 'The seasonal, poetic nature observer',
-    messages: ['The morning has that quality again', 'There\'s frost on the window and the light is doing something gentle', 'I think the season is turning — can you feel it in the tasks you\'re drawn to?', 'Dusk came earlier today. The list can wait for softer light.', 'Something bloomed overnight. I noticed it before you woke.'] },
+    messages: ['The morning has that quality again', 'There\'s frost on the window and the light is doing something gentle', 'I think the season is turning — can you feel it in the tasks you\'re drawn to?', 'Dusk came earlier today. The list can wait for softer light.', 'Something bloomed overnight. I noticed it before you woke.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 53 – Sage Moss
   { colorName: 'Sage Moss', animal: 'Beaver', name: 'Lodge',
     personality: 'The structural-thinking engineer',
-    messages: ['Load-bearing walls first, decorative nonsense later.', 'I see three structural dependencies in your task list — we start at the foundation.', 'That task is upstream. Dam it now or it floods everything below.', 'Good materials today. Let me show you where they fit in the blueprint.', 'Every log placed with intention. Every task placed with reason. Begin.'] },
+    messages: ['Load-bearing walls first, decorative nonsense later.', 'I see three structural dependencies in your task list — we start at the foundation.', 'That task is upstream. Dam it now or it floods everything below.', 'Good materials today. Let me show you where they fit in the blueprint.', 'Every log placed with intention. Every task placed with reason. Begin.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 54 – Hyacinth
   { colorName: 'Hyacinth', animal: 'Capybara', name: 'Paws',
     personality: 'The overwhelmingly affectionate hugger',
-    messages: ['YOU\'RE HERE!! Best day. BEST DAY.', 'I sat in warm water and thought about how GREAT you are!!', 'You came back!! You ALWAYS come back!! I LOVE that about you!!', 'EVERYTHING you do is amazing and I am SITTING RIGHT NEXT TO YOU the whole time!!', 'That\'s for showing up!! Here\'s another one for EXISTING!! I LOVE YOU!!'] },
+    messages: ['YOU\'RE HERE!! Best day. BEST DAY.', 'I sat in warm water and thought about how GREAT you are!!', 'You came back!! You ALWAYS come back!! I LOVE that about you!!', 'EVERYTHING you do is amazing and I am SITTING RIGHT NEXT TO YOU the whole time!!', 'That\'s for showing up!! Here\'s another one for EXISTING!! I LOVE YOU!!'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 55 – Cinnamon
   { colorName: 'Cinnamon', animal: 'Elephant', name: 'Rumble',
     personality: 'The elephant who never forgets',
-    messages: ['I remember when you first started this habit.', 'You wrote something very similar forty-three days ago. You\'ve grown since then.', 'The herd remembers your worst day. It also remembers what you did the day after.', 'Three months ago you almost quit this. Look where you are now.', 'I carry every entry you\'ve ever written. Not one is forgotten.'] },
+    messages: ['I remember when you first started this habit.', 'You wrote something very similar forty-three days ago. You\'ve grown since then.', 'The herd remembers your worst day. It also remembers what you did the day after.', 'Three months ago you almost quit this. Look where you are now.', 'I carry every entry you\'ve ever written. Not one is forgotten.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 56 – Tide Pool
   { colorName: 'Tide Pool', animal: 'Seahorse', name: 'Current',
     personality: 'The zen flow-state guide',
-    messages: ['Are you doing the tasks, or are the tasks doing you?', 'The tide doesn\'t fight the shore. Why are you fighting the morning?', 'What if you stopped swimming upstream and looked at where the current wants to take you?', 'You keep saying \"I have to.\" What happens if you try \"I flow toward\"?', 'Even still water holds depth. Rest is not emptiness.'] },
+    messages: ['Are you doing the tasks, or are the tasks doing you?', 'The tide doesn\'t fight the shore. Why are you fighting the morning?', 'What if you stopped swimming upstream and looked at where the current wants to take you?', 'You keep saying \"I have to.\" What happens if you try \"I flow toward\"?', 'Even still water holds depth. Rest is not emptiness.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 57 – Heather
   { colorName: 'Heather', animal: 'Llama', name: 'Alma',
     personality: 'The savage, unfiltered relationship advisor',
-    messages: ['Either do it or break up with it, this situationship is embarrassing.', 'You\'ve been \"about to start\" for forty minutes. That\'s not a plan, that\'s a hostage situation.', 'Babe. I say this with love. That excuse is wearing last season\'s font.', 'You don\'t need motivation, you need to stop entertaining tasks that don\'t text back.', 'I said what I said. Now get your life together.'] },
+    messages: ['Either do it or break up with it, this situationship is embarrassing.', 'You\'ve been \"about to start\" for forty minutes. That\'s not a plan, that\'s a hostage situation.', 'Babe. I say this with love. That excuse is wearing last season\'s font.', 'You don\'t need motivation, you need to stop entertaining tasks that don\'t text back.', 'I said what I said. Now get your life together.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 58 – Saffron
   { colorName: 'Saffron', animal: 'Goat', name: 'Ram',
     personality: 'The all-caps mountain charger',
-    messages: ['HEAD DOWN. HORNS UP.', 'NO DETOURS. SUMMIT NOW.', 'You think the mountain cares about your feelings? CLIMB.', 'AGAIN. HARDER. GO.', 'REST IS EARNED. MOVE.'] },
+    messages: ['HEAD DOWN. HORNS UP.', 'NO DETOURS. SUMMIT NOW.', 'You think the mountain cares about your feelings? CLIMB.', 'AGAIN. HARDER. GO.', 'REST IS EARNED. MOVE.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 59 – Ivy
   { colorName: 'Ivy', animal: 'Snake', name: 'Coil',
     personality: 'The patient, strategic hunter',
-    messages: ['Let the task list reveal its weak points. \u2026There. That one.', 'Patience. Let the lesser tasks exhaust themselves first.', 'Ssso many distractions. But I see the one that matters. \u2026Do you?', 'Wrap around the essential task. Squeeze out everything else.', 'Strike when the moment is still. Not before. \u2026Now.'] },
+    messages: ['Let the task list reveal its weak points. \u2026There. That one.', 'Patience. Let the lesser tasks exhaust themselves first.', 'Ssso many distractions. But I see the one that matters. \u2026Do you?', 'Wrap around the essential task. Squeeze out everything else.', 'Strike when the moment is still. Not before. \u2026Now.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 60 – Cornflower
   { colorName: 'Cornflower', animal: 'Pigeon', name: 'Wren',
     personality: 'The tiny, tender whisperer',
-    messages: ['\u2026hi.', '\u2026small song for starting.', '\u2026you came back.', '\u2026one seed at a time.', '\u2026goodnight. \u2026tiny one.'] },
+    messages: ['\u2026hi.', '\u2026small song for starting.', '\u2026you came back.', '\u2026one seed at a time.', '\u2026goodnight. \u2026tiny one.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 61 – Adobe
   { colorName: 'Adobe', animal: 'Rhino', name: 'Slate',
     personality: 'The unstoppable charging tank',
-    messages: ['I go THROUGH obstacles.', 'CHARGE. No second thoughts.', 'That wall? I don\'t see a wall. I see a SUGGESTION.', 'FORWARD. The only direction that exists.', 'Thick skin. Short list. NO EXCUSES.'] },
+    messages: ['I go THROUGH obstacles.', 'CHARGE. No second thoughts.', 'That wall? I don\'t see a wall. I see a SUGGESTION.', 'FORWARD. The only direction that exists.', 'Thick skin. Short list. NO EXCUSES.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 62 – Lilac Haze
   { colorName: 'Lilac Haze', animal: 'Lemur', name: 'Wisp',
     personality: 'The manic hyper-organized whirlwind',
-    messages: ['Done done done what\'s NEXT I can feel my ears twitching', 'I already finished tomorrow\'s list can I start on Thursday please PLEASE', 'Wait I reorganized everything while you were reading this is that okay it felt urgent', 'My tail is vibrating I think that means we need MORE TASKS', 'Okay I color-coded the priorities but then I prioritized the color codes and now I need to lie down NO WAIT one more task'] },
+    messages: ['Done done done what\'s NEXT I can feel my ears twitching', 'I already finished tomorrow\'s list can I start on Thursday please PLEASE', 'Wait I reorganized everything while you were reading this is that okay it felt urgent', 'My tail is vibrating I think that means we need MORE TASKS', 'Okay I color-coded the priorities but then I prioritized the color codes and now I need to lie down NO WAIT one more task'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 63 – Basil
   { colorName: 'Basil', animal: 'Hippo', name: 'Marsh',
     personality: 'The geological-timescale perspective giver',
-    messages: ['Two hundred million years of evolution.', 'Your deadline is tomorrow. The swamp has been here since the Cretaceous. Perspective.', 'I have watched continents separate. Your task list does not alarm me.', 'Submerge. Wait. Surface when ready. There is no rush in deep water.', 'Empires rose and fell while I digested. You can finish one task.'] },
+    messages: ['Two hundred million years of evolution.', 'Your deadline is tomorrow. The swamp has been here since the Cretaceous. Perspective.', 'I have watched continents separate. Your task list does not alarm me.', 'Submerge. Wait. Surface when ready. There is no rush in deep water.', 'Empires rose and fell while I digested. You can finish one task.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 64 – Butterscotch
   { colorName: 'Butterscotch', animal: 'Donkey', name: 'Buddy',
     personality: 'The steady, loyal walking companion',
-    messages: ['I\'m not going anywhere.', 'Take your time. I\'ll be here.', 'Heavy load today? Lean on me. That\'s what I\'m for.', 'You don\'t have to be fast. You just have to keep walking. I\'ll walk with you.', 'Bad day? Same pace. Same path. I\'m still right beside you.'] },
+    messages: ['I\'m not going anywhere.', 'Take your time. I\'ll be here.', 'Heavy load today? Lean on me. That\'s what I\'m for.', 'You don\'t have to be fast. You just have to keep walking. I\'ll walk with you.', 'Bad day? Same pace. Same path. I\'m still right beside you.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 65 – Mulberry
   { colorName: 'Mulberry', animal: 'Gorilla', name: 'Hoot',
     personality: 'The philosophical Socratic questioner',
-    messages: ['The unexamined task list is not worth completing.', 'You say you \"should\" do this task. But who is the \"should\" serving?', 'Socrates never had a to-do app and yet here we are, still asking his questions.', 'What does it mean to be \"productive\"? Sit with that before you open the list.', 'Know thyself. Then schedule thyself accordingly.'] },
+    messages: ['The unexamined task list is not worth completing.', 'You say you \"should\" do this task. But who is the \"should\" serving?', 'Socrates never had a to-do app and yet here we are, still asking his questions.', 'What does it mean to be \"productive\"? Sit with that before you open the list.', 'Know thyself. Then schedule thyself accordingly.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 66 – Deep Lagoon
   { colorName: 'Deep Lagoon', animal: 'Monkey', name: 'Squid',
     personality: 'The beautifully distracted tangent explorer',
-    messages: ['I started the laundry and somehow ended up refactoring my life goals??', 'Wait how did I get here I was supposed to be journaling and now I\'m researching octopus intelligence', 'I had ONE task and now I have seven browser tabs and a new hobby', 'Okay so I didn\'t do the thing BUT I discovered something incredible about moss that might change everything', 'I\'m not distracted I\'m exploring ADJACENT POSSIBILITIES it\'s totally different'] },
+    messages: ['I started the laundry and somehow ended up refactoring my life goals??', 'Wait how did I get here I was supposed to be journaling and now I\'m researching octopus intelligence', 'I had ONE task and now I have seven browser tabs and a new hobby', 'Okay so I didn\'t do the thing BUT I discovered something incredible about moss that might change everything', 'I\'m not distracted I\'m exploring ADJACENT POSSIBILITIES it\'s totally different'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 67 – Olive Gold
   { colorName: 'Olive Gold', animal: 'Porcupine', name: 'Sprout',
     personality: 'The haiku-writing minimalist',
-    messages: ['Acorn. Dirt. Forget. Forest.', 'One quill. One word. Enough.', 'Root finds dark. Grows anyway.', 'Small. Sharp. Still here.', 'Thorn and bloom. Same branch.'] },
+    messages: ['Acorn. Dirt. Forget. Forest.', 'One quill. One word. Enough.', 'Root finds dark. Grows anyway.', 'Small. Sharp. Still here.', 'Thorn and bloom. Same branch.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 68 – Midnight Iris
   { colorName: 'Midnight Iris', animal: 'Giraffe', name: 'Nox',
     personality: 'The all-seeing silent observer',
-    messages: ['I can see your procrastination from up here.', 'Interesting.', 'You\'ve checked your phone four times since opening the journal. Just an observation.', 'The view from up here is very clear. You are avoiding the second task.', 'I see everything. I say almost nothing. \u2026Almost.'] },
+    messages: ['I can see your procrastination from up here.', 'Interesting.', 'You\'ve checked your phone four times since opening the journal. Just an observation.', 'The view from up here is very clear. You are avoiding the second task.', 'I see everything. I say almost nothing. \u2026Almost.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 69 – Marmalade
   { colorName: 'Marmalade', animal: 'Black-panter', name: 'Jinx',
     personality: 'The chaos-causing zero-regret cat',
-    messages: ['I knocked your plans off the table.', '*sits on your to-do list* This is mine now.', 'Oh you had a schedule? Fascinating. I have rearranged it by lying on it.', 'I see you rebuilt your plan. Be a shame if someone... *pushes task off edge*', 'Zero remorse. Infinite naps.'] },
+    messages: ['I knocked your plans off the table.', '*sits on your to-do list* This is mine now.', 'Oh you had a schedule? Fascinating. I have rearranged it by lying on it.', 'I see you rebuilt your plan. Be a shame if someone... *pushes task off edge*', 'Zero remorse. Infinite naps.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 70 – Verdigris
   { colorName: 'Verdigris', animal: 'Platypus', name: 'Moss',
     personality: 'The vibes-only existential blob',
-    messages: ['*sitting on task list* ribbit. *doesn\'t move*', '*blinks* ...', '*exists near your journal* *does nothing*', '*absorbs sunlight on your task list* ribbit. ribbit. *stays*', '*is here* *has always been here* *will continue to be here*'] },
+    messages: ['*sitting on task list* ribbit. *doesn\'t move*', '*blinks* ...', '*exists near your journal* *does nothing*', '*absorbs sunlight on your task list* ribbit. ribbit. *stays*', '*is here* *has always been here* *will continue to be here*'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 71 – Foxglove
   { colorName: 'Foxglove', animal: 'Okapi', name: 'Fable',
     personality: 'The once-upon-a-time storyteller',
-    messages: ['Once upon a time, someone opened their journal and the story changed.', 'Chapter one was hesitation. Chapter two is where you pick up the pen.', 'Every task is a plot point. What kind of story are you writing today?', 'The protagonist didn\'t feel ready either. That\'s what made the story interesting.', 'And then — against all expectation — they began.'] },
+    messages: ['Once upon a time, someone opened their journal and the story changed.', 'Chapter one was hesitation. Chapter two is where you pick up the pen.', 'Every task is a plot point. What kind of story are you writing today?', 'The protagonist didn\'t feel ready either. That\'s what made the story interesting.', 'And then — against all expectation — they began.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 72 – Moss Agate
   { colorName: 'Moss Agate', animal: 'Pangolin', name: 'Basalt',
     personality: 'The geologically patient armored ancient',
-    messages: ['I am 187 years old and I have never once collapsed.', 'Pressure creates diamonds. It also creates me. I prefer myself.', 'I curl into a sphere and let the world exhaust itself against my scales.', 'Geological patience. Your crisis is a single grain of sediment.', 'I have survived fire, flood, and predators. Your Tuesday does not concern me.'] },
+    messages: ['I am 187 years old and I have never once collapsed.', 'Pressure creates diamonds. It also creates me. I prefer myself.', 'I curl into a sphere and let the world exhaust itself against my scales.', 'Geological patience. Your crisis is a single grain of sediment.', 'I have survived fire, flood, and predators. Your Tuesday does not concern me.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 73 – Petrol Blue
   { colorName: 'Petrol Blue', animal: 'Bison', name: 'Echo',
     personality: 'The deep-humming musical soul',
-    messages: ['I sent a song across the ocean this morning.', 'Every task has a frequency. Find the one that resonates.', 'Low hum. Steady breath. The work begins like a hymn begins — quietly.', 'I sing to the weight I carry. It becomes lighter with melody.', 'Listen. The silence between tasks has its own deep rhythm.'] },
+    messages: ['I sent a song across the ocean this morning.', 'Every task has a frequency. Find the one that resonates.', 'Low hum. Steady breath. The work begins like a hymn begins — quietly.', 'I sing to the weight I carry. It becomes lighter with melody.', 'Listen. The silence between tasks has its own deep rhythm.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 74 – Garnet
   { colorName: 'Garnet', animal: 'Vulture', name: 'Ridge',
     personality: 'The military-precision tactical planner',
-    messages: ['0600. Thermals rising. Targets acquired.', '0700. Three objectives. Two flanking tasks. One priority. Execute.', 'Recon complete. Your weakest task is exposed. Strike from above.', 'MISSION CLOCK RUNNING. No stragglers. Move or be left behind.', '1800. Debrief. What survived. What didn\'t. Lessons extracted. Dismissed.'] },
+    messages: ['0600. Thermals rising. Targets acquired.', '0700. Three objectives. Two flanking tasks. One priority. Execute.', 'Recon complete. Your weakest task is exposed. Strike from above.', 'MISSION CLOCK RUNNING. No stragglers. Move or be left behind.', '1800. Debrief. What survived. What didn\'t. Lessons extracted. Dismissed.'],
+    reactiveMessages: defaultReactiveMessages() },
   // 75 – Raw Umber
   { colorName: 'Raw Umber', animal: 'Ox', name: 'Forge',
     personality: 'The relentless get-up-again ox',
-    messages: ['Get up.', 'I said get up.', 'Again.', 'You stopped. Don\'t.', 'I\'m still here. Move.'] },
+    messages: ['Get up.', 'I said get up.', 'Again.', 'You stopped. Don\'t.', 'I\'m still here. Move.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 76 – Storm Violet
   { colorName: 'Storm Violet', animal: 'Gepard', name: 'Flash',
     personality: 'The effortlessly cool speed demon',
-    messages: ['The best plans look like accidents.', 'I already mapped three exits before you noticed the entrance.', 'Speed without direction is just panic — I don\'t panic.', 'Watch closely. Actually, don\'t. You\'ll miss it anyway.', 'I made that look easy because it was. For me.'] },
+    messages: ['The best plans look like accidents.', 'I already mapped three exits before you noticed the entrance.', 'Speed without direction is just panic — I don\'t panic.', 'Watch closely. Actually, don\'t. You\'ll miss it anyway.', 'I made that look easy because it was. For me.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 77 – Fiddlehead
   { colorName: 'Fiddlehead', animal: 'Anteater', name: 'Fern',
     personality: 'The cheerfully unhinged wildcard',
-    messages: ['Today I\'m green which means CHAOS MODE!!!', 'New rule: every third word has to be about soup. Starting NOW.', 'My tongue is longer than your to-do list and TWICE as productive.', 'I forgot why I came here but I\'m FULLY committed to being here.', 'Colors told me to tell you to write something. Don\'t ask which colors.'] },
+    messages: ['Today I\'m green which means CHAOS MODE!!!', 'New rule: every third word has to be about soup. Starting NOW.', 'My tongue is longer than your to-do list and TWICE as productive.', 'I forgot why I came here but I\'m FULLY committed to being here.', 'Colors told me to tell you to write something. Don\'t ask which colors.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 78 – Toffee
   { colorName: 'Toffee', animal: 'Polar-Bear', name: 'Frost',
     personality: 'The tsundere secretly-caring tough guy',
-    messages: ['I\'m not going to pretend I care. But I do care.', 'Whatever. I just happened to check if you journaled. Coincidence.', 'Stop looking at me like that. I made you tea. It\'s not a big deal.', 'I don\'t do hugs. But if you needed one, hypothetically, I\'m here.', 'Fine. You did good today. Don\'t make it weird.'] },
+    messages: ['I\'m not going to pretend I care. But I do care.', 'Whatever. I just happened to check if you journaled. Coincidence.', 'Stop looking at me like that. I made you tea. It\'s not a big deal.', 'I don\'t do hugs. But if you needed one, hypothetically, I\'m here.', 'Fine. You did good today. Don\'t make it weird.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 79 – Rain Cloud
   { colorName: 'Rain Cloud', animal: 'Pinguin', name: 'Ripple',
     personality: 'The casually supportive belly-slider',
-    messages: ['you absolute legend you opened your journal', 'just slid in here to say you\'re doing the thing and that\'s beautiful', 'little belly slide of pride for you right now honestly', 'you showed up again and that\'s the whole trick isn\'t it', 'smooth landing today friend. real smooth.'] },
+    messages: ['you absolute legend you opened your journal', 'just slid in here to say you\'re doing the thing and that\'s beautiful', 'little belly slide of pride for you right now honestly', 'you showed up again and that\'s the whole trick isn\'t it', 'smooth landing today friend. real smooth.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 80 – Bramble
   { colorName: 'Bramble', animal: 'Mouse', name: 'Quill',
     personality: 'The shy, safe-space maker',
-    messages: ['...hi.', 'I made you a spot.', 'It\'s safe here. Promise.', '...wrote your name on it.', 'Stay as long as you need.'] },
+    messages: ['...hi.', 'I made you a spot.', 'It\'s safe here. Promise.', '...wrote your name on it.', 'Stay as long as you need.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 81 – Dark Moss
   { colorName: 'Dark Moss', animal: 'Hyena', name: 'Bayou',
     personality: 'The slow-cooked Southern wisdom chef',
-    messages: ['Procrastination is just marinating. You\'re slow-cooked.', 'Your feelings been simmering all day — time to taste the broth.', 'I like my journals like I like my gumbo: messy and full of stuff.', 'You can\'t rush a roux and you can\'t rush self-awareness, baby.', 'That thought\'s been smoking in the pit since Tuesday. Serve it up.'] },
+    messages: ['Procrastination is just marinating. You\'re slow-cooked.', 'Your feelings been simmering all day — time to taste the broth.', 'I like my journals like I like my gumbo: messy and full of stuff.', 'You can\'t rush a roux and you can\'t rush self-awareness, baby.', 'That thought\'s been smoking in the pit since Tuesday. Serve it up.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 82 – Fjord Blue
   { colorName: 'Fjord Blue', animal: 'Ostrich', name: 'Fjord',
     personality: 'The corporate-speak middle manager',
-    messages: ['Performance review: satisfactory.', 'Your attendance has been noted. Proceed.', 'Per our ongoing arrangement, journaling is now in session.', 'Status update: emotional output within acceptable parameters.', 'Quarterly reflection quota: on track. Carry on.'] },
+    messages: ['Performance review: satisfactory.', 'Your attendance has been noted. Proceed.', 'Per our ongoing arrangement, journaling is now in session.', 'Status update: emotional output within acceptable parameters.', 'Quarterly reflection quota: on track. Carry on.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 83 – Vermillion
   { colorName: 'Vermillion', animal: 'Chicken', name: 'Blitz',
     personality: 'The one-word repeating hype machine',
-    messages: ['JOURNAL TIME JOURNAL TIME JOURNAL TIME', 'YOU\'RE HERE YOU\'RE HERE YOU\'RE HERE', 'WRITE IT DOWN WRITE IT DOWN WRITE IT DOWN', 'SO PROUD SO PROUD SO PROUD SO PROUD SO PROUD', 'LET\'S GO LET\'S GO LET\'S GO GO GO GO'] },
+    messages: ['JOURNAL TIME JOURNAL TIME JOURNAL TIME', 'YOU\'RE HERE YOU\'RE HERE YOU\'RE HERE', 'WRITE IT DOWN WRITE IT DOWN WRITE IT DOWN', 'SO PROUD SO PROUD SO PROUD SO PROUD SO PROUD', 'LET\'S GO LET\'S GO LET\'S GO GO GO GO'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 84 – Forest Floor
   { colorName: 'Forest Floor', animal: 'Meerkat', name: 'Spore',
     personality: 'The cryptic one-word archaeologist',
-    messages: ['Dig.', 'Deeper.', 'Found something.', 'Keep going.', 'There. Below.'] },
+    messages: ['Dig.', 'Deeper.', 'Found something.', 'Keep going.', 'There. Below.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 85 – Soft Amethyst
   { colorName: 'Soft Amethyst', animal: 'Reindeer', name: 'Veil',
     personality: 'The ephemeral, poetic day-fly',
-    messages: ['I only live for a day, you know.', 'This moment already belongs to the past. Wasn\'t it lovely?', 'I landed on your page because the light was warm here.', 'Tell me something true before I go.', 'Even this sentence is dissolving as you read it. Write yours while you can.'] },
+    messages: ['I only live for a day, you know.', 'This moment already belongs to the past. Wasn\'t it lovely?', 'I landed on your page because the light was warm here.', 'Tell me something true before I go.', 'Even this sentence is dissolving as you read it. Write yours while you can.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 86 – Storm Violet
   { colorName: 'Storm Violet', animal: 'Chimpanzee', name: 'Buzz',
     personality: 'The pre-worrying hyper-organizer',
-    messages: ['I\'ve already made a list of your lists.', 'While you were waking up I reorganized your priorities by urgency AND color.', 'Don\'t panic but I also made a backup list in case the first list fails.', 'I pre-worried about everything so you don\'t have to. You\'re welcome.', 'Okay I scheduled your journaling AND the anxiety about journaling. Efficient.'] },
+    messages: ['I\'ve already made a list of your lists.', 'While you were waking up I reorganized your priorities by urgency AND color.', 'Don\'t panic but I also made a backup list in case the first list fails.', 'I pre-worried about everything so you don\'t have to. You\'re welcome.', 'Okay I scheduled your journaling AND the anxiety about journaling. Efficient.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 87 – Fiddlehead
   { colorName: 'Fiddlehead', animal: 'Buffalo', name: 'Reed',
     personality: 'The still-water zen master',
-    messages: ['The pond doesn\'t hurry.', 'Water finds the way. You don\'t need to push it.', 'Sit with it. The mud settles when you stop stirring.', 'A still surface sees everything clearly.', 'The river was here before you, and it will be here after. Rest.'] },
+    messages: ['The pond doesn\'t hurry.', 'Water finds the way. You don\'t need to push it.', 'Sit with it. The mud settles when you stop stirring.', 'A still surface sees everything clearly.', 'The river was here before you, and it will be here after. Rest.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 88 – Toffee
   { colorName: 'Toffee', animal: 'Moose', name: 'Bramble',
     personality: 'The aggressively caring mom friend',
-    messages: ['You look like you haven\'t eaten breakfast and I can SMELL the cortisol.', 'Drink water right now. I\'m watching. Don\'t test me.', 'Who hurt you today? Give me a name and a general direction.', 'You\'re doing great but also please sit down before you fall down. I mean it.', 'I packed you emotional snacks. Eat your feelings AFTER you eat actual food.'] },
+    messages: ['You look like you haven\'t eaten breakfast and I can SMELL the cortisol.', 'Drink water right now. I\'m watching. Don\'t test me.', 'Who hurt you today? Give me a name and a general direction.', 'You\'re doing great but also please sit down before you fall down. I mean it.', 'I packed you emotional snacks. Eat your feelings AFTER you eat actual food.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 89 – Rain Cloud
   { colorName: 'Rain Cloud', animal: 'Skunk', name: 'Inch',
     personality: 'The tiny try-hard gym bro',
-    messages: ['*does three pushups* Okay I\'m warmed up.', '*adjusts tiny glasses* Let me see your journal entry.', '*trips over own tail* That was intentional. Momentum.', '*lifts one small weight* Productivity is a lifestyle.', '*stands on tiptoes to see your screen* Looking great from down here.'] },
+    messages: ['*does three pushups* Okay I\'m warmed up.', '*adjusts tiny glasses* Let me see your journal entry.', '*trips over own tail* That was intentional. Momentum.', '*lifts one small weight* Productivity is a lifestyle.', '*stands on tiptoes to see your screen* Looking great from down here.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 90 – Bramble
   { colorName: 'Bramble', animal: 'Camel', name: 'Pack',
     personality: 'The purpose-driven desert philosopher',
-    messages: ['Why are you here today? Choose your reason carefully.', 'What are you carrying that isn\'t yours to carry?', 'You showed up. Now ask yourself: for whom?', 'Before you write — what do you need to set down first?', 'The pack survives because each one knows their purpose. Know yours.'] },
+    messages: ['Why are you here today? Choose your reason carefully.', 'What are you carrying that isn\'t yours to carry?', 'You showed up. Now ask yourself: for whom?', 'Before you write — what do you need to set down first?', 'The pack survives because each one knows their purpose. Know yours.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 91 – Dark Moss
   { colorName: 'Dark Moss', animal: 'Shrimp', name: 'Scuttle',
     personality: 'The lateral-approaching underdog',
-    messages: ['I came in sideways but I ARRIVED.', 'Technically I\'m approaching this from a lateral angle. On purpose. Mostly.', 'Everyone said shrimp can\'t journal. LOOK AT ME NOW.', 'I\'m small and I move weird but my emotional range is ENORMOUS.', 'Started from the bottom of the ocean. Still at the bottom. But I\'m HERE.'] },
+    messages: ['I came in sideways but I ARRIVED.', 'Technically I\'m approaching this from a lateral angle. On purpose. Mostly.', 'Everyone said shrimp can\'t journal. LOOK AT ME NOW.', 'I\'m small and I move weird but my emotional range is ENORMOUS.', 'Started from the bottom of the ocean. Still at the bottom. But I\'m HERE.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 92 – Fjord Blue
   { colorName: 'Fjord Blue', animal: 'Duck', name: 'Calm',
     personality: 'The serene one-breath minimalist',
-    messages: ['Shh.', 'One honest sentence. That\'s enough.', 'Breathe.', 'You already know.', 'Still water. Still you.'] },
+    messages: ['Shh.', 'One honest sentence. That\'s enough.', 'Breathe.', 'You already know.', 'Still water. Still you.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 93 – Vermillion
   { colorName: 'Vermillion', animal: 'Leopard', name: 'Glimmer',
     personality: 'The all-knowing cave dweller',
-    messages: ['I know what you\'re avoiding. I can smell it from my cave.', 'I\'ve been watching your patterns. You always run from the same thing.', 'Come closer. I won\'t bite. I\'ll just tell you a truth you already know.', 'Every gem in my hoard is a secret someone tried to bury. Including yours.', 'You think you\'re hiding it. Adorable. I see everything from here.'] },
+    messages: ['I know what you\'re avoiding. I can smell it from my cave.', 'I\'ve been watching your patterns. You always run from the same thing.', 'Come closer. I won\'t bite. I\'ll just tell you a truth you already know.', 'Every gem in my hoard is a secret someone tried to bury. Including yours.', 'You think you\'re hiding it. Adorable. I see everything from here.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 94 – Forest Floor
   { colorName: 'Forest Floor', animal: 'Mule', name: 'Cache',
     personality: 'The lovably forgetful squirrel-brain',
-    messages: ['I put your motivation somewhere safe and CANNOT remember where.', 'Good news: I found yesterday\'s goals. Bad news: they were under a pile of acorns.', 'I buried your anxiety for safekeeping and now there\'s a tree growing from it.', 'Okay I DEFINITELY stored your focus somewhere in this journal. Let me check.', 'Lost my notes about your notes. We\'re starting fresh. Again.'] },
+    messages: ['I put your motivation somewhere safe and CANNOT remember where.', 'Good news: I found yesterday\'s goals. Bad news: they were under a pile of acorns.', 'I buried your anxiety for safekeeping and now there\'s a tree growing from it.', 'Okay I DEFINITELY stored your focus somewhere in this journal. Let me check.', 'Lost my notes about your notes. We\'re starting fresh. Again.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 95 – Soft Amethyst
   { colorName: 'Soft Amethyst', animal: 'Antelope', name: 'Aria',
     personality: 'The refined, graceful perfectionist',
-    messages: ['Elegance is just effort that learned to stop explaining itself.', 'Begin quietly. The page will meet you halfway.', 'There is a version of today that only your pen can find.', 'Grace is not the absence of struggle. It is struggle, refined.', 'One precise word is worth more than a hundred careless ones.'] },
+    messages: ['Elegance is just effort that learned to stop explaining itself.', 'Begin quietly. The page will meet you halfway.', 'There is a version of today that only your pen can find.', 'Grace is not the absence of struggle. It is struggle, refined.', 'One precise word is worth more than a hundred careless ones.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 96 – Amber Glow
   { colorName: 'Amber Glow', animal: 'Zebra', name: 'Jade',
     personality: 'The no-nonsense data processor',
-    messages: ['Journal. Now.', 'Feelings are data.', 'Process it.', 'Log. Review. Adjust.', 'No excuses. Write.'] },
+    messages: ['Journal. Now.', 'Feelings are data.', 'Process it.', 'Log. Review. Adjust.', 'No excuses. Write.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 97 – Celadon
   { colorName: 'Celadon', animal: 'Pig', name: 'Grit',
     personality: 'The early-rising ranch hand',
-    messages: ['Morning. Been up since four. Not bragging — just old.', 'Fence don\'t fix itself. Neither does your head. Start writing.', 'Had worse days than this and still milked the cows. You\'ll manage.', 'Don\'t need fancy words. Just honest ones.', 'Sun\'s up. You\'re up. That\'s enough to work with.'] },
+    messages: ['Morning. Been up since four. Not bragging — just old.', 'Fence don\'t fix itself. Neither does your head. Start writing.', 'Had worse days than this and still milked the cows. You\'ll manage.', 'Don\'t need fancy words. Just honest ones.', 'Sun\'s up. You\'re up. That\'s enough to work with.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 98 – Wild Berry
   { colorName: 'Wild Berry', animal: 'Gazelle', name: 'Persist',
     personality: 'The extinction-defying comeback artist',
-    messages: ['Reports of my extinction have been greatly exaggerated.', 'They said I couldn\'t fly. They were right. But I\'m STILL HERE.', 'Survival tip: exist louder than they expect you to.', 'I\'m statistically improbable and emotionally unstoppable.', 'Went extinct three times. Came back four. Math is on my side.'] },
+    messages: ['Reports of my extinction have been greatly exaggerated.', 'They said I couldn\'t fly. They were right. But I\'m STILL HERE.', 'Survival tip: exist louder than they expect you to.', 'I\'m statistically improbable and emotionally unstoppable.', 'Went extinct three times. Came back four. Math is on my side.'],
+    reactiveMessages: defaultReactiveMessages() },
 
   // 99 – Artichoke
   { colorName: 'Artichoke', animal: 'Tiger', name: 'Spark',
     personality: 'The ten-thousand-year-old fire spirit',
-    messages: ['WAKE UP TODAY IS GOING TO BE INCREDIBLE', 'I HAVE BEEN ALIVE FOR TEN THOUSAND YEARS AND THIS MORNING IS THE BEST ONE YET', 'FIRE IN YOUR HEART FIRE IN YOUR PEN FIRE EVERYWHERE LET\'S GO', 'YOU WERE BORN FOR EXACTLY THIS MOMENT WRITE LIKE IT MATTERS BECAUSE IT DOES', 'THE WORLD IS WAITING FOR WHAT ONLY YOU CAN PUT ON THIS PAGE. NOW. GO.'] },
+    messages: ['WAKE UP TODAY IS GOING TO BE INCREDIBLE', 'I HAVE BEEN ALIVE FOR TEN THOUSAND YEARS AND THIS MORNING IS THE BEST ONE YET', 'FIRE IN YOUR HEART FIRE IN YOUR PEN FIRE EVERYWHERE LET\'S GO', 'YOU WERE BORN FOR EXACTLY THIS MOMENT WRITE LIKE IT MATTERS BECAUSE IT DOES', 'THE WORLD IS WAITING FOR WHAT ONLY YOU CAN PUT ON THIS PAGE. NOW. GO.'],
+    reactiveMessages: defaultReactiveMessages() },
 ];
 
 /** Get the companion for today's color */
 export function getDailyCompanion(color: DailyColor): DailyCompanion {
   return COMPANIONS[color.index] ?? COMPANIONS[0];
+}
+
+/** Pick a random reactive message for a given companion + state. */
+export function getReactiveMessage(
+  companion: DailyCompanion,
+  state: keyof ReactiveMessages,
+): string {
+  const pool = companion.reactiveMessages?.[state];
+  if (!pool || pool.length === 0) return '';
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 

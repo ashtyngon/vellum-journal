@@ -3,6 +3,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from './AuthContext';
 import { formatLocalDate } from '../lib/dateUtils';
+import type { Achievement } from '../lib/achievements';
 
 /* ── BuJo Rapid Log Entry (replaces old Task) ─────────────────────── */
 
@@ -125,6 +126,13 @@ interface AppContextType {
   // Debriefs
   saveDebrief: (debrief: DayDebrief) => void;
   deleteDebrief: (date: string) => void;
+  // Achievement tracking
+  achievements: Achievement[];
+  totalActiveDays: number;
+  lastActiveDate: string;
+  unlockAchievement: (id: string) => void;
+  markAchievementSeen: (id: string) => void;
+  recordActiveDay: () => void;
   // Onboarding
   isNewUser: boolean;
   completeWalkthrough: () => void;
@@ -172,6 +180,9 @@ interface WalData {
   journalEntries: JournalEntry[];
   collections: Collection[];
   debriefs: DayDebrief[];
+  achievements?: Achievement[];
+  totalActiveDays?: number;
+  lastActiveDate?: string;
   ts: number; // timestamp of last write
   uid: string; // user uid this data belongs to
 }
@@ -212,6 +223,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [debriefs, setDebriefs] = useState<DayDebrief[]>([]);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [totalActiveDays, setTotalActiveDays] = useState(0);
+  const [lastActiveDate, setLastActiveDate] = useState('');
   const [loading, setLoading] = useState(true);
   const [isNewUser, setIsNewUser] = useState(false);
 
@@ -264,6 +278,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             setJournalEntries(wal.journalEntries);
             setCollections(wal.collections);
             setDebriefs(migrateDebriefs(wal.debriefs));
+            setAchievements(wal.achievements ?? []);
+            setTotalActiveDays(wal.totalActiveDays ?? 0);
+            setLastActiveDate(wal.lastActiveDate ?? '');
             clearWal();
           } else {
             // Use Firestore data (it's current or newer)
@@ -286,6 +303,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             setJournalEntries(data.journalEntries ?? []);
             setCollections(data.collections ?? []);
             setDebriefs(migrateDebriefs(data.debriefs ?? []));
+            setAchievements(data.achievements ?? []);
+            setTotalActiveDays(data.totalActiveDays ?? 0);
+            setLastActiveDate(data.lastActiveDate ?? '');
           }
         } else if (wal) {
           // No Firestore doc but WAL exists — use WAL
@@ -294,6 +314,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           setJournalEntries(wal.journalEntries);
           setCollections(wal.collections);
           setDebriefs(migrateDebriefs(wal.debriefs));
+          setAchievements(wal.achievements ?? []);
+          setTotalActiveDays(wal.totalActiveDays ?? 0);
+          setLastActiveDate(wal.lastActiveDate ?? '');
           clearWal();
         } else {
           // Brand-new user — start blank, show walkthrough
@@ -302,12 +325,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           setJournalEntries([]);
           setCollections([]);
           setDebriefs([]);
+          setAchievements([]);
+          setTotalActiveDays(0);
+          setLastActiveDate('');
           if (localStorage.getItem('vellum-walkthrough-done') !== 'true') {
             setIsNewUser(true);
           }
           await setDoc(doc(db, 'users', user.uid), {
             entries: [], habits: [], journalEntries: [],
-            collections: [], debriefs: [],
+            collections: [], debriefs: [], achievements: [],
+            totalActiveDays: 0, lastActiveDate: '',
             updatedAt: new Date().toISOString(),
           });
         }
@@ -320,6 +347,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           setJournalEntries(wal.journalEntries);
           setCollections(wal.collections);
           setDebriefs(migrateDebriefs(wal.debriefs));
+          setAchievements(wal.achievements ?? []);
+          setTotalActiveDays(wal.totalActiveDays ?? 0);
+          setLastActiveDate(wal.lastActiveDate ?? '');
           clearWal();
         }
       }
@@ -334,8 +364,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // Also writes to localStorage WAL as a synchronous backup.
   // CRITICAL: Only save AFTER Firestore data has been loaded to prevent
   // overwriting real data with empty/stale state.
-  const latestDataRef = useRef({ entries, habits, journalEntries, collections, debriefs });
-  latestDataRef.current = { entries, habits, journalEntries, collections, debriefs };
+  const latestDataRef = useRef({ entries, habits, journalEntries, collections, debriefs, achievements, totalActiveDays, lastActiveDate });
+  latestDataRef.current = { entries, habits, journalEntries, collections, debriefs, achievements, totalActiveDays, lastActiveDate };
 
   const flushSave = useCallback(() => {
     if (!user || !dataLoadedRef.current) return;
@@ -357,7 +387,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     writeWal(user.uid, latestDataRef.current);
     // Save to Firestore immediately — no debounce
     flushSave();
-  }, [entries, habits, journalEntries, collections, debriefs, user, flushSave]);
+  }, [entries, habits, journalEntries, collections, debriefs, achievements, totalActiveDays, lastActiveDate, user, flushSave]);
 
   // Flush any pending save when the page is about to unload.
   // Even if the async Firestore write doesn't complete, the WAL is already
@@ -481,6 +511,28 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const deleteDebrief = useCallback((date: string) =>
     setDebriefs(prev => prev.filter(d => d.date !== date)), []);
 
+  /* ── Achievement tracking ─────────────────────────────────────── */
+
+  const unlockAchievement = useCallback((id: string) => {
+    setAchievements(prev => {
+      if (prev.some(a => a.id === id)) return prev; // already unlocked
+      return [...prev, { id, unlockedAt: new Date().toISOString(), seen: false }];
+    });
+  }, []);
+
+  const markAchievementSeen = useCallback((id: string) => {
+    setAchievements(prev => prev.map(a => a.id === id ? { ...a, seen: true } : a));
+  }, []);
+
+  const recordActiveDay = useCallback(() => {
+    const today = formatLocalDate(new Date());
+    setLastActiveDate(prev => {
+      if (prev === today) return prev; // already recorded today
+      setTotalActiveDays(d => d + 1);
+      return today;
+    });
+  }, []);
+
   /* ── Onboarding ────────────────────────────────────────────────── */
 
   const completeWalkthrough = useCallback(() => {
@@ -503,6 +555,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     addCollection, updateCollection, deleteCollection,
     addCollectionItem, updateCollectionItem, deleteCollectionItem, reorderCollectionItems,
     saveDebrief, deleteDebrief,
+    achievements, totalActiveDays, lastActiveDate,
+    unlockAchievement, markAchievementSeen, recordActiveDay,
     isNewUser, completeWalkthrough,
   }), [
     activeEntries, trashEntries, habits, journalEntries, collections, debriefs, loading,
@@ -512,6 +566,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     addCollection, updateCollection, deleteCollection,
     addCollectionItem, updateCollectionItem, deleteCollectionItem, reorderCollectionItems,
     saveDebrief, deleteDebrief,
+    achievements, totalActiveDays, lastActiveDate,
+    unlockAchievement, markAchievementSeen, recordActiveDay,
     isNewUser, completeWalkthrough,
   ]);
 
