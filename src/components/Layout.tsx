@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getColorOfTheDay, DEFAULT_PRIMARY, applyAccentColor, getColorName, getDailyCompanion } from '../lib/colorOfTheDay';
+import { getColorOfTheDay, DEFAULT_PRIMARY, applyAccentColor, getDailyCompanion } from '../lib/colorOfTheDay';
 import { todayStr } from '../lib/dateUtils';
 
 const Layout = ({ children }: { children: ReactNode }) => {
@@ -33,7 +33,6 @@ const Layout = ({ children }: { children: ReactNode }) => {
     applyAccentColor(color, darkMode);
   }, [dailyColor, darkMode, useDefaultColor]);
 
-  const colorName = useMemo(() => getColorName(dailyColor), [dailyColor]);
   const companion = useMemo(() => getDailyCompanion(dailyColor), [dailyColor]);
 
   const revertColor = () => {
@@ -104,21 +103,17 @@ const Layout = ({ children }: { children: ReactNode }) => {
             {/* Color of the Day — prominent pill */}
             <button
               onClick={() => setColorInfoOpen(v => !v)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all hover:scale-105"
+              className="flex items-center justify-center size-9 rounded-full transition-all hover:scale-110"
               style={{
                 backgroundColor: useDefaultColor ? 'transparent' : `var(--color-tint-medium)`,
-                border: useDefaultColor ? '1px solid var(--color-border)' : `1.5px solid var(--color-primary)`,
+                border: useDefaultColor ? '1.5px solid var(--color-border)' : `2px solid var(--color-primary)`,
               }}
+              aria-label={`Today's companion: ${companion.name}`}
             >
               <span
-                className="inline-block size-3.5 rounded-full flex-shrink-0"
+                className="inline-block size-4 rounded-full flex-shrink-0"
                 style={{ backgroundColor: dailyColor.css }}
               />
-              <span className="font-mono text-[11px] uppercase tracking-wider"
-                style={{ color: useDefaultColor ? 'var(--color-pencil)' : 'var(--color-primary)' }}
-              >
-                {colorName}
-              </span>
             </button>
             {/* Color popover */}
             {colorInfoOpen && (
@@ -127,14 +122,15 @@ const Layout = ({ children }: { children: ReactNode }) => {
                 <div className="absolute right-4 sm:right-16 top-14 w-72 max-w-[calc(100vw-2rem)] p-5 bg-paper rounded-xl shadow-lifted border border-wood-light/30 z-50" role="dialog" aria-label="Color of the Day settings">
                   <div className="flex items-center gap-3 mb-3">
                     <div
-                      className="size-[120px] rounded-xl shadow-md flex items-center justify-center overflow-hidden"
+                      className="size-[100px] rounded-xl shadow-md flex items-center justify-center overflow-hidden flex-shrink-0"
                       style={{ background: `var(--color-gradient)` }}
                     >
-                      <img src={`/animals/${companion.animal}.png`} alt={companion.name} className="w-[84px] h-[84px] object-contain" />
+                      <img src={`/animals/${companion.animal}.png`} alt={companion.name} className="w-[72px] h-[72px] object-contain" />
                     </div>
                     <div>
-                      <p className="font-header italic text-lg text-ink">{colorName}</p>
-                      <p className="font-mono text-[11px] text-pencil uppercase tracking-widest">{companion.name} · today&rsquo;s companion</p>
+                      <p className="font-header italic text-lg text-ink">{companion.name}</p>
+                      <p className="font-body text-sm text-ink/60 leading-snug mt-0.5">{companion.personality}</p>
+                      <p className="font-mono text-[13px] text-pencil/50 uppercase tracking-widest mt-1">today&rsquo;s companion</p>
                     </div>
                   </div>
                   <p className="font-body text-sm text-ink/70 leading-relaxed mb-4 italic">
@@ -143,7 +139,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
                   {/* Color toggle — clear on/off */}
                   <button
                     onClick={() => { useDefaultColor ? restoreDailyColor() : revertColor(); setColorInfoOpen(false); }}
-                    className="w-full text-center py-3 rounded-lg font-mono text-xs uppercase tracking-wider transition-all"
+                    className="w-full text-center py-3 rounded-lg font-mono text-sm uppercase tracking-wider transition-all"
                     style={{
                       backgroundColor: useDefaultColor ? 'var(--color-tint-medium)' : 'transparent',
                       border: useDefaultColor ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
@@ -186,7 +182,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
                   <div className="fixed inset-0 z-40" onClick={() => setShowProfile(false)} />
                   <div className="absolute right-0 top-12 z-50 bg-paper rounded-lg shadow-lifted border border-wood-light/50 p-4 min-w-[200px]">
                     <p className="text-sm font-medium text-ink truncate">{user?.displayName}</p>
-                    <p className="text-xs text-pencil truncate mb-3">{user?.email}</p>
+                    <p className="text-sm text-pencil truncate mb-3">{user?.email}</p>
                     <button
                       onClick={logout}
                       className="w-full text-left text-sm text-ink-light hover:text-ink py-1.5 px-2 rounded hover:bg-surface-light transition-colors flex items-center gap-2"

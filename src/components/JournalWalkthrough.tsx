@@ -189,7 +189,7 @@ export default function JournalWalkthrough({
                          [&::-webkit-slider-thumb]:transition-transform
                          [&::-webkit-slider-thumb]:hover:scale-110"
             />
-            <div className="flex justify-between text-xs font-mono text-pencil">
+            <div className="flex justify-between text-sm font-mono text-pencil">
               <span>{min}</span>
               <span>{max}</span>
             </div>
@@ -259,7 +259,7 @@ export default function JournalWalkthrough({
                          transition-colors duration-300 p-3
                          ${isMorningPages ? 'min-h-[280px] text-xl' : 'min-h-[120px] text-lg'}`}
             />
-            <p className="text-xs font-mono text-pencil/50 mt-2 text-right">
+            <p className="text-sm font-mono text-pencil/50 mt-2 text-right">
               Shift + Enter for new line &middot; Enter to continue
             </p>
           </div>
@@ -398,7 +398,7 @@ export default function JournalWalkthrough({
                 </div>
                 {/* Content */}
                 <div className={`flex-1 pb-6 ${isFirst ? 'pt-0' : 'pt-1'}`}>
-                  <p className={`font-mono text-[10px] uppercase tracking-widest mb-1.5 ${isFirst ? 'text-ink/50' : isLast ? 'text-primary font-bold' : 'text-primary/60'}`}>
+                  <p className={`font-mono text-[12px] uppercase tracking-widest mb-1.5 ${isFirst ? 'text-ink/50' : isLast ? 'text-primary font-bold' : 'text-primary/60'}`}>
                     {isFirst ? 'Starting point' : `Why #${i}`}
                   </p>
                   <p className={`font-body leading-relaxed whitespace-pre-wrap ${isLast ? 'text-ink font-medium text-lg' : 'text-ink'}`}>
@@ -471,7 +471,7 @@ export default function JournalWalkthrough({
         >
           <div className="max-w-2xl mx-auto">
             {/* Section title */}
-            <p className="font-mono text-xs text-pencil uppercase tracking-widest mb-6">
+            <p className="font-mono text-sm text-pencil uppercase tracking-widest mb-6">
               Your Reflections
             </p>
 
@@ -537,7 +537,7 @@ export default function JournalWalkthrough({
         </h2>
 
         {/* Step counter */}
-        <span className="font-mono text-xs text-pencil tabular-nums">
+        <span className="font-mono text-sm text-pencil tabular-nums">
           {currentStep + 1} of {totalSteps}
         </span>
       </div>

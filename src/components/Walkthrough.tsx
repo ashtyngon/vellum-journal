@@ -179,17 +179,17 @@ const Walkthrough = ({ onComplete }: WalkthroughProps) => {
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/15 text-center">
               <span className="material-symbols-outlined text-3xl text-white/80 mb-2 block">timeline</span>
               <p className="font-body font-semibold text-white text-sm">Flow View</p>
-              <p className="font-body text-[11px] text-white/50 mt-1">Drag tasks into time blocks</p>
+              <p className="font-body text-[13px] text-white/50 mt-1">Drag tasks into time blocks</p>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/15 text-center">
               <span className="material-symbols-outlined text-3xl text-white/80 mb-2 block">show_chart</span>
               <p className="font-body font-semibold text-white text-sm">Habits</p>
-              <p className="font-body text-[11px] text-white/50 mt-1">Track daily habits + streaks</p>
+              <p className="font-body text-[13px] text-white/50 mt-1">Track daily habits + streaks</p>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/15 text-center">
               <span className="material-symbols-outlined text-3xl text-white/80 mb-2 block">inventory_2</span>
               <p className="font-body font-semibold text-white text-sm">Archive</p>
-              <p className="font-body text-[11px] text-white/50 mt-1">Journal entries + collections</p>
+              <p className="font-body text-[13px] text-white/50 mt-1">Journal entries + collections</p>
             </div>
           </div>
           <button
@@ -264,7 +264,7 @@ const Walkthrough = ({ onComplete }: WalkthroughProps) => {
         </div>
         <button
           onClick={skip}
-          className="font-mono text-[10px] text-white/30 hover:text-white/60 uppercase tracking-wider transition-colors ml-4"
+          className="font-mono text-[12px] text-white/30 hover:text-white/60 uppercase tracking-wider transition-colors ml-4"
         >
           Skip
         </button>

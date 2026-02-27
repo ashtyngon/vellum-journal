@@ -320,7 +320,7 @@ function JournalsTab({
                           </span>
 
                           <div
-                            className="shrink-0 mx-auto size-6 rounded-full bg-white/20 text-white flex items-center justify-center text-xs font-bold shadow-inner"
+                            className="shrink-0 mx-auto size-6 rounded-full bg-white/20 text-white flex items-center justify-center text-sm font-bold shadow-inner"
                             title={`${count} ${count === 1 ? 'Entry' : 'Entries'}`}
                           >
                             {count}
@@ -375,17 +375,17 @@ function JournalsTab({
               {/* Events section */}
               {expandedEvents.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-xs font-body font-semibold text-ink-light uppercase tracking-wider">Events</h4>
+                  <h4 className="text-sm font-body font-semibold text-ink-light uppercase tracking-wider">Events</h4>
                   {expandedEvents.map(ev => (
                     <div key={ev.id} className="flex items-center gap-3 py-2 px-3 bg-surface-light/30 rounded-lg border border-wood-light/20">
                       <div className="size-2.5 rounded-full bg-primary shrink-0" />
                       <span className="font-body text-sm text-ink flex-1">{ev.title}</span>
                       {ev.time && (
-                        <span className="text-xs font-mono bg-primary/10 text-primary px-2 py-0.5 rounded-full shrink-0">
+                        <span className="text-sm font-mono bg-primary/10 text-primary px-2 py-0.5 rounded-full shrink-0">
                           {ev.time}
                         </span>
                       )}
-                      <span className="text-xs font-mono text-ink-light shrink-0">{formatDate(ev.date)}</span>
+                      <span className="text-sm font-mono text-ink-light shrink-0">{formatDate(ev.date)}</span>
                     </div>
                   ))}
                 </div>
@@ -412,7 +412,7 @@ function JournalsTab({
                           </span>
                         )}
                         {entry.method && (
-                          <span className="text-xs font-mono bg-sage/20 text-sage px-1.5 py-0.5 rounded">
+                          <span className="text-sm font-mono bg-sage/20 text-sage px-1.5 py-0.5 rounded">
                             {entry.method}
                           </span>
                         )}
@@ -434,7 +434,7 @@ function JournalsTab({
                     {entry.tags && entry.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mt-3">
                         {entry.tags.map(tag => (
-                          <span key={tag} className="text-xs font-body bg-wood-light/40 text-ink-light px-2 py-0.5 rounded-full">
+                          <span key={tag} className="text-sm font-body bg-wood-light/40 text-ink-light px-2 py-0.5 rounded-full">
                             {tag}
                           </span>
                         ))}
@@ -444,8 +444,8 @@ function JournalsTab({
                     {entry.wins && entry.wins.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mt-2">
                         {entry.wins.map(win => (
-                          <span key={win} className="text-xs font-body bg-primary/10 text-primary px-2 py-0.5 rounded-full flex items-center gap-1">
-                            <span className="material-symbols-outlined text-xs">emoji_events</span>
+                          <span key={win} className="text-sm font-body bg-primary/10 text-primary px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <span className="material-symbols-outlined text-sm">emoji_events</span>
                             {win}
                           </span>
                         ))}
@@ -468,16 +468,16 @@ function JournalsTab({
               <div className="flex items-center gap-2">
                 {deleteConfirm === editingEntry.id ? (
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-white/70 font-body">Delete?</span>
+                    <span className="text-sm text-white/70 font-body">Delete?</span>
                     <button
                       onClick={() => { handleDeleteEntry(editingEntry.id); setEditingEntry(null); }}
-                      className="text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-0.5 rounded font-body transition-colors"
+                      className="text-sm bg-red-500 hover:bg-red-600 text-white px-2 py-0.5 rounded font-body transition-colors"
                     >
                       Yes
                     </button>
                     <button
                       onClick={() => setDeleteConfirm(null)}
-                      className="text-xs bg-white/20 hover:bg-white/30 text-white px-2 py-0.5 rounded font-body transition-colors"
+                      className="text-sm bg-white/20 hover:bg-white/30 text-white px-2 py-0.5 rounded font-body transition-colors"
                     >
                       No
                     </button>
@@ -518,12 +518,12 @@ function JournalsTab({
               {editingEntry.method && editingEntry.steps && editingEntry.steps.length > 0 && (
                 <div>
                   <label className="block text-sm font-body font-medium text-ink mb-2">
-                    Method: <span className="font-mono text-xs bg-sage/20 text-sage px-1.5 py-0.5 rounded">{editingEntry.method}</span>
+                    Method: <span className="font-mono text-sm bg-sage/20 text-sage px-1.5 py-0.5 rounded">{editingEntry.method}</span>
                   </label>
                   <div className="space-y-2 bg-surface-light/30 rounded-lg p-3 border border-wood-light/20">
                     {editingEntry.steps.map((step, idx) => (
                       <div key={idx} className="space-y-0.5">
-                        <p className="text-xs font-body font-semibold text-ink-light">{step.prompt}</p>
+                        <p className="text-sm font-body font-semibold text-ink-light">{step.prompt}</p>
                         <p className="text-sm font-body text-ink pl-2 border-l-2 border-primary/20">{step.answer}</p>
                       </div>
                     ))}
@@ -969,7 +969,7 @@ function CollectionsTab() {
                 <h4 className="font-display italic text-lg text-ink mb-2 leading-tight">{col.title}</h4>
 
                 {/* Item count badge */}
-                <span className="inline-block text-xs font-mono bg-wood-light/30 text-ink-light px-2 py-0.5 rounded-full mb-3">
+                <span className="inline-block text-sm font-mono bg-wood-light/30 text-ink-light px-2 py-0.5 rounded-full mb-3">
                   {col.items.length} {col.items.length === 1 ? 'item' : 'items'}
                 </span>
 
@@ -983,9 +983,9 @@ function CollectionsTab() {
                             ? 'bg-primary/80 border-primary/80 text-white'
                             : 'border-wood-light'
                         }`}>
-                          {item.done && <span className="material-symbols-outlined text-[10px]">check</span>}
+                          {item.done && <span className="material-symbols-outlined text-[12px]">check</span>}
                         </div>
-                        <span className={`text-xs font-body truncate ${
+                        <span className={`text-sm font-body truncate ${
                           item.done ? 'line-through text-ink-light/50' : 'text-ink-light'
                         }`}>
                           {item.text}
@@ -993,7 +993,7 @@ function CollectionsTab() {
                       </li>
                     ))}
                     {col.items.length > 3 && (
-                      <li className="text-xs font-body text-ink-light/50 pl-5">
+                      <li className="text-sm font-body text-ink-light/50 pl-5">
                         +{col.items.length - 3} more
                       </li>
                     )}
@@ -1004,16 +1004,16 @@ function CollectionsTab() {
               {/* Delete button on hover */}
               {deleteConfirmId === col.id ? (
                 <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-paper rounded-lg shadow-soft px-2 py-1 border border-wood-light/40 z-10">
-                  <span className="text-xs font-body text-ink-light">Delete?</span>
+                  <span className="text-sm font-body text-ink-light">Delete?</span>
                   <button
                     onClick={() => handleDeleteCollection(col.id)}
-                    className="text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-0.5 rounded font-body transition-colors"
+                    className="text-sm bg-red-500 hover:bg-red-600 text-white px-2 py-0.5 rounded font-body transition-colors"
                   >
                     Yes
                   </button>
                   <button
                     onClick={() => setDeleteConfirmId(null)}
-                    className="text-xs bg-surface-light hover:bg-wood-light text-ink px-2 py-0.5 rounded font-body transition-colors"
+                    className="text-sm bg-surface-light hover:bg-wood-light text-ink px-2 py-0.5 rounded font-body transition-colors"
                   >
                     No
                   </button>

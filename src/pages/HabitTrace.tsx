@@ -168,7 +168,7 @@ export default function HabitTrace() {
       {/* Header */}
       <div className="flex-none px-6 md:px-10 py-4 z-40 bg-gradient-to-b from-background-light via-background-light to-transparent">
         <h1 className="text-3xl font-header italic text-ink">Habit Trace</h1>
-        <p className="text-pencil font-mono text-xs mt-1 tracking-wider">Track what you actually do, not what you wish you did</p>
+        <p className="text-pencil font-mono text-sm mt-1 tracking-wider">Track what you actually do, not what you wish you did</p>
       </div>
 
       {/* Content */}
@@ -206,7 +206,7 @@ export default function HabitTrace() {
               <button
                 onClick={handleAddHabit}
                 disabled={!newHabitName.trim()}
-                className="px-3 py-1 bg-primary text-white text-xs font-body font-semibold rounded-full hover:bg-primary-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-3 py-1 bg-primary text-white text-sm font-body font-semibold rounded-full hover:bg-primary-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Add
               </button>
@@ -295,7 +295,7 @@ export default function HabitTrace() {
                     </button>
                   )}
 
-                  <span className="font-mono text-[10px] text-pencil ml-auto flex-none">
+                  <span className="font-mono text-[12px] text-pencil ml-auto flex-none">
                     {habit.streak > 0 && (
                       <span className={colorToText(habit.color)}>{habit.streak}d</span>
                     )}
@@ -353,10 +353,10 @@ export default function HabitTrace() {
                       className="flex flex-col items-center justify-end"
                       style={{ width: CELL_W }}
                     >
-                      <span className={`font-handwriting text-[10px] leading-none ${day.isToday ? 'text-primary font-bold' : 'text-pencil'}`}>
+                      <span className={`font-handwriting text-[12px] leading-none ${day.isToday ? 'text-primary font-bold' : 'text-pencil'}`}>
                         {day.dayName}
                       </span>
-                      <span className={`font-display text-xs leading-tight ${day.isToday ? 'text-primary font-bold' : 'text-ink/50'}`}>
+                      <span className={`font-display text-sm leading-tight ${day.isToday ? 'text-primary font-bold' : 'text-ink/50'}`}>
                         {day.dayNum}
                       </span>
                     </div>

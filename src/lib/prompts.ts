@@ -120,10 +120,12 @@ function getContextualPrompt(data: {
   const yesterday = yesterdayStr();
 
   // ── Check for overdue tasks (tasks from before today still open) ──
+  // Parked tasks (date === '') are intentionally unscheduled, not overdue
   const overdueTasks = entries.filter(
     (e) =>
       e.type === 'task' &&
       e.status === 'todo' &&
+      e.date !== '' &&
       e.date < today,
   );
   if (overdueTasks.length > 0) {

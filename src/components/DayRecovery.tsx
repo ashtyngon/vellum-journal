@@ -16,8 +16,9 @@ const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) =>
   const today = todayStr();
 
   // All tasks that need attention: today's undone + overdue from past
+  // Exclude parked tasks (date === '') — those are intentionally unscheduled
   const actionableTasks = entries.filter(
-    (e) => e.type === 'task' && e.status === 'todo' && e.date <= today
+    (e) => e.type === 'task' && e.status === 'todo' && e.date !== '' && e.date <= today
   );
 
   // Track which tasks user wants to keep, park, or defer
@@ -58,7 +59,7 @@ const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) =>
         <p className="font-body text-sm text-pencil">No open tasks. You're clear.</p>
         <button
           onClick={onDismiss}
-          className="mt-2 text-xs font-mono text-primary hover:underline"
+          className="mt-2 text-sm font-mono text-primary hover:underline"
         >
           Dismiss
         </button>
@@ -78,10 +79,10 @@ const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) =>
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-wood-light/15">
         <div>
-          <h3 className="font-mono text-xs text-pencil uppercase tracking-[0.15em]">
+          <h3 className="font-mono text-sm text-pencil uppercase tracking-[0.15em]">
             Reset My Day
           </h3>
-          <p className="font-body text-sm text-ink/70 mt-0.5">
+          <p className="font-body text-base text-ink/70 mt-0.5">
             {actionableTasks.length} task{actionableTasks.length !== 1 ? 's' : ''} — pick what
             you're doing today
           </p>
@@ -115,12 +116,12 @@ const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) =>
               {/* Task title */}
               <div className="flex-1 min-w-0">
                 <span
-                  className={`font-body text-sm text-ink ${decision !== 'keep' ? 'line-through' : ''}`}
+                  className={`font-body text-base text-ink ${decision !== 'keep' ? 'line-through' : ''}`}
                 >
                   {task.title}
                 </span>
                 {isOverdue && (
-                  <span className="ml-2 font-mono text-[11px] text-tension/60 uppercase tracking-wider">
+                  <span className="ml-2 font-mono text-sm text-tension/60 uppercase tracking-wider">
                     overdue
                   </span>
                 )}
@@ -130,7 +131,7 @@ const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) =>
               <div className="flex items-center gap-1.5 flex-shrink-0">
                 <button
                   onClick={() => setDecision(task.id, 'keep')}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-mono uppercase tracking-wider transition-all ${
+                  className={`px-3 py-1.5 rounded-md text-sm font-mono uppercase tracking-wider transition-all ${
                     decision === 'keep'
                       ? 'bg-primary/12 text-primary'
                       : 'text-pencil/50 hover:text-pencil hover:bg-surface-light'
@@ -140,7 +141,7 @@ const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) =>
                 </button>
                 <button
                   onClick={() => setDecision(task.id, 'park')}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-mono uppercase tracking-wider transition-all ${
+                  className={`px-3 py-1.5 rounded-md text-sm font-mono uppercase tracking-wider transition-all ${
                     decision === 'park'
                       ? 'bg-sage/12 text-sage'
                       : 'text-pencil/50 hover:text-pencil hover:bg-surface-light'
@@ -151,7 +152,7 @@ const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) =>
                 </button>
                 <button
                   onClick={() => setDecision(task.id, 'defer')}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-mono uppercase tracking-wider transition-all ${
+                  className={`px-3 py-1.5 rounded-md text-sm font-mono uppercase tracking-wider transition-all ${
                     decision === 'defer'
                       ? 'bg-bronze/12 text-bronze'
                       : 'text-pencil/50 hover:text-pencil hover:bg-surface-light'
@@ -167,12 +168,12 @@ const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) =>
 
       {/* Footer */}
       <div className="flex items-center justify-between px-5 py-3 border-t border-wood-light/15 bg-surface-light/30">
-        <span className="font-mono text-xs text-pencil">
+        <span className="font-mono text-sm text-pencil">
           Keeping {keepCount} of {actionableTasks.length}
         </span>
         <button
           onClick={handleApply}
-          className="px-5 py-2 rounded-lg bg-primary text-white font-body text-sm hover:bg-primary/90 transition-colors shadow-soft"
+          className="px-5 py-2.5 rounded-lg bg-primary text-white font-body text-base hover:bg-primary/90 transition-colors shadow-soft"
         >
           Apply
         </button>

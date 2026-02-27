@@ -284,6 +284,16 @@ export default function DailyLeaf() {
     return () => { document.documentElement.classList.remove('focus-mode'); };
   }, [focusMode]);
 
+  // ESC key exits focus mode
+  useEffect(() => {
+    if (!focusMode) return;
+    const handleEsc = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape') setFocusMode(false);
+    };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [focusMode]);
+
   const [planAddInput, setPlanAddInput] = useState('');
   const planInputRef = useRef<HTMLInputElement>(null);
   const [planTarget, setPlanTarget] = useState<'today' | 'tomorrow' | 'week'>('tomorrow');
@@ -374,9 +384,11 @@ export default function DailyLeaf() {
 
   // Overdue tasks: incomplete tasks from days before REAL today (not the viewed date)
   // Only shown when viewing today — not when browsing past days
+  // Overdue = has a real date AND that date is before today.
+  // Tasks with date === '' are in the parking lot — NOT overdue.
   const overdueTasks = useMemo(
     () => isViewingToday
-      ? entries.filter((e) => e.type === 'task' && e.status === 'todo' && e.date < realToday)
+      ? entries.filter((e) => e.type === 'task' && e.status === 'todo' && e.date !== '' && e.date < realToday)
       : [],
     [entries, realToday, isViewingToday],
   );
@@ -401,9 +413,9 @@ export default function DailyLeaf() {
     if (overdueTasks.length === 0) return;
     batchUpdateEntries(overdueTasks.map(t => ({
       id: t.id,
-      updates: { date: today, section: undefined, timeBlock: undefined, movedCount: (t.movedCount ?? 0) + 1 },
+      updates: { date: '', section: undefined, timeBlock: undefined },
     })));
-  }, [overdueTasks, today, batchUpdateEntries]);
+  }, [overdueTasks, batchUpdateEntries]);
 
   const rescheduleOne = useCallback((id: string) => {
     const task = overdueTasks.find(t => t.id === id);
@@ -816,7 +828,7 @@ export default function DailyLeaf() {
               {/* Intention — only for today/tomorrow (not week) */}
               {planTarget !== 'week' && (
                 <div>
-                  <label className="block font-mono text-[11px] text-accent uppercase tracking-[0.15em] mb-1.5">
+                  <label className="block font-mono text-[13px] text-accent uppercase tracking-[0.15em] mb-1.5">
                     {planTarget === 'today' ? "Today\u2019s intention" : "Tomorrow\u2019s intention"}
                   </label>
                   <input
@@ -833,7 +845,7 @@ export default function DailyLeaf() {
               {/* Entries list */}
               {planEntries.length > 0 && (
                 <div>
-                  <p className="font-mono text-[11px] text-pencil uppercase tracking-[0.15em] mb-2 flex items-center gap-1.5">
+                  <p className="font-mono text-[13px] text-pencil uppercase tracking-[0.15em] mb-2 flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-[14px]">checklist</span>
                     {planEntries.length} item{planEntries.length !== 1 ? 's' : ''} {planTarget === 'today' ? 'today' : 'planned'}
                   </p>
@@ -846,12 +858,12 @@ export default function DailyLeaf() {
                         </span>
                         {/* Show date label in week view */}
                         {planTarget === 'week' && entry.date !== today && (
-                          <span className="font-mono text-[11px] text-pencil/70 flex-shrink-0">
+                          <span className="font-mono text-[13px] text-pencil/70 flex-shrink-0">
                             {new Date(entry.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}
                           </span>
                         )}
                         {entry.type === 'event' && entry.time && (
-                          <span className="font-mono text-[11px] text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded flex-shrink-0">{entry.time}</span>
+                          <span className="font-mono text-[13px] text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded flex-shrink-0">{entry.time}</span>
                         )}
                         <button onClick={() => deleteEntry(entry.id)} className="opacity-0 group-hover/item:opacity-100 text-ink-light/40 hover:text-tension transition-all shrink-0">
                           <span className="material-symbols-outlined text-[16px]">close</span>
@@ -997,13 +1009,13 @@ export default function DailyLeaf() {
                     {!isViewingToday && (
                       <button
                         onClick={goToToday}
-                        className="flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-mono uppercase tracking-wider bg-primary/10 text-primary transition-all"
+                        className="flex-shrink-0 px-3 py-1.5 rounded-full text-[13px] font-mono uppercase tracking-wider bg-primary/10 text-primary transition-all"
                       >
                         Today
                       </button>
                     )}
                   </div>
-                  <span className="font-body text-xs sm:text-sm text-pencil/70 mt-0.5 block ml-1">
+                  <span className="font-body text-sm sm:text-sm text-pencil/70 mt-0.5 block ml-1">
                     {isViewingPast ? 'Looking back' : isViewingFuture ? 'Looking ahead' : `Good ${getGreeting()}`}
                   </span>
                 </div>
@@ -1024,7 +1036,7 @@ export default function DailyLeaf() {
                           className="transition-all duration-700 ease-out"
                         />
                       </svg>
-                      <span className="absolute font-mono text-xs text-ink tabular-nums">
+                      <span className="absolute font-mono text-sm text-ink tabular-nums">
                         {completedCount}/{totalTaskCount}
                       </span>
                     </div>
@@ -1198,7 +1210,7 @@ export default function DailyLeaf() {
                   </button>
                 </div>
                 {!isViewingToday && (
-                  <button onClick={goToToday} className="mt-1 text-xs font-mono text-primary/60 hover:text-primary transition-colors uppercase tracking-wider">
+                  <button onClick={goToToday} className="mt-1 text-sm font-mono text-primary/60 hover:text-primary transition-colors uppercase tracking-wider">
                     Back to today
                   </button>
                 )}
@@ -1232,7 +1244,7 @@ export default function DailyLeaf() {
           {!focusMode && !showDayRecovery && todayTasks.length > 0 && (
             <button
               onClick={() => setShowDayRecovery(true)}
-              className="mb-3 inline-flex items-center gap-1.5 font-mono text-xs text-pencil hover:text-primary uppercase tracking-widest transition-all px-3 py-2 rounded-lg border border-wood-light/20 hover:border-primary/20 hover:bg-primary/5"
+              className="mb-3 inline-flex items-center gap-1.5 font-mono text-sm text-pencil hover:text-primary uppercase tracking-widest transition-all px-4 py-2.5 rounded-lg border border-wood-light/20 hover:border-primary/20 hover:bg-primary/5"
             >
               Reset My Day
             </button>
@@ -1262,13 +1274,13 @@ export default function DailyLeaf() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={(e) => { e.stopPropagation(); rescheduleAll(); }}
-                    className="text-xs font-mono text-primary hover:text-primary/80 bg-primary/10 hover:bg-primary/15 px-3 py-1.5 rounded-full transition-colors uppercase tracking-wider"
+                    className="text-sm font-mono text-primary hover:text-primary/80 bg-primary/10 hover:bg-primary/15 px-3 py-1.5 rounded-full transition-colors uppercase tracking-wider"
                   >
                     &rarr; Today
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); parkAll(); }}
-                    className="text-xs font-mono text-pencil hover:text-ink bg-wood-light/20 hover:bg-wood-light/30 px-3 py-1.5 rounded-full transition-colors uppercase tracking-wider"
+                    className="text-sm font-mono text-pencil hover:text-ink bg-wood-light/20 hover:bg-wood-light/30 px-3 py-1.5 rounded-full transition-colors uppercase tracking-wider"
                   >
                     &rarr; Later
                   </button>
@@ -1283,7 +1295,7 @@ export default function DailyLeaf() {
                     <div key={task.id} className="group/ot flex items-center gap-3 py-2 px-3 -mx-1 rounded-lg hover:bg-surface-light transition-colors">
                       <span className="inline-block size-2.5 rounded-full bg-pencil/30 flex-shrink-0" />
                       <span className="flex-1 font-body text-base text-ink truncate">{task.title}</span>
-                      <span className="font-mono text-[11px] text-pencil/70 flex-shrink-0">
+                      <span className="font-mono text-[13px] text-pencil/70 flex-shrink-0">
                         {new Date(task.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </span>
                       <div className="flex items-center gap-2.5 sm:opacity-0 sm:group-hover/ot:opacity-100 transition-opacity flex-shrink-0">
@@ -1311,7 +1323,7 @@ export default function DailyLeaf() {
                 <button
                   key={pill.type}
                   onClick={() => setEntryType(pill.type)}
-                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full font-mono text-xs uppercase tracking-wider transition-all ${
+                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full font-mono text-sm uppercase tracking-wider transition-all ${
                     entryType === pill.type
                       ? 'bg-primary/12 text-primary font-medium border border-primary/25'
                       : 'text-pencil hover:bg-surface-light border border-transparent'
@@ -1325,7 +1337,7 @@ export default function DailyLeaf() {
               ))}
               <button
                 onClick={() => setShowSignifierHelp((v) => !v)}
-                className="ml-auto font-mono text-[11px] text-pencil hover:text-primary transition-colors uppercase tracking-widest px-2 py-1.5"
+                className="ml-auto font-mono text-[13px] text-pencil hover:text-primary transition-colors uppercase tracking-widest px-2 py-1.5"
               >
                 Key
               </button>
@@ -1335,7 +1347,7 @@ export default function DailyLeaf() {
               <div className="mb-3 px-4 py-3 bg-surface-light border border-wood-light/15 rounded-lg">
                 <div className="flex flex-wrap gap-x-5 gap-y-1">
                   {SIGNIFIER_TOOLTIPS.map((s) => (
-                    <span key={s.symbol} className="font-mono text-xs text-pencil">
+                    <span key={s.symbol} className="font-mono text-sm text-pencil">
                       <span className="text-ink font-semibold mr-1">{s.symbol}</span>
                       {s.meaning}
                     </span>
@@ -1447,27 +1459,27 @@ export default function DailyLeaf() {
                       {/* Meta row */}
                       <div className="flex items-center gap-2 mt-0.5">
                         {isNote && !isEditing && (
-                          <span className="font-mono text-[11px] text-pencil/60 uppercase tracking-widest">note</span>
+                          <span className="font-mono text-[13px] text-pencil/60 uppercase tracking-widest">note</span>
                         )}
                         {!isEditing && isEvent && entry.time && (
-                          <span className="font-mono text-xs text-primary/70 bg-primary/8 px-2 py-0.5 rounded-md">{entry.time}</span>
+                          <span className="font-mono text-sm text-primary/70 bg-primary/8 px-2 py-0.5 rounded-md">{entry.time}</span>
                         )}
                         {!isEditing && isTask && entry.timeBlock && !isInactive && (
                           <button
                             onClick={(e) => { e.stopPropagation(); updateEntry(entry.id, { timeBlock: undefined }); }}
-                            className="font-mono text-xs text-primary/70 bg-primary/8 px-2 py-0.5 rounded-md hover:bg-primary/15 hover:line-through transition-all"
+                            className="font-mono text-sm text-primary/70 bg-primary/8 px-2 py-0.5 rounded-md hover:bg-primary/15 hover:line-through transition-all"
                             title="Click to unpin from time"
                           >
                             {entry.timeBlock}
                           </button>
                         )}
                         {!isEditing && isTask && (entry.movedCount ?? 0) > 0 && (
-                          <span className="text-[11px] font-mono text-tension/60" title={`Rescheduled ${entry.movedCount} time(s)`}>
+                          <span className="text-[13px] font-mono text-tension/60" title={`Rescheduled ${entry.movedCount} time(s)`}>
                             ↻{entry.movedCount}
                           </span>
                         )}
                         {!isEditing && entry.tags && entry.tags.length > 0 && (
-                          <span className="font-mono text-[11px] text-pencil/70 bg-wood-light/15 px-1.5 py-0.5 rounded">
+                          <span className="font-mono text-[13px] text-pencil/70 bg-wood-light/15 px-1.5 py-0.5 rounded">
                             {entry.tags[0]}
                           </span>
                         )}
@@ -1497,7 +1509,7 @@ export default function DailyLeaf() {
                           </button>
                         </div>
                         {isTask && !isInactive && (
-                          <button onClick={() => setStuckTask(entry)} className="font-mono text-[11px] text-pencil hover:text-primary bg-surface-light hover:bg-primary/10 px-2.5 py-1.5 rounded-lg transition-colors uppercase tracking-wider">
+                          <button onClick={() => setStuckTask(entry)} className="font-mono text-[13px] text-pencil hover:text-primary bg-surface-light hover:bg-primary/10 px-2.5 py-1.5 rounded-lg transition-colors uppercase tracking-wider">
                             Unblock
                           </button>
                         )}
@@ -1601,14 +1613,14 @@ export default function DailyLeaf() {
                     <div className="flex items-center gap-2.5">
                       <span className="material-symbols-outlined text-primary/60 text-xl">event</span>
                       <span className="font-body text-base font-medium text-ink">Upcoming</span>
-                      <span className="font-mono text-xs text-pencil/50 tabular-nums">{upcomingEvents.length}</span>
+                      <span className="font-mono text-sm text-pencil/50 tabular-nums">{upcomingEvents.length}</span>
                     </div>
                     <span className="material-symbols-outlined text-pencil text-lg transition-transform group-open/section:rotate-180">expand_more</span>
                   </summary>
                   <div className="px-5 pb-4 space-y-2">
                     {upcomingEvents.slice(0, 12).map((ev) => (
                       <div key={ev.id} className="group/ev flex items-center gap-3">
-                        <span className="font-mono text-xs text-primary/60 whitespace-nowrap min-w-[80px]">
+                        <span className="font-mono text-sm text-primary/60 whitespace-nowrap min-w-[80px]">
                           {formatEventDate(ev.date, today, tomorrow)}
                           {ev.time && ` ${ev.time}`}
                         </span>
@@ -1698,7 +1710,7 @@ export default function DailyLeaf() {
                             {habit.name}
                           </span>
                           {habit.streak > 0 && (
-                            <span className="text-[11px] font-mono text-pencil/60">{habit.streak}d</span>
+                            <span className="text-[13px] font-mono text-pencil/60">{habit.streak}d</span>
                           )}
                         </button>
                       );
@@ -1714,7 +1726,7 @@ export default function DailyLeaf() {
                     <div className="flex items-center gap-2.5">
                       <span className="material-symbols-outlined text-primary/60 text-xl">emoji_events</span>
                       <span className="font-body text-base font-medium text-ink">Wins</span>
-                      <span className="font-mono text-xs text-pencil/50 tabular-nums">{todaysCompletedTasks.length + todaysJournalWins.length}</span>
+                      <span className="font-mono text-sm text-pencil/50 tabular-nums">{todaysCompletedTasks.length + todaysJournalWins.length}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <button onClick={(e) => { e.preventDefault(); fireConfetti(); }} className="text-primary/50 hover:text-primary transition-colors">
@@ -1782,7 +1794,7 @@ export default function DailyLeaf() {
                     <span className="font-body text-base font-medium text-ink">Journal Exercises</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-[11px] text-primary/50 uppercase tracking-wider">
+                    <span className="font-mono text-[13px] text-primary/50 uppercase tracking-wider">
                       {getTimeLabel()} picks
                     </span>
                     <span className="material-symbols-outlined text-pencil text-lg transition-transform group-open/section:rotate-180">expand_more</span>
@@ -1814,10 +1826,10 @@ export default function DailyLeaf() {
                               <div className="flex items-center gap-1.5 mb-0.5">
                                 <span className="font-body text-sm font-medium text-ink">{method.name}</span>
                                 {isSuggested && (
-                                  <span className="font-mono text-[11px] text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded-full uppercase tracking-widest">now</span>
+                                  <span className="font-mono text-[13px] text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded-full uppercase tracking-widest">now</span>
                                 )}
                               </div>
-                              <p className="font-body text-xs text-pencil leading-relaxed line-clamp-2">{method.description}</p>
+                              <p className="font-body text-sm text-pencil leading-relaxed line-clamp-2">{method.description}</p>
                             </div>
                           </div>
                         </button>
@@ -1834,7 +1846,7 @@ export default function DailyLeaf() {
                     <div className="flex items-center gap-2.5">
                       <span className="material-symbols-outlined text-primary/60 text-xl">menu_book</span>
                       <span className="font-body text-base font-medium text-ink">Journal Entries</span>
-                      <span className="font-mono text-xs text-pencil/50 tabular-nums">{todaysJournalEntries.length}</span>
+                      <span className="font-mono text-sm text-pencil/50 tabular-nums">{todaysJournalEntries.length}</span>
                     </div>
                     <span className="material-symbols-outlined text-pencil text-lg transition-transform group-open/section:rotate-180">expand_more</span>
                   </summary>
@@ -1844,7 +1856,7 @@ export default function DailyLeaf() {
                         {entry.title && <p className="font-body text-base font-medium text-ink/70 mb-0.5 truncate">{entry.title}</p>}
                         <p className="text-sm font-body text-ink/45 italic line-clamp-2">{entry.content}</p>
                         {entry.method && (
-                          <span className="inline-block mt-1.5 font-mono text-[11px] text-primary/60 bg-primary/8 px-1.5 py-0.5 rounded uppercase tracking-widest">{entry.method}</span>
+                          <span className="inline-block mt-1.5 font-mono text-[13px] text-primary/60 bg-primary/8 px-1.5 py-0.5 rounded uppercase tracking-widest">{entry.method}</span>
                         )}
                       </Link>
                     ))}

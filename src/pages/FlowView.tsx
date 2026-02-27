@@ -278,35 +278,35 @@ function TaskCard({
           {/* Metadata row */}
           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
             {isHabitTask && (
-              <span className="text-[10px] font-mono text-sage bg-sage/10 px-1.5 py-0.5 rounded flex items-center gap-0.5">
-                <span className="material-symbols-outlined text-[10px]">routine</span>
+              <span className="text-[12px] font-mono text-sage bg-sage/10 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                <span className="material-symbols-outlined text-[12px]">routine</span>
                 habit
               </span>
             )}
             {entry.timeBlock && (
               <button
                 onClick={e => { e.stopPropagation(); onUpdate(entry.id, { timeBlock: undefined }); }}
-                className="text-[10px] font-mono text-primary bg-primary/5 px-1.5 py-0.5 rounded hover:bg-primary/15 hover:line-through transition-all flex items-center gap-0.5 group/time"
+                className="text-[12px] font-mono text-primary bg-primary/5 px-1.5 py-0.5 rounded hover:bg-primary/15 hover:line-through transition-all flex items-center gap-0.5 group/time"
                 title="Click to unpin from time"
               >
                 {formatTime12(entry.timeBlock)}
-                <span className="material-symbols-outlined text-[10px] opacity-0 group-hover/time:opacity-100 transition-opacity">close</span>
+                <span className="material-symbols-outlined text-[12px] opacity-0 group-hover/time:opacity-100 transition-opacity">close</span>
               </button>
             )}
             {entry.duration && (
-              <span className="text-[10px] font-mono text-pencil">{entry.duration}</span>
+              <span className="text-[12px] font-mono text-pencil">{entry.duration}</span>
             )}
             {entry.tags?.map(tag => (
-              <span key={tag} className="text-[10px] font-mono text-pencil bg-background-light px-1.5 rounded">{tag}</span>
+              <span key={tag} className="text-[12px] font-mono text-pencil bg-background-light px-1.5 rounded">{tag}</span>
             ))}
             {(entry.links ?? []).length > 0 && (
-              <span className="text-[10px] font-mono text-primary/60" title={`${entry.links!.length} link(s)`}>
+              <span className="text-[12px] font-mono text-primary/60" title={`${entry.links!.length} link(s)`}>
                 <span className="material-symbols-outlined text-[12px] align-middle">link</span>
                 {entry.links!.length}
               </span>
             )}
             {(entry.movedCount ?? 0) > 0 && (
-              <span className="text-[10px] font-mono text-rose" title={`Moved ${entry.movedCount} time(s)`}>
+              <span className="text-[12px] font-mono text-rose" title={`Moved ${entry.movedCount} time(s)`}>
                 ↻{entry.movedCount}
               </span>
             )}
@@ -350,12 +350,12 @@ function EventCard({ entry, onOpenDetail }: { entry: RapidLogEntry; onOpenDetail
         <p className="text-sm font-body text-ink leading-snug group-hover:text-primary/80 transition-colors">{entry.title}</p>
         <div className="flex items-center gap-1.5 mt-1">
           {entry.time && (
-            <span className="text-[10px] font-mono text-sage bg-sage/10 px-1.5 py-0.5 rounded">
+            <span className="text-[12px] font-mono text-sage bg-sage/10 px-1.5 py-0.5 rounded">
               {formatTime12(entry.time)}
             </span>
           )}
           {entry.duration && (
-            <span className="text-[10px] font-mono text-pencil">{entry.duration}</span>
+            <span className="text-[12px] font-mono text-pencil">{entry.duration}</span>
           )}
           {entry.description && (
             <span className="text-pencil/40"><span className="material-symbols-outlined text-[12px]">description</span></span>
@@ -444,13 +444,13 @@ function SectionHeader({
       )}
 
       {/* Time range */}
-      <span className="font-mono text-[10px] text-pencil tracking-wider shrink-0">
+      <span className="font-mono text-[12px] text-pencil tracking-wider shrink-0">
         {formatHour12(section.startHour)} - {formatHour12(section.endHour)}
       </span>
 
       {/* Counts badge */}
       {(taskCount > 0 || eventCount > 0) && (
-        <span className="font-mono text-[10px] text-pencil bg-surface-light px-1.5 py-0.5 rounded shrink-0">
+        <span className="font-mono text-[12px] text-pencil bg-surface-light px-1.5 py-0.5 rounded shrink-0">
           {taskCount > 0 && `${taskCount}t`}
           {taskCount > 0 && eventCount > 0 && ' '}
           {eventCount > 0 && `${eventCount}e`}
@@ -624,21 +624,21 @@ function ResizableTimelineCard({
                 if (e.key === 'Enter') commitEdit();
                 if (e.key === 'Escape') { setTitle(entry.title); setEditing(false); }
               }}
-              className="w-full bg-transparent border-b border-primary/40 text-xs font-body text-ink outline-none py-0.5"
+              className="w-full bg-transparent border-b border-primary/40 text-sm font-body text-ink outline-none py-0.5"
             />
           ) : (
             <p
-              className={`text-xs font-body text-ink leading-tight cursor-text hover:text-primary/80 transition-colors ${isDone ? 'line-through decoration-sage/50' : ''}`}
+              className={`text-sm font-body text-ink leading-tight cursor-text hover:text-primary/80 transition-colors ${isDone ? 'line-through decoration-sage/50' : ''}`}
               onClick={() => setEditing(true)}
             >
               {entry.title}
             </p>
           )}
           <div className="flex items-center gap-1 mt-0.5">
-            <span className="text-[11px] font-mono text-primary/70">
+            <span className="text-[13px] font-mono text-primary/70">
               {formatTime12(entry.timeBlock!)}
             </span>
-            <span className="text-[11px] font-mono text-pencil/50">
+            <span className="text-[13px] font-mono text-pencil/50">
               {minutesToDurationStr(durationMin)}
             </span>
           </div>
@@ -769,10 +769,10 @@ function ZoomedSection({
           className="text-pencil hover:text-primary transition-colors flex items-center gap-1"
         >
           <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-          <span className="text-xs font-mono">Sections</span>
+          <span className="text-sm font-mono">Sections</span>
         </button>
         <h4 className="flex-1 font-display italic text-base text-ink">{customName}</h4>
-        <span className="font-mono text-[10px] text-pencil tracking-wider">
+        <span className="font-mono text-[12px] text-pencil tracking-wider">
           {formatHour12(section.startHour)} - {formatHour12(section.endHour)}
         </span>
       </div>
@@ -798,7 +798,7 @@ function ZoomedSection({
                 style={{ top: `${slotIdx * SLOT_HEIGHT}px`, height: `${SLOT_HEIGHT}px` }}
               >
                 {/* Time label */}
-                <span className={`font-mono text-[10px] w-14 text-right shrink-0 pt-1.5 pr-2 ${
+                <span className={`font-mono text-[12px] w-14 text-right shrink-0 pt-1.5 pr-2 ${
                   isHourMark ? 'text-pencil font-semibold' : 'text-pencil/40'
                 }`}>
                   {slot.label}
@@ -854,7 +854,7 @@ function ZoomedSection({
       {/* Unscheduled tasks in this section */}
       {unscheduled.length > 0 && (
         <div className="px-3 pb-3 pt-1 border-t border-wood-light/30">
-          <p className="text-[10px] font-mono text-pencil uppercase tracking-widest mb-2">Unscheduled</p>
+          <p className="text-[12px] font-mono text-pencil uppercase tracking-widest mb-2">Unscheduled</p>
           <div className="space-y-1.5">
             {unscheduled.map(t => (
               <TaskCard
@@ -959,10 +959,10 @@ function AddTaskInline({
         className="w-full bg-transparent text-sm font-body text-ink outline-none placeholder:text-pencil/50"
       />
       <div className="flex items-center justify-end gap-2 mt-2">
-        <button onClick={() => { setTitle(''); setOpen(false); }} className="text-xs text-pencil hover:text-ink transition-colors">
+        <button onClick={() => { setTitle(''); setOpen(false); }} className="text-sm text-pencil hover:text-ink transition-colors">
           Cancel
         </button>
-        <button onClick={submit} className="text-xs text-white bg-primary hover:bg-primary-dark px-3 py-1 rounded transition-colors">
+        <button onClick={submit} className="text-sm text-white bg-primary hover:bg-primary-dark px-3 py-1 rounded transition-colors">
           Add
         </button>
       </div>
@@ -1042,7 +1042,7 @@ function ParkingLotItem({
           {entry.tags && entry.tags.length > 0 && (
             <div className="mt-1 flex items-center gap-1.5">
               {entry.tags.map(tag => (
-                <span key={tag} className="text-[10px] font-mono text-pencil bg-background-light px-1.5 rounded">{tag}</span>
+                <span key={tag} className="text-[12px] font-mono text-pencil bg-background-light px-1.5 rounded">{tag}</span>
               ))}
             </div>
           )}
@@ -1170,7 +1170,7 @@ function TaskDetailModal({
         <div className="px-5 pb-5 space-y-4">
           {/* Description */}
           <div>
-            <label className="text-[10px] font-mono text-pencil uppercase tracking-widest mb-1.5 block">Description</label>
+            <label className="text-[12px] font-mono text-pencil uppercase tracking-widest mb-1.5 block">Description</label>
             <textarea
               value={desc}
               onChange={e => setDesc(e.target.value)}
@@ -1180,7 +1180,7 @@ function TaskDetailModal({
             />
             {/* Render clickable links in description preview */}
             {desc && (
-              <div className="mt-1 text-xs font-body text-ink-light leading-relaxed">
+              <div className="mt-1 text-sm font-body text-ink-light leading-relaxed">
                 {renderTextWithLinks(desc)}
               </div>
             )}
@@ -1188,7 +1188,7 @@ function TaskDetailModal({
 
           {/* Links */}
           <div>
-            <label className="text-[10px] font-mono text-pencil uppercase tracking-widest mb-1.5 block">Links</label>
+            <label className="text-[12px] font-mono text-pencil uppercase tracking-widest mb-1.5 block">Links</label>
             {(entry.links ?? []).length > 0 && (
               <div className="space-y-1.5 mb-2">
                 {entry.links!.map(url => {
@@ -1200,7 +1200,7 @@ function TaskDetailModal({
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs font-mono text-primary hover:text-primary/80 underline underline-offset-2 decoration-primary/30 truncate flex-1"
+                        className="text-sm font-mono text-primary hover:text-primary/80 underline underline-offset-2 decoration-primary/30 truncate flex-1"
                       >
                         {shortUrl.length > 50 ? shortUrl.slice(0, 50) + '…' : shortUrl}
                       </a>
@@ -1223,7 +1223,7 @@ function TaskDetailModal({
                 onChange={e => setLinkInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') addLink(); }}
                 placeholder="Paste a URL…"
-                className="flex-1 bg-transparent text-xs font-mono text-ink border-b border-dashed border-wood-light/30 outline-none py-1.5 placeholder:text-pencil/30 focus:border-primary/40 transition-colors"
+                className="flex-1 bg-transparent text-sm font-mono text-ink border-b border-dashed border-wood-light/30 outline-none py-1.5 placeholder:text-pencil/30 focus:border-primary/40 transition-colors"
               />
               <button
                 onClick={addLink}
@@ -1236,7 +1236,7 @@ function TaskDetailModal({
           </div>
 
           {/* Metadata row */}
-          <div className="flex items-center gap-3 flex-wrap text-[10px] font-mono text-pencil/60 pt-2 border-t border-wood-light/15">
+          <div className="flex items-center gap-3 flex-wrap text-[12px] font-mono text-pencil/60 pt-2 border-t border-wood-light/15">
             {entry.timeBlock && (
               <span className="flex items-center gap-1">
                 <span className="material-symbols-outlined text-[12px]">schedule</span>
@@ -1261,7 +1261,7 @@ function TaskDetailModal({
           <div className="flex justify-end pt-1">
             <button
               onClick={() => { onDelete(entry.id); onClose(); }}
-              className="text-xs font-body text-pencil/40 hover:text-rose transition-colors flex items-center gap-1"
+              className="text-sm font-body text-pencil/40 hover:text-rose transition-colors flex items-center gap-1"
             >
               <span className="material-symbols-outlined text-[14px]">delete</span>
               Delete {entry.type === 'event' ? 'event' : 'task'}
@@ -1451,7 +1451,7 @@ function SectionBody({
 
       {/* Empty state */}
       {tasks.length === 0 && events.length === 0 && (
-        <p className="text-xs font-handwriting text-pencil/40 italic text-center py-3">
+        <p className="text-sm font-handwriting text-pencil/40 italic text-center py-3">
           Drop tasks here or add one below
         </p>
       )}
@@ -1677,11 +1677,11 @@ function DayColumn({
             {info.full}
           </h3>
           {info.isWeekend && (
-            <span className="text-[11px] font-mono text-accent/60 bg-accent/10 px-1.5 py-0.5 rounded">weekend</span>
+            <span className="text-[13px] font-mono text-accent/60 bg-accent/10 px-1.5 py-0.5 rounded">weekend</span>
           )}
         </div>
         <span
-          className={`font-mono text-xs tracking-widest uppercase ${
+          className={`font-mono text-sm tracking-widest uppercase ${
             isToday ? 'text-primary font-bold' :
             info.isWeekend ? 'text-accent/70' :
             'text-bronze'
@@ -1999,7 +1999,7 @@ export default function FlowView() {
     if (ids.length > 1) {
       const ghost = document.createElement('div');
       ghost.textContent = `${ids.length} tasks`;
-      ghost.className = 'fixed -top-[200px] bg-primary text-white text-xs font-mono px-3 py-1.5 rounded-full shadow-lg';
+      ghost.className = 'fixed -top-[200px] bg-primary text-white text-sm font-mono px-3 py-1.5 rounded-full shadow-lg';
       document.body.appendChild(ghost);
       e.dataTransfer.setDragImage(ghost, 40, 15);
       setTimeout(() => ghost.remove(), 0);
@@ -2152,7 +2152,7 @@ export default function FlowView() {
               Parking Lot
             </div>
             {parkingLotEntries.length > 0 && (
-              <div className="mt-auto bg-primary/15 text-primary font-mono text-[10px] font-medium rounded-full w-6 h-6 flex items-center justify-center">
+              <div className="mt-auto bg-primary/15 text-primary font-mono text-[12px] font-medium rounded-full w-6 h-6 flex items-center justify-center">
                 {parkingLotEntries.length}
               </div>
             )}
@@ -2164,7 +2164,7 @@ export default function FlowView() {
           <div className="p-5 pb-2 flex items-center justify-between">
             <div>
               <h2 className="font-display italic text-lg text-ink mb-0.5">Parking Lot</h2>
-              <p className="font-handwriting text-xs text-bronze">Unscheduled tasks</p>
+              <p className="font-handwriting text-sm text-bronze">Unscheduled tasks</p>
             </div>
             <button
               onClick={() => setParkingCollapsed(true)}
@@ -2178,7 +2178,7 @@ export default function FlowView() {
           {/* Task list */}
           <div className="flex-1 overflow-y-auto px-4 py-2 space-y-2 no-scrollbar">
             {parkingLotEntries.length === 0 && (
-              <p className="text-xs font-handwriting text-pencil/40 italic text-center py-6">
+              <p className="text-sm font-handwriting text-pencil/40 italic text-center py-6">
                 All tasks scheduled.
               </p>
             )}
@@ -2199,7 +2199,7 @@ export default function FlowView() {
           {/* Habits — draggable into sections */}
           {habits.length > 0 && (
             <div className="px-4 py-2 border-t border-wood-light/20">
-              <p className="text-[10px] font-mono text-pencil uppercase tracking-widest mb-2">Habits</p>
+              <p className="text-[12px] font-mono text-pencil uppercase tracking-widest mb-2">Habits</p>
               <div className="space-y-1.5">
                 {habits.map(habit => {
                   const isCompleted = habit.completedDates.includes(dateKey);
@@ -2233,11 +2233,11 @@ export default function FlowView() {
                           {isCompleted ? 'check_circle' : 'radio_button_unchecked'}
                         </span>
                       </button>
-                      <span className={`text-xs font-body ${isCompleted ? 'text-pencil line-through' : 'text-ink'}`}>
+                      <span className={`text-sm font-body ${isCompleted ? 'text-pencil line-through' : 'text-ink'}`}>
                         {habit.name}
                       </span>
                       {habit.streak > 0 && (
-                        <span className="text-[11px] font-mono text-pencil/50 ml-auto">{habit.streak}d</span>
+                        <span className="text-[13px] font-mono text-pencil/50 ml-auto">{habit.streak}d</span>
                       )}
                     </div>
                   );
@@ -2269,7 +2269,7 @@ export default function FlowView() {
 
           {/* Footer */}
           <div className="p-4 border-t border-wood-light/30">
-            <div className="flex items-center gap-2 text-xs font-mono text-pencil">
+            <div className="flex items-center gap-2 text-sm font-mono text-pencil">
               <span className="material-symbols-outlined text-[14px]">inventory_2</span>
               <span>{parkingLotEntries.length} unscheduled</span>
             </div>
@@ -2293,7 +2293,7 @@ export default function FlowView() {
           <div className="flex items-center gap-1.5 flex-1 flex-wrap">
             <button
               onClick={() => { setFocusedDay(null); clearSelection(); }}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-mono transition-all ${
+              className={`px-2.5 py-1 rounded-full text-[13px] font-mono transition-all ${
                 focusedDay === null
                   ? 'bg-primary text-white shadow-soft'
                   : 'text-pencil hover:text-ink hover:bg-surface-light'
@@ -2305,7 +2305,7 @@ export default function FlowView() {
               <button
                 key={chip.offset}
                 onClick={() => setFocusedDay(focusedDay === chip.offset ? null : chip.offset)}
-                className={`px-2.5 py-1 rounded-full text-[11px] font-mono transition-all ${
+                className={`px-2.5 py-1 rounded-full text-[13px] font-mono transition-all ${
                   focusedDay === chip.offset
                     ? 'bg-primary text-white shadow-soft'
                     : chip.isWeekend
@@ -2321,7 +2321,7 @@ export default function FlowView() {
             <div className="relative">
               <button
                 onClick={() => setShowDatePicker(!showDatePicker)}
-                className="px-2 py-1 rounded-full text-[11px] font-mono text-pencil hover:text-primary hover:bg-surface-light transition-all flex items-center gap-1"
+                className="px-2 py-1 rounded-full text-[13px] font-mono text-pencil hover:text-primary hover:bg-surface-light transition-all flex items-center gap-1"
                 title="Jump to any date"
               >
                 <span className="material-symbols-outlined text-[14px]">calendar_month</span>
@@ -2342,7 +2342,7 @@ export default function FlowView() {
             {/* Bulk select toggle */}
             <button
               onClick={() => { setBulkMode(!bulkMode); if (bulkMode) clearSelection(); }}
-              className={`px-2 py-1 rounded-full text-[11px] font-mono transition-all flex items-center gap-1 ${
+              className={`px-2 py-1 rounded-full text-[13px] font-mono transition-all flex items-center gap-1 ${
                 bulkMode
                   ? 'bg-primary/10 text-primary ring-1 ring-primary/30'
                   : 'text-pencil hover:text-primary hover:bg-surface-light'
@@ -2351,7 +2351,7 @@ export default function FlowView() {
             >
               <span className="material-symbols-outlined text-[14px]">checklist</span>
               {bulkMode && selectedIds.size > 0 && (
-                <span className="text-[10px]">{selectedIds.size}</span>
+                <span className="text-[12px]">{selectedIds.size}</span>
               )}
             </button>
 
@@ -2359,7 +2359,7 @@ export default function FlowView() {
             {bulkMode && selectedIds.size > 0 && (
               <button
                 onClick={clearSelection}
-                className="px-2 py-1 rounded-full text-[10px] font-mono text-pencil hover:text-rose hover:bg-rose/10 transition-all"
+                className="px-2 py-1 rounded-full text-[12px] font-mono text-pencil hover:text-rose hover:bg-rose/10 transition-all"
               >
                 Clear
               </button>
@@ -2369,7 +2369,7 @@ export default function FlowView() {
           {/* Navigation arrows + hint (only in multi-day view) */}
           {focusedDay === null && (
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono text-pencil/40 hidden sm:inline">scroll to navigate →</span>
+              <span className="text-[12px] font-mono text-pencil/40 hidden sm:inline">scroll to navigate →</span>
               <button
                 onClick={() => scrollToDay('prev')}
                 className="w-7 h-7 rounded-full flex items-center justify-center text-pencil hover:text-primary hover:bg-surface-light transition-colors"
@@ -2416,7 +2416,7 @@ export default function FlowView() {
               {focusedDay !== 0 && (
                 <button
                   onClick={() => setFocusedDay(0)}
-                  className="px-2 py-1 rounded-full text-[10px] font-mono text-primary/70 hover:text-primary hover:bg-primary/5 transition-all ml-1"
+                  className="px-2 py-1 rounded-full text-[12px] font-mono text-primary/70 hover:text-primary hover:bg-primary/5 transition-all ml-1"
                 >
                   Today
                 </button>
@@ -2591,7 +2591,7 @@ function SectionManager({
         title="Manage sections"
       >
         <span className="material-symbols-outlined text-[16px]">dashboard_customize</span>
-        <span className="text-xs font-mono">Sections</span>
+        <span className="text-sm font-mono">Sections</span>
       </button>
     );
   }
@@ -2641,14 +2641,14 @@ function SectionManager({
       <div className="flex items-center gap-2 pt-2 border-t border-wood-light/30">
         <button
           onClick={handleAdd}
-          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-wood-light/50 text-ink-light hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all text-xs font-body"
+          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-wood-light/50 text-ink-light hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all text-sm font-body"
         >
           <span className="material-symbols-outlined text-[14px]">add</span>
           Add Section
         </button>
         <button
           onClick={handleReset}
-          className="px-3 py-2 rounded-lg text-xs font-body text-ink-light hover:text-ink hover:bg-surface-light transition-colors"
+          className="px-3 py-2 rounded-lg text-sm font-body text-ink-light hover:text-ink hover:bg-surface-light transition-colors"
           title="Reset to defaults"
         >
           Reset
@@ -2727,13 +2727,13 @@ function SectionManagerRow({
         />
 
         {/* Time range */}
-        <span className="text-[11px] font-mono text-pencil/60 shrink-0">
+        <span className="text-[13px] font-mono text-pencil/60 shrink-0">
           {formatHour12(section.startHour)}–{formatHour12(section.endHour)}
         </span>
 
         {/* Pinned days hint */}
         {section.pinnedDays && section.pinnedDays.length > 0 && section.pinnedDays.length < 7 && (
-          <span className="text-[11px] font-mono text-primary/50 shrink-0">
+          <span className="text-[13px] font-mono text-primary/50 shrink-0">
             {section.pinnedDays.length === 5 && [1,2,3,4,5].every(d => section.pinnedDays!.includes(d))
               ? 'Wkdays'
               : section.pinnedDays.length === 2 && [0,6].every(d => section.pinnedDays!.includes(d))
@@ -2757,21 +2757,21 @@ function SectionManagerRow({
         <div className="px-3 pb-3 pt-1 space-y-3 border-t border-wood-light/15">
           {/* Time range */}
           <div className="flex items-center gap-2">
-            <label className="text-[10px] font-mono text-pencil/60 w-10 shrink-0">From</label>
+            <label className="text-[12px] font-mono text-pencil/60 w-10 shrink-0">From</label>
             <select
               value={section.startHour}
               onChange={e => onUpdate({ startHour: Number(e.target.value) })}
-              className="flex-1 text-xs font-mono text-ink bg-surface-light/50 border border-wood-light/30 rounded px-2 py-1 outline-none focus:border-primary/40"
+              className="flex-1 text-sm font-mono text-ink bg-surface-light/50 border border-wood-light/30 rounded px-2 py-1 outline-none focus:border-primary/40"
             >
               {Array.from({ length: 24 }, (_, h) => (
                 <option key={h} value={h}>{formatHour12(h)}</option>
               ))}
             </select>
-            <label className="text-[10px] font-mono text-pencil/60 w-6 shrink-0 text-center">to</label>
+            <label className="text-[12px] font-mono text-pencil/60 w-6 shrink-0 text-center">to</label>
             <select
               value={section.endHour}
               onChange={e => onUpdate({ endHour: Number(e.target.value) })}
-              className="flex-1 text-xs font-mono text-ink bg-surface-light/50 border border-wood-light/30 rounded px-2 py-1 outline-none focus:border-primary/40"
+              className="flex-1 text-sm font-mono text-ink bg-surface-light/50 border border-wood-light/30 rounded px-2 py-1 outline-none focus:border-primary/40"
             >
               {Array.from({ length: 24 }, (_, h) => h + 1).map(h => (
                 <option key={h} value={h}>{formatHour12(h % 24)}</option>
@@ -2781,7 +2781,7 @@ function SectionManagerRow({
 
           {/* Color picker */}
           <div className="flex items-center gap-2">
-            <label className="text-[10px] font-mono text-pencil/60 w-10 shrink-0">Color</label>
+            <label className="text-[12px] font-mono text-pencil/60 w-10 shrink-0">Color</label>
             <div className="flex gap-1.5 flex-wrap">
               {SECTION_COLORS.map(c => (
                 <button
@@ -2798,7 +2798,7 @@ function SectionManagerRow({
 
           {/* Pinned days */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-mono text-pencil/60">Days</label>
+            <label className="text-[12px] font-mono text-pencil/60">Days</label>
             <div className="flex items-center gap-1 flex-wrap">
               {(['S', 'M', 'T', 'W', 'T', 'F', 'S'] as const).map((label, dayIdx) => {
                 const pinned = section.pinnedDays ?? [];
@@ -2818,7 +2818,7 @@ function SectionManagerRow({
                         onUpdate({ pinnedDays: [...pinned, dayIdx].sort() });
                       }
                     }}
-                    className={`w-7 h-7 rounded text-[10px] font-mono transition-all ${
+                    className={`w-7 h-7 rounded text-[12px] font-mono transition-all ${
                       isActive
                         ? isAllDays
                           ? 'bg-surface-light text-pencil/60 border border-wood-light/30'
@@ -2847,7 +2847,7 @@ function SectionManagerRow({
                   <button
                     key={preset.label}
                     onClick={() => onUpdate({ pinnedDays: preset.days ? [...preset.days] : undefined })}
-                    className={`text-[11px] font-mono px-2 py-1 rounded transition-all ${
+                    className={`text-[13px] font-mono px-2 py-1 rounded transition-all ${
                       isActive
                         ? 'bg-primary/15 text-primary border border-primary/30'
                         : 'text-pencil/50 hover:text-primary bg-surface-light/50 hover:bg-primary/5 border border-transparent'
@@ -2864,16 +2864,16 @@ function SectionManagerRow({
           <div className="flex justify-end">
             {confirmDelete ? (
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-body text-ink-light">Remove section?</span>
+                <span className="text-[12px] font-body text-ink-light">Remove section?</span>
                 <button
                   onClick={() => { onRemove(); setConfirmDelete(false); }}
-                  className="text-[10px] font-body font-medium text-tension hover:text-tension/80 px-2 py-1 rounded bg-tension/10 hover:bg-tension/15 transition-colors"
+                  className="text-[12px] font-body font-medium text-tension hover:text-tension/80 px-2 py-1 rounded bg-tension/10 hover:bg-tension/15 transition-colors"
                 >
                   Yes
                 </button>
                 <button
                   onClick={() => setConfirmDelete(false)}
-                  className="text-[10px] font-body text-ink-light hover:text-ink px-2 py-1 transition-colors"
+                  className="text-[12px] font-body text-ink-light hover:text-ink px-2 py-1 transition-colors"
                 >
                   No
                 </button>
@@ -2882,7 +2882,7 @@ function SectionManagerRow({
               <button
                 onClick={() => canRemove ? setConfirmDelete(true) : undefined}
                 disabled={!canRemove}
-                className="text-[10px] font-body text-ink-light/50 hover:text-tension disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="text-[12px] font-body text-ink-light/50 hover:text-tension disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 Remove section
               </button>

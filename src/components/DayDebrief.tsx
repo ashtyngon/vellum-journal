@@ -304,7 +304,7 @@ const DayDebrief = ({ todayEntries, date, onSave, onSkip }: DayDebriefProps) => 
                 </span>
               </div>
               <span
-                className={`font-mono text-[10px] uppercase tracking-wider transition-colors ${
+                className={`font-mono text-[12px] uppercase tracking-wider transition-colors ${
                   isSelected ? 'text-primary font-medium' : 'text-pencil'
                 }`}
               >
