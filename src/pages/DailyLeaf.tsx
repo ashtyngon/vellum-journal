@@ -1158,15 +1158,15 @@ export default function DailyLeaf() {
                 const tomorrowTasksFromYesterday = entries.filter(e => e.type === 'task' && e.date === today && e.status === 'todo');
                 if (!yesterdayDebrief || !isViewingToday || tomorrowTasksFromYesterday.length === 0) return null;
                 return (
-                  <div className="mt-4 p-4 rounded-xl bg-surface-light/60 border border-wood-light/20">
+                  <div className="mt-4 p-5 rounded-xl bg-surface-light/60 border border-wood-light/20">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="material-symbols-outlined text-base text-primary/60">nights_stay</span>
-                      <span className="font-mono text-[11px] text-pencil uppercase tracking-[0.15em]">From last night&rsquo;s debrief</span>
+                      <span className="material-symbols-outlined text-lg text-primary/60">nights_stay</span>
+                      <span className="font-mono text-sm text-pencil uppercase tracking-[0.15em]">From last night&rsquo;s debrief</span>
                     </div>
                     {yesterdayDebrief.reflection && (
-                      <p className="font-body text-base text-ink/75 italic mb-2">&ldquo;{yesterdayDebrief.reflection}&rdquo;</p>
+                      <p className="font-body text-lg text-ink/75 italic mb-2">&ldquo;{yesterdayDebrief.reflection}&rdquo;</p>
                     )}
-                    <p className="font-body text-base text-ink/80">
+                    <p className="font-body text-lg text-ink/80">
                       You planned <span className="font-semibold">{tomorrowTasksFromYesterday.length}</span> task{tomorrowTasksFromYesterday.length !== 1 ? 's' : ''} for today.
                       {yesterdayDebrief.planRealism >= 4 && ' Yesterday felt ambitious \u2014 maybe start with your top 3.'}
                       {yesterdayDebrief.planRealism <= 2 && ' Yesterday was light \u2014 you might have room for more.'}
