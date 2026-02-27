@@ -7,12 +7,13 @@ import { todayStr } from '../lib/dateUtils';
 interface DayRecoveryProps {
   entries: RapidLogEntry[];
   onUpdateEntry: (id: string, updates: Partial<RapidLogEntry>) => void;
+  onDeleteEntry: (id: string) => void;
   onDismiss: () => void;
 }
 
 /* ── Component ────────────────────────────────────────────────────── */
 
-const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) => {
+const DayRecovery = ({ entries, onUpdateEntry, onDeleteEntry, onDismiss }: DayRecoveryProps) => {
   const today = todayStr();
 
   // All tasks that need attention: today's undone + carried over from past
@@ -21,20 +22,21 @@ const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) =>
     (e) => e.type === 'task' && e.status === 'todo' && e.date !== '' && e.date <= today
   );
 
-  // Track which tasks user wants to keep, park, or defer
-  // By default everything is "keep" (stays as-is for today)
-  const [decisions, setDecisions] = useState<Record<string, 'keep' | 'park' | 'defer'>>({});
+  // Track which tasks user wants to keep, park, defer, or delete
+  const [decisions, setDecisions] = useState<Record<string, 'keep' | 'park' | 'defer' | 'delete'>>({});
 
   const getDecision = (id: string) => decisions[id] || 'keep';
 
-  const setDecision = (id: string, decision: 'keep' | 'park' | 'defer') => {
+  const setDecision = (id: string, decision: 'keep' | 'park' | 'defer' | 'delete') => {
     setDecisions((prev) => ({ ...prev, [id]: decision }));
   };
 
   const handleApply = () => {
     for (const task of actionableTasks) {
       const d = getDecision(task.id);
-      if (d === 'park') {
+      if (d === 'delete') {
+        onDeleteEntry(task.id);
+      } else if (d === 'park') {
         // Move to parking lot — unschedule entirely (no date, no section, no timeBlock)
         onUpdateEntry(task.id, { date: '', section: undefined, timeBlock: undefined });
       } else if (d === 'defer') {
@@ -52,6 +54,7 @@ const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) =>
   };
 
   const keepCount = actionableTasks.filter((t) => getDecision(t.id) === 'keep').length;
+  const deleteCount = actionableTasks.filter((t) => getDecision(t.id) === 'delete').length;
 
   if (actionableTasks.length === 0) {
     return (
@@ -105,7 +108,7 @@ const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) =>
             <div
               key={task.id}
               className={`flex items-center gap-3 px-5 py-2.5 transition-colors ${
-                decision === 'park' || decision === 'defer' ? 'opacity-40' : ''
+                decision === 'park' || decision === 'defer' || decision === 'delete' ? 'opacity-40' : ''
               }`}
             >
               {/* Priority dot */}
@@ -160,6 +163,18 @@ const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) =>
                 >
                   tomorrow
                 </button>
+                <button
+                  onClick={() => setDecision(task.id, 'delete')}
+                  className={`p-1.5 rounded-md transition-all ${
+                    decision === 'delete'
+                      ? 'bg-tension/12 text-tension'
+                      : 'text-pencil/30 hover:text-tension hover:bg-tension/5'
+                  }`}
+                  title="Delete this task"
+                  aria-label="Delete task"
+                >
+                  <span className="material-symbols-outlined text-[18px]">delete</span>
+                </button>
               </div>
             </div>
           );
@@ -170,6 +185,7 @@ const DayRecovery = ({ entries, onUpdateEntry, onDismiss }: DayRecoveryProps) =>
       <div className="flex items-center justify-between px-5 py-3 border-t border-wood-light/15 bg-surface-light/30">
         <span className="font-mono text-sm text-pencil">
           Keeping {keepCount} of {actionableTasks.length}
+          {deleteCount > 0 && <span className="text-tension"> · deleting {deleteCount}</span>}
         </span>
         <button
           onClick={handleApply}

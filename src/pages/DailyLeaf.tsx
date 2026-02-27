@@ -1237,7 +1237,7 @@ export default function DailyLeaf() {
           {/* Day Recovery */}
           {!focusMode && showDayRecovery && (
             <div className="mb-5">
-              <DayRecovery entries={entries} onUpdateEntry={updateEntry} onDismiss={() => setShowDayRecovery(false)} />
+              <DayRecovery entries={entries} onUpdateEntry={updateEntry} onDeleteEntry={deleteEntry} onDismiss={() => setShowDayRecovery(false)} />
             </div>
           )}
           {!focusMode && !showDayRecovery && todayTasks.length > 0 && (
