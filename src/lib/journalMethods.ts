@@ -1,5 +1,5 @@
 /* ── Journal Method Definitions ────────────────────────────────────────
-   Static definitions for all 8 guided journaling methods available
+   Static definitions for all 10 guided journaling methods available
    in vellum-journal. Each method defines a multi-step flow with
    typed inputs (textarea, slider, select, body-picker).
    ──────────────────────────────────────────────────────────────────── */
@@ -476,6 +476,55 @@ export const JOURNAL_METHODS: JournalMethod[] = [
           'What do you want to tell yourself right now, before it happens?',
         placeholder:
           'e.g. You\'re going to be nervous and that\'s fine. The nervousness doesn\'t mean it\'ll go badly -- it means you care. You\'ve done this before and survived every time.',
+        inputType: 'textarea',
+      },
+    ],
+  },
+
+  /* ─── 9. Ketamine Session Prep (Integration) ──────────────────────── */
+  {
+    id: 'ketamine-prep',
+    name: 'Session Prep',
+    description:
+      'Set intentions before your ketamine session.',
+    icon: 'spa',
+    category: 'integration',
+    steps: [
+      {
+        prompt: 'How are you feeling right now — physically and emotionally? Just notice, no fixing.',
+        placeholder:
+          'e.g. My shoulders are tight. I feel a low hum of anxiety but also curiosity. I slept okay. There\'s some dread I can\'t name.',
+        inputType: 'textarea',
+      },
+      {
+        prompt: 'What\'s been weighing on you since your last session? What\'s unfinished?',
+        placeholder:
+          'e.g. I had a flash of grief mid-week that I didn\'t process. The insight about my dad felt true in session but I couldn\'t hold onto it after.',
+        inputType: 'textarea',
+      },
+      {
+        prompt: 'What do you want to bring into this session? Not a goal — an intention or a question.',
+        placeholder:
+          'e.g. I want to sit with the sadness instead of intellectualizing it. Or: why do I feel like I need permission to rest?',
+        inputType: 'textarea',
+      },
+      {
+        prompt: 'Is there anything you\'re afraid might come up? Name it so it has less power.',
+        placeholder:
+          'e.g. I\'m afraid I\'ll feel nothing again. Or that the memory of the apartment will surface and I won\'t be able to handle it.',
+        inputType: 'textarea',
+      },
+      {
+        prompt: 'How safe do you feel right now? What would help you feel safer going in?',
+        placeholder: 'Slide to rate your felt sense of safety.',
+        inputType: 'slider',
+        min: 0,
+        max: 100,
+      },
+      {
+        prompt: 'Write a short message to yourself for when you come back. What do you want to remember?',
+        placeholder:
+          'e.g. Whatever you saw was real. You don\'t have to understand it yet. Drink water. Be gentle tonight.',
         inputType: 'textarea',
       },
     ],
