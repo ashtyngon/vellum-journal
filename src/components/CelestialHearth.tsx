@@ -52,14 +52,16 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+/** Stable ref for a callback — avoids stale closures in effects/timers */
+function useStableCallback<T extends (...args: never[]) => void>(fn: T): T {
+  const ref = useRef(fn);
+  ref.current = fn;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  return useCallback(((...args: never[]) => ref.current(...args)) as T, []);
+}
+
 // Phase durations for progress bar (seconds)
-const PHASE_DURATIONS = {
-  breathing: 60,
-  sorting: 480,
-  journaling: 240,
-  closing: 60,
-};
-const TOTAL_DURATION = Object.values(PHASE_DURATIONS).reduce((a, b) => a + b, 0);
+const TOTAL_DURATION = 60 + 480 + 240 + 60; // breathing + sorting + journaling + closing
 
 type Phase = 'breathing' | 'sorting' | 'journaling-release' | 'journaling-reframe' | 'closing-activate' | 'closing-final';
 
@@ -67,7 +69,7 @@ type Phase = 'breathing' | 'sorting' | 'journaling-release' | 'journaling-refram
 
 export default function CelestialHearth({ onClose }: CelestialHearthProps) {
   const [phase, setPhase] = useState<Phase>('breathing');
-  const [fade, setFade] = useState(true); // true = visible
+  const [fade, setFade] = useState(true);
   const [progress, setProgress] = useState(0);
   const startTimeRef = useRef(Date.now());
 
@@ -80,7 +82,7 @@ export default function CelestialHearth({ onClose }: CelestialHearthProps) {
     return () => clearInterval(interval);
   }, []);
 
-  // Phase transition helper
+  // Phase transition — stable, no deps issues
   const transitionTo = useCallback((next: Phase) => {
     setFade(false);
     setTimeout(() => {
@@ -89,7 +91,7 @@ export default function CelestialHearth({ onClose }: CelestialHearthProps) {
     }, 700);
   }, []);
 
-  // Keyboard support
+  // Keyboard: Escape to close
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -97,6 +99,13 @@ export default function CelestialHearth({ onClose }: CelestialHearthProps) {
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, [onClose]);
+
+  // Stable callbacks for each phase — created once, never change
+  const onBreathingDone = useStableCallback(() => transitionTo('sorting'));
+  const onSortingDone = useStableCallback(() => transitionTo('journaling-release'));
+  const onReleaseDone = useStableCallback(() => transitionTo('journaling-reframe'));
+  const onReframeDone = useStableCallback(() => transitionTo('closing-activate'));
+  const onActivateDone = useStableCallback(() => transitionTo('closing-final'));
 
   return (
     <div className="fixed inset-0 z-[200] flex flex-col" style={{ backgroundColor: '#0f131f' }}>
@@ -122,10 +131,8 @@ export default function CelestialHearth({ onClose }: CelestialHearthProps) {
         </span>
         <button
           onClick={onClose}
-          className="text-xs uppercase tracking-[0.2em] transition-colors duration-500"
+          className="text-xs uppercase tracking-[0.2em] transition-colors duration-500 hover:text-[rgba(233,195,73,0.8)]"
           style={{ color: 'rgba(144,144,151,0.5)' }}
-          onMouseEnter={e => (e.currentTarget.style.color = 'rgba(233,195,73,0.8)')}
-          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(144,144,151,0.5)')}
         >
           exit
         </button>
@@ -134,44 +141,31 @@ export default function CelestialHearth({ onClose }: CelestialHearthProps) {
       {/* ── Main content ───────────────────────────────────────────── */}
       <main
         className="flex-1 flex items-center justify-center px-6 transition-opacity"
-        style={{
-          opacity: fade ? 1 : 0,
-          transitionDuration: '700ms',
-        }}
+        style={{ opacity: fade ? 1 : 0, transitionDuration: '700ms' }}
       >
-        {phase === 'breathing' && (
-          <BreathingPhase onComplete={() => transitionTo('sorting')} />
-        )}
-        {phase === 'sorting' && (
-          <SortingPhase onComplete={() => transitionTo('journaling-release')} />
-        )}
+        {phase === 'breathing' && <BreathingPhase onComplete={onBreathingDone} />}
+        {phase === 'sorting' && <SortingPhase onComplete={onSortingDone} />}
         {phase === 'journaling-release' && (
           <JournalingPhase
             prompt="A belief I carried about myself that I'm ready to let go of..."
-            onContinue={() => transitionTo('journaling-reframe')}
+            onContinue={onReleaseDone}
           />
         )}
         {phase === 'journaling-reframe' && (
           <JournalingPhase
             prompt="What I know instead..."
-            onContinue={() => transitionTo('closing-activate')}
+            onContinue={onReframeDone}
           />
         )}
-        {phase === 'closing-activate' && (
-          <ClosingActivate onSelect={() => transitionTo('closing-final')} />
-        )}
-        {phase === 'closing-final' && (
-          <ClosingFinal />
-        )}
+        {phase === 'closing-activate' && <ClosingActivate onSelect={onActivateDone} />}
+        {phase === 'closing-final' && <ClosingFinal />}
       </main>
 
       {/* ── Ambient glow ───────────────────────────────────────────── */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div
           className="absolute inset-0"
-          style={{
-            background: 'radial-gradient(circle at 50% 50%, rgba(233,195,73,0.03) 0%, transparent 70%)',
-          }}
+          style={{ background: 'radial-gradient(circle at 50% 50%, rgba(233,195,73,0.03) 0%, transparent 70%)' }}
         />
       </div>
 
@@ -190,52 +184,71 @@ export default function CelestialHearth({ onClose }: CelestialHearthProps) {
 
 /* ═══════════════════════════════════════════════════════════════════════
    Phase 1: BREATHING — 4 cycles of 4s inhale + 4s hold + 6s exhale
+   Auto-advances after 4 full cycles. Circle pulsates smoothly.
    ═══════════════════════════════════════════════════════════════════════ */
 
 function BreathingPhase({ onComplete }: { onComplete: () => void }) {
   const [showIntro, setShowIntro] = useState(true);
   const [breathState, setBreathState] = useState<'in' | 'hold' | 'out'>('in');
-  const [cycle, setCycle] = useState(0);
   const [scale, setScale] = useState(1);
-  const totalCycles = 4;
+  const onCompleteSafe = useStableCallback(onComplete);
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
+  const clearTimers = () => {
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+  };
+
+  const addTimer = (fn: () => void, ms: number) => {
+    timersRef.current.push(setTimeout(fn, ms));
+  };
+
+  // Intro: show text for 2s then start breathing
   useEffect(() => {
-    // Show intro for 2s, then start breathing
-    const introTimer = setTimeout(() => setShowIntro(false), 2000);
-    return () => clearTimeout(introTimer);
+    const t = setTimeout(() => setShowIntro(false), 2000);
+    return () => clearTimeout(t);
   }, []);
 
+  // Breathing timeline — runs once when intro finishes
   useEffect(() => {
     if (showIntro) return;
-    if (cycle >= totalCycles) {
-      // Finished all cycles — wait 1s then advance
-      const done = setTimeout(onComplete, 1000);
-      return () => clearTimeout(done);
-    }
+    clearTimers();
 
-    // Inhale: 4s
-    setBreathState('in');
-    setScale(1.4);
-    const holdTimer = setTimeout(() => {
-      // Hold: 4s
-      setBreathState('hold');
-      const exhaleTimer = setTimeout(() => {
-        // Exhale: 6s
+    const INHALE = 4000, HOLD = 4000, EXHALE = 6000;
+    const CYCLE = INHALE + HOLD + EXHALE;
+    const TOTAL_CYCLES = 4;
+
+    for (let c = 0; c < TOTAL_CYCLES; c++) {
+      const base = c * CYCLE;
+
+      // Inhale start
+      addTimer(() => {
+        setBreathState('in');
+        setScale(1.4);
+      }, base);
+
+      // Hold start
+      addTimer(() => {
+        setBreathState('hold');
+      }, base + INHALE);
+
+      // Exhale start
+      addTimer(() => {
         setBreathState('out');
         setScale(1.0);
-        const nextTimer = setTimeout(() => {
-          setCycle(c => c + 1);
-        }, 6000);
-        return () => clearTimeout(nextTimer);
-      }, 4000);
-      return () => clearTimeout(exhaleTimer);
-    }, 4000);
+      }, base + INHALE + HOLD);
+    }
 
-    return () => clearTimeout(holdTimer);
-  }, [showIntro, cycle, onComplete]);
+    // Auto-advance after all cycles + 1s pause
+    addTimer(() => {
+      onCompleteSafe();
+    }, TOTAL_CYCLES * CYCLE + 1000);
+
+    return clearTimers;
+  }, [showIntro, onCompleteSafe]);
 
   const breathText = breathState === 'in' ? 'breathe in' : breathState === 'hold' ? 'hold' : 'breathe out';
-  const transitionDuration = breathState === 'in' ? '4s' : breathState === 'out' ? '6s' : '0s';
+  const transitionMs = breathState === 'in' ? 4000 : breathState === 'out' ? 6000 : 200;
 
   return (
     <div className="flex flex-col items-center justify-center text-center w-full max-w-[520px]">
@@ -259,17 +272,21 @@ function BreathingPhase({ onComplete }: { onComplete: () => void }) {
           />
           {/* Breathing circle */}
           <div
-            className="w-[200px] h-[200px] rounded-full flex items-center justify-center"
+            className="w-[200px] h-[200px] rounded-full"
             style={{
               backgroundColor: 'rgba(233,195,73,0.15)',
               transform: `scale(${scale})`,
-              transition: `transform ${transitionDuration} ease-in-out`,
+              transition: `transform ${transitionMs}ms ease-in-out`,
             }}
           />
-          {/* Breath cue */}
+          {/* Breath cue — whisper quiet */}
           <p
             className="text-sm uppercase tracking-[0.3em]"
-            style={{ color: 'rgba(223,226,243,0.4)', fontFamily: 'Manrope, sans-serif' }}
+            style={{
+              color: 'rgba(223,226,243,0.4)',
+              fontFamily: 'Manrope, sans-serif',
+              transition: 'opacity 300ms',
+            }}
           >
             {breathText}
           </p>
@@ -281,100 +298,98 @@ function BreathingPhase({ onComplete }: { onComplete: () => void }) {
 
 /* ═══════════════════════════════════════════════════════════════════════
    Phase 2: SORTING — Implicit association word-pairing (~80-90 pairs)
+   Self-word flashes → positive word appears → user taps to confirm.
+   Gradually accelerates. Auto-completes after ~90 pairs or 8 minutes.
    ═══════════════════════════════════════════════════════════════════════ */
 
 function SortingPhase({ onComplete }: { onComplete: () => void }) {
-  const [pairIndex, setPairIndex] = useState(0);
-  const [showPositive, setShowPositive] = useState(false);
-  const [glowing, setGlowing] = useState(false);
-  const [blank, setBlank] = useState(false);
+  const [displayState, setDisplayState] = useState<'self' | 'positive' | 'glow' | 'blank'>('blank');
   const [selfWord, setSelfWord] = useState('');
   const [positiveWord, setPositiveWord] = useState('');
   const [nudge, setNudge] = useState(false);
 
+  const onCompleteSafe = useStableCallback(onComplete);
+  const pairRef = useRef(0);
   const positivePoolRef = useRef<string[]>(shuffle(POSITIVE_WORDS));
   const poolIndexRef = useRef(0);
   const phaseStartRef = useRef(Date.now());
-  const maxPairs = 90;
-  const maxTime = 8 * 60 * 1000; // 8 minutes
-  const nudgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const nudgeTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const pairTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const doneRef = useRef(false);
 
-  const getNextPositive = useCallback(() => {
+  const MAX_PAIRS = 90;
+  const MAX_TIME = 8 * 60 * 1000;
+
+  const getNextPositive = () => {
     if (poolIndexRef.current >= positivePoolRef.current.length) {
       positivePoolRef.current = shuffle(POSITIVE_WORDS);
       poolIndexRef.current = 0;
     }
-    const word = positivePoolRef.current[poolIndexRef.current];
-    poolIndexRef.current++;
-    return word;
-  }, []);
+    return positivePoolRef.current[poolIndexRef.current++];
+  };
 
-  const getNextSelf = useCallback(() => {
-    return SELF_WORDS[Math.floor(Math.random() * SELF_WORDS.length)];
-  }, []);
+  const getNextSelf = () => SELF_WORDS[Math.floor(Math.random() * SELF_WORDS.length)];
 
-  // Self-word display time decreases as pairs progress
-  const selfWordDuration = useCallback((pair: number) => {
-    const min = 350, max = 600;
+  const selfWordDuration = (pair: number) => {
     const t = Math.min(pair / 50, 1);
-    return max - t * (max - min);
-  }, []);
+    return 600 - t * 250; // 600ms → 350ms
+  };
 
-  // Start a new pair
-  const startPair = useCallback((pair: number) => {
+  const startPair = useCallback(() => {
+    if (doneRef.current) return;
+    const pair = pairRef.current;
     const elapsed = Date.now() - phaseStartRef.current;
-    if (pair >= maxPairs || elapsed >= maxTime) {
-      // Phase complete
-      setTimeout(onComplete, 1500);
+
+    if (pair >= MAX_PAIRS || elapsed >= MAX_TIME) {
+      doneRef.current = true;
+      setTimeout(() => onCompleteSafe(), 1500);
       return;
     }
 
-    setBlank(false);
-    setGlowing(false);
-    setShowPositive(false);
-    setNudge(false);
-
+    // Show self-word
     const sw = getNextSelf();
     const pw = getNextPositive();
     setSelfWord(sw);
     setPositiveWord(pw);
+    setDisplayState('self');
+    setNudge(false);
 
-    // Show self-word, then crossfade to positive
-    const duration = selfWordDuration(pair);
-    setTimeout(() => {
-      setShowPositive(true);
-      // Start nudge timer
-      if (nudgeTimerRef.current) clearTimeout(nudgeTimerRef.current);
+    // After delay, show positive word
+    const dur = selfWordDuration(pair);
+    pairTimerRef.current = setTimeout(() => {
+      setDisplayState('positive');
+      // Nudge after 5s of no tap
       nudgeTimerRef.current = setTimeout(() => setNudge(true), 5000);
-    }, duration);
-  }, [getNextSelf, getNextPositive, selfWordDuration, onComplete]);
+    }, dur);
+  }, [onCompleteSafe]);
 
-  // Start first pair
+  // Start first pair on mount
   useEffect(() => {
-    startPair(0);
+    startPair();
     return () => {
-      if (nudgeTimerRef.current) clearTimeout(nudgeTimerRef.current);
+      clearTimeout(pairTimerRef.current);
+      clearTimeout(nudgeTimerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle tap/confirmation
   const handleConfirm = useCallback(() => {
-    if (!showPositive || glowing || blank) return;
+    if (displayState !== 'positive' || doneRef.current) return;
 
-    if (nudgeTimerRef.current) clearTimeout(nudgeTimerRef.current);
+    clearTimeout(nudgeTimerRef.current);
     setNudge(false);
-    setGlowing(true);
+    setDisplayState('glow');
 
+    // Glow → blank → next pair
     setTimeout(() => {
-      setBlank(true);
+      setDisplayState('blank');
       setTimeout(() => {
-        const next = pairIndex + 1;
-        setPairIndex(next);
-        startPair(next);
+        pairRef.current++;
+        startPair();
       }, 300);
     }, 600);
-  }, [showPositive, glowing, blank, pairIndex, startPair]);
+  }, [displayState, startPair]);
 
   // Keyboard: spacebar / right arrow
   useEffect(() => {
@@ -388,58 +403,57 @@ function SortingPhase({ onComplete }: { onComplete: () => void }) {
     return () => window.removeEventListener('keydown', handleKey);
   }, [handleConfirm]);
 
-  if (blank) {
-    return <div className="w-full max-w-[520px]" />;
-  }
-
   return (
     <div
-      className="flex flex-col items-center justify-center text-center w-full max-w-[520px] cursor-pointer select-none"
+      className="flex flex-col items-center justify-center text-center w-full max-w-[520px] cursor-pointer select-none min-h-[200px]"
       onClick={handleConfirm}
       role="button"
       tabIndex={0}
     >
-      <div className="relative flex flex-col items-center gap-12">
-        {/* Glow effect on confirm */}
-        {glowing && (
-          <div
-            className="absolute w-48 h-48 rounded-full"
-            style={{
-              background: 'radial-gradient(circle, rgba(233,195,73,0.15) 0%, transparent 70%)',
-              animation: 'celestialGlowPulse 0.6s ease-out forwards',
-            }}
-          />
-        )}
+      {displayState === 'blank' ? (
+        <div className="h-12" />
+      ) : (
+        <div className="relative flex flex-col items-center gap-12">
+          {/* Glow effect on confirm */}
+          {displayState === 'glow' && (
+            <div
+              className="absolute w-48 h-48 rounded-full"
+              style={{
+                background: 'radial-gradient(circle, rgba(233,195,73,0.2) 0%, transparent 70%)',
+                animation: 'celestialGlowPulse 0.6s ease-out forwards',
+              }}
+            />
+          )}
 
-        {/* Word display */}
-        <h1
-          className="text-4xl italic transition-all"
-          style={{
-            fontFamily: 'Georgia, "Noto Serif", serif',
-            color: showPositive ? '#e9c349' : 'rgba(223,226,243,0.95)',
-            transitionDuration: '600ms',
-            transform: glowing ? 'scale(1.08)' : 'scale(1)',
-            opacity: glowing ? 0 : 1,
-          }}
-        >
-          {showPositive ? positiveWord : selfWord}
-        </h1>
-
-        {/* Tap prompt */}
-        {showPositive && !glowing && (
-          <p
-            className="text-xs uppercase tracking-[0.2em] transition-opacity duration-500"
+          {/* Word display */}
+          <h1
+            className="text-4xl italic"
             style={{
-              color: 'rgba(223,226,243,0.4)',
-              fontFamily: 'Manrope, sans-serif',
-              opacity: nudge ? 0.7 : 0.4,
-              animation: nudge ? 'celestialNudge 1.5s ease-in-out infinite' : 'none',
+              fontFamily: 'Georgia, "Noto Serif", serif',
+              color: displayState === 'self' ? 'rgba(223,226,243,0.95)' : '#e9c349',
+              transform: displayState === 'glow' ? 'scale(1.08)' : 'scale(1)',
+              opacity: displayState === 'glow' ? 0 : 1,
+              transition: 'all 400ms ease-out',
             }}
           >
-            tap to take this
-          </p>
-        )}
-      </div>
+            {displayState === 'self' ? selfWord : positiveWord}
+          </h1>
+
+          {/* Tap prompt */}
+          {displayState === 'positive' && (
+            <p
+              className="text-xs uppercase tracking-[0.2em]"
+              style={{
+                color: 'rgba(223,226,243,0.4)',
+                fontFamily: 'Manrope, sans-serif',
+                animation: nudge ? 'celestialNudge 1.5s ease-in-out infinite' : 'none',
+              }}
+            >
+              tap to take this
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -498,10 +512,8 @@ function JournalingPhase({ prompt, onContinue }: { prompt: string; onContinue: (
 
       <button
         onClick={onContinue}
-        className="flex items-center gap-3 text-sm uppercase tracking-widest py-4 px-8 group transition-colors duration-700"
+        className="flex items-center gap-3 text-sm uppercase tracking-widest py-4 px-8 group transition-colors duration-700 hover:text-[#ffdfa0]"
         style={{ color: '#e9c349', fontFamily: 'Manrope, sans-serif' }}
-        onMouseEnter={e => (e.currentTarget.style.color = '#ffdfa0')}
-        onMouseLeave={e => (e.currentTarget.style.color = '#e9c349')}
       >
         continue
         <span
@@ -521,15 +533,16 @@ function JournalingPhase({ prompt, onContinue }: { prompt: string; onContinue: (
 
 function ClosingActivate({ onSelect }: { onSelect: () => void }) {
   const [customText, setCustomText] = useState('');
+  const [picked, setPicked] = useState<string | null>(null);
 
-  const handlePick = () => {
-    // Brief glow then advance
-    setTimeout(onSelect, 400);
+  const handlePick = (label: string) => {
+    setPicked(label);
+    setTimeout(onSelect, 600);
   };
 
   const handleCustomSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    handlePick();
+    handlePick(customText || 'something kind');
   };
 
   return (
@@ -551,23 +564,14 @@ function ClosingActivate({ onSelect }: { onSelect: () => void }) {
         {ACTIVATION_OPTIONS.map(option => (
           <button
             key={option}
-            onClick={handlePick}
-            className="py-3.5 px-5 rounded-2xl text-base transition-all duration-500 text-left"
+            onClick={() => handlePick(option)}
+            className="py-3.5 px-5 rounded-2xl text-base text-left transition-all duration-500"
             style={{
               fontFamily: 'Georgia, "Noto Serif", serif',
-              color: 'rgba(223,226,243,0.8)',
-              backgroundColor: 'rgba(49,52,66,0.5)',
-              border: '1px solid rgba(70,70,76,0.3)',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.backgroundColor = 'rgba(233,195,73,0.15)';
-              e.currentTarget.style.borderColor = 'rgba(233,195,73,0.3)';
-              e.currentTarget.style.color = '#e9c349';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.backgroundColor = 'rgba(49,52,66,0.5)';
-              e.currentTarget.style.borderColor = 'rgba(70,70,76,0.3)';
-              e.currentTarget.style.color = 'rgba(223,226,243,0.8)';
+              color: picked === option ? '#e9c349' : 'rgba(223,226,243,0.8)',
+              backgroundColor: picked === option ? 'rgba(233,195,73,0.15)' : 'rgba(49,52,66,0.5)',
+              border: picked === option ? '1px solid rgba(233,195,73,0.4)' : '1px solid rgba(70,70,76,0.3)',
+              boxShadow: picked === option ? '0 0 20px rgba(233,195,73,0.15)' : 'none',
             }}
           >
             {option}
