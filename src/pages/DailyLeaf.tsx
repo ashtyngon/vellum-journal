@@ -11,6 +11,7 @@ import WeekPlanner from '../components/WeekPlanner';
 import DayDebriefComponent from '../components/DayDebrief';
 import { useTaskCelebration } from '../components/TaskCelebration';
 import Walkthrough from '../components/Walkthrough';
+import CelestialHearth from '../components/CelestialHearth';
 import { parseNaturalEntry, parseTime } from '../lib/nlParser';
 import { todayStr, dayAfter, dayBefore, formatLocalDate } from '../lib/dateUtils';
 import { getColorOfTheDay, getDailyCompanion } from '../lib/colorOfTheDay';
@@ -185,6 +186,7 @@ export default function DailyLeaf() {
   const [stuckTask, setStuckTask] = useState<RapidLogEntry | null>(null);
   const [activeMethod, setActiveMethod] = useState<JournalMethod | null>(null);
   const [showWeekPlanner, setShowWeekPlanner] = useState(false);
+  const [showCelestialHearth, setShowCelestialHearth] = useState(false);
 
   // Morning Flow — shows once per day on first open
   const morningFlowKey = `vellum-morning-done-${todayStr()}`;
@@ -738,6 +740,10 @@ export default function DailyLeaf() {
           onComplete={handleWalkthroughComplete}
           onCancel={() => setActiveMethod(null)}
         />
+      )}
+
+      {showCelestialHearth && (
+        <CelestialHearth onClose={() => setShowCelestialHearth(false)} />
       )}
 
       {/* ── Plan Overlay (Today / Tomorrow / Week) ────────────────── */}
@@ -1732,6 +1738,23 @@ export default function DailyLeaf() {
                       );
                     });
                   })()}
+
+                  {/* ── Celestial Hearth — post-session integration ──── */}
+                  <button
+                    onClick={() => setShowCelestialHearth(true)}
+                    className="text-left p-3.5 rounded-lg border transition-all border-wood-light/10 hover:bg-surface-light hover:border-primary/15 col-span-full"
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <span className="material-symbols-outlined text-xl mt-0.5 text-ink/30">local_fire_department</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="font-body text-sm font-medium text-ink">The Celestial Hearth</span>
+                          <span className="font-mono text-[13px] text-pencil/50 bg-surface-light px-1.5 py-0.5 rounded-full uppercase tracking-widest">12 min</span>
+                        </div>
+                        <p className="font-body text-sm text-pencil leading-relaxed line-clamp-2">Post-session integration. Breathing, word-pairing, journaling, closing.</p>
+                      </div>
+                    </div>
+                  </button>
                 </div>
               </details>
 

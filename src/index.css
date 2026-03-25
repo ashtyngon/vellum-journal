@@ -210,6 +210,20 @@
       100% { opacity: 1; transform: translateY(0); }
     }
 
+    /* ── Celestial Hearth animations ─────────────────────────────── */
+    @keyframes celestialFadeIn {
+      0%   { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    @keyframes celestialGlowPulse {
+      0%   { opacity: 0.5; transform: scale(1); }
+      100% { opacity: 0;   transform: scale(1.5); }
+    }
+    @keyframes celestialNudge {
+      0%, 100% { opacity: 0.4; }
+      50%      { opacity: 0.8; }
+    }
+
     /* Multi-line truncation */
     .truncate-2 {
         display: -webkit-box;

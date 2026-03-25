@@ -253,47 +253,97 @@ export const JOURNAL_METHODS: JournalMethod[] = [
     ],
   },
 
-  /* ─── 5. Session Integration (Integration) ────────────────────────── */
+  /* ─── 5. Session Integration (Integration) ──────────────────────────
+     Evidence base:
+     - Neuroplasticity window: first 24-48h post-ketamine are when
+       cortical changes are most active (MGH pilot study, Wilkinson 2017)
+     - Memory reconsolidation: reactivating the felt experience (not
+       just thinking about it) is what allows memories to update
+       (PsyA-EMDR, Hase 2023)
+     - MAPS protocol: non-directive exploration first, structured
+       reflection later — premature meaning-making blocks integration
+     - Pennebaker: write while fresh, don't edit, "deepest thoughts"
+     - Pairs with Session Prep — closes the arc opened there
+     ──────────────────────────────────────────────────────────────────── */
   {
     id: 'integration',
     name: 'Session Integration',
     description:
-      'Lock in insights from therapy before they fade.',
+      'Capture what surfaced before your mind rewrites it.',
     icon: 'self_improvement',
     category: 'integration',
     steps: [
+      // ══ PHASE 1: CAPTURE (do this soon after — raw, nonverbal) ═════
+
+      // ── Step 1: Re-read your prep message ─────────────────────────
+      // Closes the arc from Session Prep step 7. Grounds you in your
+      // own voice from before the experience.
       {
-        prompt:
-          'What images, feelings, or moments from the session are still with you?',
+        prompt: 'If you wrote yourself a message before the session, read it now. How does it land? Does it still feel true, or has something shifted?',
         placeholder:
-          'e.g. The image of myself as a kid sitting alone at the lunch table. A heavy feeling in my chest when we talked about the move.',
+          'e.g. I told myself "whatever you saw was real." It feels different now — I saw something I didn\'t expect and I\'m not sure I want it to be real. But it is.',
         inputType: 'textarea',
       },
+      // ── Step 2: Raw fragments — images, sensations, words ─────────
+      // The post-session brain is image-rich and pre-verbal.
+      // Capture fragments before the narrative mind tidies them up.
+      // Pennebaker: write while fresh, no editing.
       {
-        prompt: 'What felt most significant or surprising?',
+        prompt: 'What\'s still with you right now? Don\'t organize it — just write fragments. Images, body sensations, colors, phrases, feelings, faces, memories. Whatever is floating.',
         placeholder:
-          'e.g. I didn\'t expect to cry when we talked about my grandmother. I think I\'ve been carrying that grief longer than I realized.',
+          'e.g. A dark room with warm light. My hands felt enormous. The word "permission" kept appearing. I saw my younger self but wasn\'t sad about it. A sensation of something unclenching in my chest. The color blue.',
         inputType: 'textarea',
       },
+      // ── Step 3: Body check — what changed somatically ─────────────
+      // Memory reconsolidation research: the body holds the update
+      // before the mind catches up. Gendlin: check the felt sense.
       {
-        prompt:
-          'Is there an old belief that feels a little less true now?',
+        prompt: 'Scan your body like you did before the session. What\'s different now? What shifted, released, or appeared?',
         placeholder:
-          'e.g. The belief that needing help means I\'m weak. Today it felt more like needing help means I\'m honest.',
+          'e.g. The tight band across my forehead is gone. My chest feels open in a way it hasn\'t in weeks. But there\'s a new tenderness in my stomach — like something was touched that\'s still raw.',
         inputType: 'textarea',
       },
+
+      // ══ PHASE 2: PROCESS (connect, name, anchor) ══════════════════
+
+      // ── Step 4: What surprised you ────────────────────────────────
+      // Surprise = the gap between expectation and experience.
+      // This gap is where new learning lives.
       {
-        prompt:
-          'What new understanding or perspective is forming?',
+        prompt: 'What happened that you didn\'t expect? What surprised you — about the session, about yourself, about what came up?',
         placeholder:
-          'e.g. I\'m starting to see that my perfectionism isn\'t discipline -- it\'s fear. And I can work with fear differently than I thought.',
+          'e.g. I expected to work on the anxiety but what came up was loneliness. I didn\'t expect to feel compassion for the version of me I usually criticize. The fear I named in prep didn\'t show up at all — something else did.',
         inputType: 'textarea',
       },
+      // ── Step 5: Belief update — what feels less true now ──────────
+      // Lieberman affect labeling: name the old belief precisely.
+      // Reconsolidation: the old belief must be activated and then
+      // contradicted by felt experience to update.
       {
-        prompt:
-          'What\'s one thing from this session you want to carry forward into your week?',
+        prompt: 'Is there something you believed before the session that feels less solid now? Name the old belief, then write what\'s replacing it — even if the new version is blurry.',
         placeholder:
-          'e.g. When I notice the urge to over-prepare, pause and ask: "Am I preparing, or am I hiding?"',
+          'e.g. Old: "I have to earn rest." New: something like... rest isn\'t a reward, it\'s a requirement. I felt that in my body, not just my head. Old: "I\'m too much." New: I\'m not too much. I\'ve just been around people who couldn\'t hold it.',
+        inputType: 'textarea',
+      },
+      // ── Step 6: The dump — what do you want to remember ───────────
+      // Consolidation window: explicitly encoding what matters
+      // strengthens the memory trace. This is the "take-home message"
+      // from MAPS integration protocol.
+      {
+        prompt: 'If this experience could be distilled into one thing you don\'t want to forget — one sentence, one image, one feeling — what is it?',
+        placeholder:
+          'e.g. The feeling of my own hand on my chest and realizing I\'ve never once comforted myself like that. Or: "You\'re allowed to put it down." Or: the image of the kid, and the fact that I smiled at him.',
+        inputType: 'textarea',
+      },
+      // ── Step 7: Anchor — what changes this week ───────────────────
+      // Integration research: insights without behavioral anchors fade
+      // within days. One specific, concrete action prevents this.
+      // MGH pilot: patients with structured integration had 25% relapse
+      // vs 55-89% without.
+      {
+        prompt: 'Name one concrete thing you\'ll do differently this week because of what you experienced. Not a vague intention — something specific, something you\'d notice yourself doing.',
+        placeholder:
+          'e.g. When I feel the urge to apologize for existing, I\'ll pause and say nothing instead. Or: I\'ll let myself sit in the car for five minutes before going inside — just to be with myself. Or: I\'ll call my sister and actually say the thing.',
         inputType: 'textarea',
       },
     ],
@@ -481,50 +531,97 @@ export const JOURNAL_METHODS: JournalMethod[] = [
     ],
   },
 
-  /* ─── 9. Ketamine Session Prep (Integration) ──────────────────────── */
+  /* ─── 9. Session Prep (Integration) ─────────────────────────────────
+     Evidence base:
+     - Gendlin Focusing (1978): body-first entry, felt sense → handle → asking
+     - Pennebaker Expressive Writing: "very deepest thoughts and feelings,"
+       progressive deepening across steps
+     - Lieberman Affect Labeling (2007): granular naming reduces amygdala
+       reactivity — specificity matters more than duration
+     - MAPS MDMA-AT prep protocol: fears, expectations, "nothing comes up
+       that isn't already there," open-ended intentions
+     - KAP clinical protocols: set/setting, envelope of intention,
+       trust-building before medicine session
+     ──────────────────────────────────────────────────────────────────── */
   {
     id: 'ketamine-prep',
     name: 'Session Prep',
     description:
-      'Set intentions before your ketamine session.',
+      'Surface what\'s underneath before you go in.',
     icon: 'spa',
     category: 'integration',
     steps: [
+      // ── Step 1: Clearing a space (Gendlin Step 1) ──────────────────
+      // Body-first entry. Emotions live in the body before cognition.
+      // Gendlin: "Clearing a space is asking, what's between me and
+      // feeling fine right now?" — scan for what's *there*, not what
+      // you *think* is there.
       {
-        prompt: 'How are you feeling right now — physically and emotionally? Just notice, no fixing.',
+        prompt: 'Close your eyes for ten seconds. Scan slowly from head to feet. Where is something sitting in your body right now? Describe exactly what you feel there — not why, just the raw sensation.',
         placeholder:
-          'e.g. My shoulders are tight. I feel a low hum of anxiety but also curiosity. I slept okay. There\'s some dread I can\'t name.',
+          'e.g. Tight band across my forehead. Something heavy and warm sitting on my chest. My jaw is clenched and I didn\'t notice until now. Stomach feels hollow, like before a flight.',
         inputType: 'textarea',
       },
+      // ── Step 2: Felt sense → handle (Gendlin Steps 2-3) ───────────
+      // Move from raw sensation to emotional meaning. The "handle" is
+      // the word or image that makes the felt sense click.
+      // Lieberman: the more granular the label, the more the amygdala
+      // quiets. Push past "anxious" to the specific texture.
       {
-        prompt: 'What\'s been weighing on you since your last session? What\'s unfinished?',
+        prompt: 'Stay with the strongest sensation. If it had an emotional name — more specific than "bad" or "anxious" — what would it be? Find the word that makes your body go "...yes, that\'s it."',
         placeholder:
-          'e.g. I had a flash of grief mid-week that I didn\'t process. The insight about my dad felt true in session but I couldn\'t hold onto it after.',
+          'e.g. It\'s not anxiety, it\'s dread. Specifically: dread of being seen and found empty. Or: it\'s grief, but the sticky kind — like I\'m mourning something I never had.',
         inputType: 'textarea',
       },
+      // ── Step 3: Pennebaker deepening — what's underneath ──────────
+      // Pennebaker: "write your very deepest thoughts and feelings."
+      // Progressive disclosure: surface → underneath → underneath that.
+      // This is where buried material surfaces.
       {
-        prompt: 'What do you want to bring into this session? Not a goal — an intention or a question.',
+        prompt: 'Now go underneath it. What is this feeling really about? Write your deepest, most honest thoughts — the ones you haven\'t said to anyone, maybe not even yourself. No editing.',
         placeholder:
-          'e.g. I want to sit with the sadness instead of intellectualizing it. Or: why do I feel like I need permission to rest?',
+          'e.g. I think I\'m afraid that I\'m broken in a way that can\'t be fixed. That everyone else figured something out that I missed. That the sessions help but I\'m still the same person when the medicine wears off.',
         inputType: 'textarea',
       },
+      // ── Step 4: The inventory — everything that's bothering you ────
+      // Structured surfacing. Lists bypass the avoidance that free-form
+      // writing allows. MAPS protocol: gather "fears and concerns."
+      // Instruction is to be exhaustive, not polished.
       {
-        prompt: 'Is there anything you\'re afraid might come up? Name it so it has less power.',
+        prompt: 'List everything that\'s bothering you right now. Big and small, rational and irrational. Don\'t filter — just dump. One thing per line if it helps.',
         placeholder:
-          'e.g. I\'m afraid I\'ll feel nothing again. Or that the memory of the apartment will surface and I won\'t be able to handle it.',
+          'e.g. The conversation I\'m avoiding with my mom. Money. That I haven\'t exercised in two weeks. A comment someone made that I can\'t stop replaying. The feeling that I\'m wasting my potential. That weird pain in my side.',
         inputType: 'textarea',
       },
+      // ── Step 5: Fears about the session (MAPS protocol) ───────────
+      // MAPS: "It is helpful to remember nothing is going to come up
+      // that is not already there. Whatever comes up is something you
+      // are walking around with already but not conscious of."
       {
-        prompt: 'How safe do you feel right now? What would help you feel safer going in?',
-        placeholder: 'Slide to rate your felt sense of safety.',
-        inputType: 'slider',
-        min: 0,
-        max: 100,
-      },
-      {
-        prompt: 'Write a short message to yourself for when you come back. What do you want to remember?',
+        prompt: 'What are you afraid might happen in this session? Name every fear — including the embarrassing ones. Remember: nothing will come up that isn\'t already inside you.',
         placeholder:
-          'e.g. Whatever you saw was real. You don\'t have to understand it yet. Drink water. Be gentle tonight.',
+          'e.g. That I\'ll feel nothing and waste the session. That I\'ll cry and not be able to stop. That something will surface I\'m not ready for. That it\'ll work and then I\'ll have to actually change.',
+        inputType: 'textarea',
+      },
+      // ── Step 6: Gendlin "asking" — what wants attention ───────────
+      // Gendlin Step 5: "Ask the felt sense what it needs."
+      // After surfacing everything, let the material self-organize.
+      // The intention should *emerge* from what was surfaced, not be
+      // imposed top-down.
+      {
+        prompt: 'Look at everything you just wrote. What feels like it\'s asking for attention most? Not what you think you *should* work on — what\'s pulling at you? Let your intention come from that.',
+        placeholder:
+          'e.g. I want to understand why I feel empty even when things are going well. Or: I want to let myself feel the grief I keep intellectualizing. Or just: I want to stop fighting myself.',
+        inputType: 'textarea',
+      },
+      // ── Step 7: Safety anchor + letter to self ─────────────────────
+      // KAP protocols: establish felt safety. MAPS: "you will be
+      // supported." Pennebaker: closing with self-directed compassion
+      // helps contain the material that was opened.
+      {
+        prompt: 'Write a message to yourself for when you come back. Speak to yourself the way you\'d speak to someone you love who just went through something hard.',
+        placeholder:
+          'e.g. Whatever you saw was real, even if it fades. You don\'t have to understand it tonight. Drink water, eat something warm, don\'t make any decisions. You did a brave thing.',
         inputType: 'textarea',
       },
     ],
