@@ -7,6 +7,7 @@ import ArchiveLibrary from './pages/ArchiveLibrary';
 // FlowView removed — weekly planner is now on the DailyLeaf page
 import HabitTrace from './pages/HabitTrace';
 import DailyLeaf from './pages/DailyLeaf';
+import DataRecovery from './pages/DataRecovery';
 import { useAuth } from './context/AuthContext';
 
 function ProtectedRoutes() {
@@ -34,6 +35,7 @@ function ProtectedRoutes() {
           <Route path="/flow" element={<Navigate to="/daily" replace />} />
           <Route path="/habit-trace" element={<HabitTrace />} />
           <Route path="/daily" element={<DailyLeaf />} />
+          <Route path="/recover" element={<DataRecovery />} />
           <Route path="*" element={<Navigate to="/daily" replace />} />
         </Routes>
       </Layout>
