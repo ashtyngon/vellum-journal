@@ -211,6 +211,50 @@ function clearWal() {
   try { localStorage.removeItem(LS_KEY); } catch { /* ignore */ }
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   DATA-LOSS GUARD
+   ──────────────────────────────────────────────────────────────────────
+   Refuses to save when entry counts drop catastrophically relative to
+   the highest-known-good counts for this user. Protects against bugs
+   that would silently overwrite the Firestore document with empty state.
+
+   Triggers if (baseline ≥ 10) AND (current < baseline × 0.5 OR baseline
+   − current ≥ 20). Updates baseline upward whenever counts grow.
+
+   Override in devtools: `window.__VELLUM_FORCE_SAVE__ = true`
+   ══════════════════════════════════════════════════════════════════════ */
+
+const BASELINE_KEY_PREFIX = 'vellum-baseline-';
+const GUARD_DROP_PCT = 0.5;
+const GUARD_DROP_COUNT = 20;
+const GUARD_MIN_BASELINE = 10;
+
+interface BaselineCounts {
+  entries: number;
+  journalEntries: number;
+  collections: number;
+}
+
+function readBaseline(uid: string): BaselineCounts | null {
+  try {
+    const raw = localStorage.getItem(BASELINE_KEY_PREFIX + uid);
+    return raw ? (JSON.parse(raw) as BaselineCounts) : null;
+  } catch { return null; }
+}
+
+function writeBaseline(uid: string, counts: BaselineCounts) {
+  try {
+    localStorage.setItem(BASELINE_KEY_PREFIX + uid, JSON.stringify(counts));
+  } catch { /* ignore */ }
+}
+
+function isCatastrophicDrop(baseline: number, current: number): boolean {
+  if (baseline < GUARD_MIN_BASELINE) return false;
+  if (current < baseline * GUARD_DROP_PCT) return true;
+  if (baseline - current >= GUARD_DROP_COUNT) return true;
+  return false;
+}
+
 /* ── Provider ──────────────────────────────────────────────────────── */
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
@@ -233,6 +277,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // This prevents saving stale/empty state back to Firestore before load completes.
   const dataLoadedRef = useRef(false);
   const prevUserUid = useRef<string | null>(null);
+
+  // Highest known-good entry counts — drives the data-loss guard below.
+  const baselineRef = useRef<BaselineCounts | null>(null);
 
   // Load from Firestore when user logs in
   useEffect(() => {
@@ -354,6 +401,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         }
       }
       prevUserUid.current = user.uid;
+      // Reset baseline — will be hydrated on first save-effect run after load.
+      baselineRef.current = null;
       dataLoadedRef.current = true;
       setLoading(false);
     };
@@ -383,6 +432,61 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!user || !dataLoadedRef.current) return;
+
+    // ── Data-loss guard ────────────────────────────────────────────
+    const data = latestDataRef.current;
+    const current: BaselineCounts = {
+      entries: data.entries.length,
+      journalEntries: data.journalEntries.length,
+      collections: data.collections.length,
+    };
+
+    // Lazy-hydrate baseline on first post-load save, taking MAX of
+    // stored-on-disk value and the freshly-loaded counts.
+    if (baselineRef.current === null) {
+      const stored = readBaseline(user.uid);
+      baselineRef.current = {
+        entries: Math.max(stored?.entries ?? 0, current.entries),
+        journalEntries: Math.max(stored?.journalEntries ?? 0, current.journalEntries),
+        collections: Math.max(stored?.collections ?? 0, current.collections),
+      };
+      writeBaseline(user.uid, baselineRef.current);
+    }
+
+    const baseline = baselineRef.current;
+    const forceSave =
+      typeof window !== 'undefined' &&
+      (window as unknown as { __VELLUM_FORCE_SAVE__?: boolean }).__VELLUM_FORCE_SAVE__ === true;
+
+    if (
+      !forceSave &&
+      (isCatastrophicDrop(baseline.entries, current.entries) ||
+        isCatastrophicDrop(baseline.journalEntries, current.journalEntries) ||
+        isCatastrophicDrop(baseline.collections, current.collections))
+    ) {
+      console.error(
+        '[VELLUM GUARD] Refusing to save — entry count dropped catastrophically. ' +
+        'To override, run in devtools: window.__VELLUM_FORCE_SAVE__ = true',
+        { baseline, current },
+      );
+      return; // skip BOTH WAL and Firestore writes
+    }
+
+    // Grow baseline if counts went up (normal user activity).
+    if (
+      current.entries > baseline.entries ||
+      current.journalEntries > baseline.journalEntries ||
+      current.collections > baseline.collections
+    ) {
+      const next: BaselineCounts = {
+        entries: Math.max(baseline.entries, current.entries),
+        journalEntries: Math.max(baseline.journalEntries, current.journalEntries),
+        collections: Math.max(baseline.collections, current.collections),
+      };
+      baselineRef.current = next;
+      writeBaseline(user.uid, next);
+    }
+
     // IMMEDIATELY write to localStorage (synchronous backup)
     writeWal(user.uid, latestDataRef.current);
     // Save to Firestore immediately — no debounce

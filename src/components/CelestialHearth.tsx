@@ -313,8 +313,8 @@ function SortingPhase({ onComplete }: { onComplete: () => void }) {
   const positivePoolRef = useRef<string[]>(shuffle(POSITIVE_WORDS));
   const poolIndexRef = useRef(0);
   const phaseStartRef = useRef(Date.now());
-  const nudgeTimerRef = useRef<ReturnType<typeof setTimeout>>();
-  const pairTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const nudgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pairTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const doneRef = useRef(false);
 
   const MAX_PAIRS = 90;
@@ -367,8 +367,8 @@ function SortingPhase({ onComplete }: { onComplete: () => void }) {
   useEffect(() => {
     startPair();
     return () => {
-      clearTimeout(pairTimerRef.current);
-      clearTimeout(nudgeTimerRef.current);
+      if (pairTimerRef.current) clearTimeout(pairTimerRef.current);
+      if (nudgeTimerRef.current) clearTimeout(nudgeTimerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -377,7 +377,7 @@ function SortingPhase({ onComplete }: { onComplete: () => void }) {
   const handleConfirm = useCallback(() => {
     if (displayState !== 'positive' || doneRef.current) return;
 
-    clearTimeout(nudgeTimerRef.current);
+    if (nudgeTimerRef.current) clearTimeout(nudgeTimerRef.current);
     setNudge(false);
     setDisplayState('glow');
 

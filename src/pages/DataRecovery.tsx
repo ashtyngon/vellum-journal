@@ -68,14 +68,14 @@ export default function DataRecovery() {
       const data = snap.data();
       setFirestoreData(data);
 
-      const entries = (data.entries || data.tasks || []) as Array<Record<string, string>>;
-      const journals = (data.journalEntries || []) as Array<Record<string, string>>;
+      const entries = (data.entries || data.tasks || []) as Array<{ id: string; title?: string; date: string; type?: string; status?: string; deletedAt?: string }>;
+      const journals = (data.journalEntries || []) as Array<{ id: string; title?: string; date: string; type?: string; status?: string; deletedAt?: string }>;
 
       setFirestoreEntries(groupByMonth(entries));
       setFirestoreJournals(groupByMonth(journals));
 
       const totalEntries = entries.length;
-      const deletedEntries = entries.filter((e: Record<string, string>) => e.deletedAt).length;
+      const deletedEntries = entries.filter(e => e.deletedAt).length;
       const activeEntries = totalEntries - deletedEntries;
 
       setStatus(`Firestore: ${totalEntries} entries (${activeEntries} active, ${deletedEntries} soft-deleted), ${journals.length} journal entries. Updated: ${data.updatedAt || 'unknown'}`);
